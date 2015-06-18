@@ -1,0 +1,127 @@
+Core Firebase Features:
+	1) API's in multiple languages, include native mobile - we will just do javascript
+	2) Hosting - we won't do this by definition
+	3) User authentication - MVP+ - Although we should probably do our research on this before we start building so we dont construct something thats hard to add authentication to later. Need to really understand how their token system works. Also really important to think about this in terms of how user read and write control will be handled to different parts of the database. Maybe explore how other nobackend frameworks have handled this.
+		1) Session management via tokens
+		2) Control read/write access to specific parts of database via user management
+	4) Live data syncing
+		Firebase client uses database "references" to refer to data, we will need to create an equivalent to this - whiteboard how this will work. One of the first things we need to figure out, entire client library depends on it.
+		I think the functions below all can take a scope context as a third parameter as well, so in our function code we would have
+			this = scope || this;
+		1) Handles any data that can be JSONified - We can do this
+			Works like this: var myFirebaseRef = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/"); //reference to main firebase document
+			//all of these will require error handling / on the client side
+			1) Writing data:
+				   //i think this returns a reference to the new data path so you can work with it directly later
+				1) set: myFireBaseRef.set({any valid json}, callback) //exactly what you'd expect, basically add a property
+				2) update: var child = myFireBaseRef.child("propertyName")
+				   child.update({valid json}, callback)
+				   //returns a reference to the new data path which you can use to do stuff to it
+				3) push: var child = myFireBaseRef.child("messages")
+				   child.push({valid json}, callback)
+		   	2) Retrieving data:
+		   		Data is returned as "snapshots". Snapshots have a method called .val() which converts to obj (JSON.parse?)
+		   		1) Data stored in firebase is retrieved using an asynchronous listener to a database reference
+			   	2) Example from firebase documentation:
+			   		// This code will make it so any post that is added to database is written to console
+			   		// Get a database reference to our posts
+					var ref = new Firebase("https://docs-examples.firebaseio.com/web/saving-data/fireblog/posts");
+					// Attach an asynchronous callback to read the data at our posts reference
+					ref.on("value", function(snapshot) {
+					  console.log(snapshot.val());
+					}, function (errorObject) {
+					  console.log("The read failed: " + errorObject.code);
+					});
+				3) Event types:
+					1) "value" - read a static snapshot of the contents of a given database path.
+						1) IMPORTANT: Triggered once with the initial data and again everytime the data changes
+						2) Callback is passed snapshot containing all data at that location
+					//impose limit on number to return here on initial call?
+					2) "child_added" - typically used when retrieving a list of items from the database
+						1) Triggered once for each existing child and then again every time a new child is added to specified path
+						2) Event callback passed a snapshot containing new childs data - for ordering purposes, also passed a second argument containing the key of the second child. Not sure what this is for exactly, but keep in mind?
+					3) "child_changed"
+						1) Triggered any time a child node is modified - includes any modifications to descendants of child node (not sure how rethinkDB handles descendants - look into this)
+						2) Snapshot passed to callback contains updated childs data
+					4) "child_removed"
+						1) Triggered when an immediate child is removed
+						2) Snapshot passed to callback contains data for removed child
+					5) "child_moved"
+						1) Used when working with ordered data --- MVP+? not necessary for basic functionality.
+				4) Event guarantees - we should keep these in mind when writing our code
+					1) Events will always be triggered when local state changes.
+					2) Events will always eventually reflect the correct state of the data, even in cases where local operations or timing cause temporary differences, such as in the temporary loss of network connection.
+					3) Writes from a single client will always be written to the server and broadcast out to other users in-order.
+					4) Value events are always triggered last and are guaranteed to contain updates from any other events which occurred before that snapshot was taken ---- keep this in mind when writing client, if we dont incorporate this could be pretty hard to write client code
+				5) Detaching callbacks - ref below is the client database reference
+					1) ref.off("value", originalCallback) --- I dont understand how this works if the callback was anonymous...maybe we should implement this differently
+					2) ref.off("value", originalCallback, this) --- if a scope context was passed originally, have to pass it here too
+					3) ref.off("value") --- detach all value callbacks
+					4) ref.off() --- detach all callbacks 
+					5) Also reff.once("event", callback) invokese a callback once and then immediately removes it
+				6) Querying data - might be too much work to implement this, MVP+? Although limiting queries is pretty important. startAt, endAt etc allow us to do "pagination". equalTo() allows to filter based on exact matches, also kind of important.
+					1) can add the following properties to retrieval calls:
+						1) orderByChild(), orderByKey(), orderByValue(), or orderByPriority()
+						2) limitToFirst(), limitToLast(), startAt(), endAt(), and equalTo()
+					Example: ref.orderByChild("height").on("child_added", function(snapshot) {
+							  console.log(snapshot.key() + " was " + snapshot.val().height + " meters tall");
+							});
+					Example of comlex query that finds dinosaur that is just shorter than stegosaurus:
+						var ref = new Firebase("https://dinosaur-facts.firebaseio.com/dinosaurs");
+						ref.child("stegosaurus").child("height").on("value", function(stegosaurusHeightSnapshot) {
+						  var favoriteDinoHeight = stegosaurusHeightSnapshot.val();
+						  var queryRef = ref.orderByChild("height").endAt(favoriteDinoHeight).limitToLast(2)
+						  queryRef.on("value", function(querySnapshot) {
+						      if (querySnapshot.numChildren() == 2) {
+						        // Data is ordered by increasing height, so we want the first entry
+						        querySnapshot.forEach(function(dinoSnapshot) {
+						          console.log("The dinosaur just shorter than the stegasaurus is " + dinoSnapshot.key());
+						          // Returning true means that we will only loop through the forEach() one time
+						          return true;
+						        });
+						      } else {
+						        console.log("The stegosaurus is the shortest dino");
+						      }
+						  });
+						});
+
+
+	   	2) Clients maintains a local version of any active data - helps when connectivity is lost - this feature would be great but not necessary?
+	   		1) All writes to database trigger local events immediately, app remains responsive regardless of network latency or internet connectivity - similar to meteor
+
+
+		2) Method of interest:
+			1) Validate method - makes sure posted data conforms to a certain schema - how does this work?
+				1) This is really fucking important. We need to figure out how this works otherwise the platform will be completely vulnerable to any authorized user fucking everything up or inserting shitty data, althought it kind of goes hand in hand with auth.
+			2) indexOn - specify indexes for data
+			3) Method for traversing the document
+				1) val (value of current reference)
+				2) child (get reference to specified relative path)
+				3) parent (get reference to parent location)
+				4) hasChild(return true if specified child exists)
+				5) hasChildren (check for the existence of children)
+				6) exists(return true if contains data)
+
+		3)
+		4)
+	5) REST API - This is an intersting one
+		1) Example: curl -X PUT -d '{ "alanisawesome": { "name": "Alan Turing", "birthday": "June 23, 1912" } }' 'https://docs-examples.firebaseio.com/rest/quickstart/users.json' - This allows users to write to the database using a PUT statement. RethinkDB has no feature like this, its actually one of the main distinction they advertise as the difference between them and firebase. We have an opportunity here to do something cool, basically we have a master "/api/*" route and we parse it to determine how to interact with the database.
+		2) https://www.firebase.com/docs/rest/api/ - REST API documentation
+		3) The REST API allows you to specify an auth parameter like this:
+		curl 'https://samplechat.firebaseio-demo.com/users/jack/name.json?auth=CREDENTIAL'
+			1) The CREDENTIAL parameter can be either your firebase secret (basicly like an API key) OR, and this is the important part, an authentication token.
+			2) Unlike firebase, we'll be able to specify more parameters to the REST api like orderby and how many results to return...very powerful!
+			3) Their rest API supports streaming..I'm not familiar with this technology or how it works, I suggest we dont bother with it. 
+	6) Documentation will be super important for this project, we need to ACTIVELY document and write tests as we code or the framework will be unusable by the time we're done and none of us will know how it works - possible way to ease this is to copy firebase specs exactly
+	7) Visual display of database that live updates in browser - I think RethinkDB has this, but will need to install it to be sure.
+
+Hood.ie - I think Hood.ie handles data access control by giving every user their own space and only allowing them to read/write to that area.
+	1) offline first - code keeps working with no internet connection
+	2) User accounts built in
+	3) Email service built in
+	4) "Sharing" - exchange read/write privileges between users
+
+Figure out logical ways to divide this up. Also do we want to use promises? we could get into callbackk hell here, but promises might be an additional layer of complexity not worth dealing with.
+
+
+curl -X PUT -d '{ "alanisawesome": { "name": "Alan Turing", "birthday": "June 23, 1912" } }' 'https://docs-examples.firebaseio.com/rest/quickstart/users.json'

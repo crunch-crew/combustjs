@@ -1,0 +1,22 @@
+We need to think about chaining, and how client-side chains will translate properly into Reql chains
+We also need to think about tables and how we want to handle that. As far as I can tell, firebase doesn't use tables.
+Q (promise library)?
+
+Push has some uniquive behavior:
+	var messageListRef = new Firebase('https://samplechat.firebaseio-demo.com/message_list');
+	var newMessageRef = messageListRef.push();
+	    newMessageRef.set({ 'user_id': 'fred', 'text': 'Yabba Dabba Doo!' });
+	// We've appended a new message to the message_list location.
+	var path = newMessageRef.toString();
+	// path will be something like
+	// 'https://samplechat.firebaseio-demo.com/message_list/-IKo28nwJLH0Nc5XeFmj'
+Generate a new child location using a unique name and returns a Firebase reference to it. This is useful when the children of a Firebase location represent a list of items. See Lists of Data.
+
+As far as I can tell, Firebases push method would be a direct mapping to insert in ReThinkDB -- need to read that article
+set maps to update
+
+How do we handle lists?
+
+You can optionally pass a value to push() and the value will be immediately written to the generated location. If you don't pass a value to push(), nothing is written and the child will remain empty unless written to using set().
+
+RethinkDB tables contain ROWS of documents
