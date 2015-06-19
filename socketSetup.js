@@ -9,6 +9,8 @@ exports.setup = function(server) {
 	//this is what actually attaches socket.io to the express server
 	io = sockets(server);
 	io.on('connection', function(socket) {
+		//notify client of successful connection
+		socket.emit('connectSuccess', "Socket connection established");
 		//if user request to subscribe to a table, put them in a room with that table name
 		socket.on('subscribeUrl', function(subscribeRequest) {
 			socket.join(subscribeRequest.url);
@@ -19,19 +21,13 @@ exports.setup = function(server) {
 		socket.on('push', function(pushRequest) {
 			var rows = parseToRows(pushRequest);
 			var rootRow = rows.length-1;
-			// console.log("pushRequest is:", pushRequest);
 			db.connect(function(conn) {
 				r.db('test').table('yolo').insert({placeholder:"placeHolder text"}).run(conn, function(err, result) {
-					// console.log("result of insert is:,", result);
 					var generatedKey = result.generated_keys[0];
-					//push request should specify a path
+					socket.emit("pushSuccess", {pushedId: generatedKey});
 					var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
 					var rootRow = rows.slice(rows.length-1)[0];
 					var childRows = rows.slice(0,rows.length-1);
-					console.log("generatedKey is:", generatedKey);
-					console.log("rows are:", rows)
-					console.log("rootRow is: ", rootRow);
-					console.log("childRows are:", childRows);
 					r.db('test').table('yolo').get(generatedKey).update(rootRow).run(conn);
 					r.table('yolo').insert(childRows).run(conn);
 				});
