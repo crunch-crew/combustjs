@@ -1,6 +1,7 @@
 var sockets = require('socket.io');
 var db = require('./db');
 var r = require('rethinkdb');
+var parseToRows = require('./parseToRows');
 
 var io;
 //express server object is passed to this function and it attaches websockets + all the event listeners and handlers
@@ -16,9 +17,24 @@ exports.setup = function(server) {
 
 		//{path: '/root/etc', data: json}
 		socket.on('push', function(pushRequest) {
-			console.log("pushRequest is:", pushRequest);
+			var rows = parseToRows(pushRequest);
+			var rootRow = rows.length-1;
+			// console.log("pushRequest is:", pushRequest);
 			db.connect(function(conn) {
-				r.db('test').table('yolo').insert(pushRequest).run(conn);
+				r.db('test').table('yolo').insert({placeholder:"placeHolder text"}).run(conn, function(err, result) {
+					// console.log("result of insert is:,", result);
+					var generatedKey = result.generated_keys[0];
+					//push request should specify a path
+					var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
+					var rootRow = rows.slice(rows.length-1)[0];
+					var childRows = rows.slice(0,rows.length-1);
+					console.log("generatedKey is:", generatedKey);
+					console.log("rows are:", rows)
+					console.log("rootRow is: ", rootRow);
+					console.log("childRows are:", childRows);
+					r.db('test').table('yolo').get(generatedKey).update(rootRow).run(conn);
+					r.table('yolo').insert(childRows).run(conn);
+				});
 			}, pushRequest);
 		});
 
