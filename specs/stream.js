@@ -1,6 +1,9 @@
 var io = require('socket.io-client')
 var r = require('rethinkdb');
 var db = require('../db');
+var parseToRows = require('../parseToRows');
+var expect = require('chai').expect;
+var should = require('should');
 
 var utils = {
 	dbName: 'test',
@@ -13,6 +16,43 @@ var serverAddress = 'http://0.0.0.0:3000';
 
 var socket = io.connect(serverAddress);
 
+describe("parseToRows", function() {
+	it('should parse nested objects into rows', function(done) {
+		var testObj = {
+			users: {
+				user1: {
+					name: "richie"
+				},
+				user2: {
+					name: "kuldeep"
+				},
+				user: {
+					name: "jack"
+				}
+			},
+			activated: true,
+			messedUp: false,
+			test: {
+				array: [{test:"hello"}, {test:'world'}],
+				name: "viable"
+			}
+		}
+
+		var rows = parseToRows(testObj,"/root/", 'testObj');
+		rows.should.eql([ 
+			{ path: '/root/testObj/users/', id: 'user1', name: 'richie' },
+		  { path: '/root/testObj/users/', id: 'user2', name: 'kuldeep' },
+		  { path: '/root/testObj/users/', id: 'user', name: 'jack' },
+		  { path: '/root/testObj/', id: 'users' },
+		  { path: '/root/testObj/test/array/', id: '0', test: 'hello' },
+		  { path: '/root/testObj/test/array/', id: '1', test: 'world' },
+		  { path: '/root/testObj/test/', id: 'array' },
+		  { path: '/root/testObj/', id: 'test', name: 'viable' },
+		  { path: '/root/', id: 'testObj', activated: true, messedUp: false } ]);
+		done();
+	})
+})
+
 describe('Sockets', function() {
 	it('should successfully establish a socket connection', function(done) {
 		socket.on('connect', function() {
@@ -20,8 +60,8 @@ describe('Sockets', function() {
 		})
 	});
 
-	it('should successfully subscribe to a table', function(done) {
-		socket.emit('subscribeTable', {tableName: utils.tableName});
+	it('should successfully subscribe to a url', function(done) {
+		socket.emit('subscribeUrl', {url: '/'});
 		socket.once('subscribeSuccess', function(response) {
 			done();
 		});

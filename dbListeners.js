@@ -21,4 +21,8 @@ var setup = function(db, io) {
 	})
 }
 
+var addListener = function(db, io, url) {
+	r.db('test').table('yolo').filter({})
+}
+
 exports.setup = setup;

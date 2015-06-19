@@ -9,9 +9,9 @@ exports.setup = function(server) {
 	io = sockets(server);
 	io.on('connection', function(socket) {
 		//if user request to subscribe to a table, put them in a room with that table name
-		socket.on('subscribeTable', function(subscribeRequest) {
-			socket.join(subscribeRequest.tableName);
-			socket.emit("subscribeSuccess", "successfully subscribed to changes in table: " + subscribeRequest.tableName);
+		socket.on('subscribeUrl', function(subscribeRequest) {
+			socket.join(subscribeRequest.url);
+			socket.emit("subscribeSuccess", "successfully subscribed to changes in url: " + subscribeRequest.url);
 		});
 
 		//{path: '/root/etc', data: json}
