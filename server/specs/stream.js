@@ -39,8 +39,6 @@ var utils = {
 	}
 }
 
-console.log("db is:", db);
-
 var serverAddress = 'http://0.0.0.0:3000';
 
 

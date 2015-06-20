@@ -22,23 +22,23 @@ exports.setup = function(server) {
 			// socket.join(getRequest.url);
 			var urlArray = getRequest.url.split('/');
 			urlArray = urlArray.slice(1,urlArray.length-1);
-			console.log("urlArray is: ", urlArray);
+			// console.log("urlArray is: ", urlArray);
 			if (urlArray.length === 1) {
 				rootString = '/';
 			}
 			else {
 				rootString = "/" + (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
 			}
-			console.log("root string is: ", rootString);
+			// console.log("root string is: ", rootString);
 			var rootRow;
 			var childrenRows;
 			db.connect(function(conn) {
 				r.db('test').table('test').filter({path: rootString, _id:urlArray[urlArray.length-1]}).run(conn, function(err, cursor) {
 					if (err) throw err;
 					cursor.toArray(function(err, result) {
-						console.log("first query results look like: ", result);
+						// console.log("first query results look like: ", result);
 						rootRow = result[0];
-						console.log("root row: ", result);
+						// console.log("root row: ", result);
 					});
 					r.db('test').table('test').filter(r.row('path').match(getRequest.url+"*")).run(conn, function(err, cursor) {
 						if (err) throw err;
@@ -64,15 +64,15 @@ exports.setup = function(server) {
 					var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
 					var rootRow = rows.slice(rows.length-1)[0];
 					var childRows = rows.slice(0,rows.length-1);
-					console.log("rootRow in push: ", rootRow);
-					console.log("childRows in push: ", childRows);
+					// console.log("rootRow in push: ", rootRow);
+					// console.log("childRows in push: ", childRows);
 					r.db('test').table('test').get(generatedKey).update(rootRow).run(conn);
 					r.table('test').insert(childRows).run(conn, function(err, results) {
-						console.log("children add results:", results);
+						// console.log("children add results:", results);
 						socket.emit('pushSuccess', {created: true, key: generatedKey});
 						//emit to clients listening for child add events at this url
 						io.to(pushRequest.path + "-" + "childadd").emit(pushRequest.path + "-" + "childaddSuccess", pushRequest.data);
-						console.log("emitted to room: ", pushRequest.path + "-" + "childadd");
+						// console.log("emitted to room: ", pushRequest.path + "-" + "childadd");
 					});
 				});
 			}, pushRequest);
@@ -80,11 +80,11 @@ exports.setup = function(server) {
 
 		//{path: '/root/etc', id:'_id' data: json}
 		socket.on('set', function(setRequest) {
-			console.log("setRequest is:", setRequest);
+			// console.log("setRequest is:", setRequest);
 			//preproessing here
 			db.connect(function(conn) {
-				console.log("setRequest.path: ", setRequest.path);
-				console.log("setRequset.id: ", setRequest._id);
+				// console.log("setRequest.path: ", setRequest.path);
+				// console.log("setRequset.id: ", setRequest._id);
 				r.db('test').table('test').filter({path: setRequest.path, _id: setRequest._id}).update(setRequest).run(conn);
 				r.db('test').table('test').filter(r.row('path').match(setRequest.path + setRequest._id + "/*")).delete().run(conn);
 			}, setRequest);
