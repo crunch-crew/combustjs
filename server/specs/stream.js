@@ -1,14 +1,14 @@
 var io = require('socket.io-client')
 var r = require('rethinkdb');
 var db = require('../db');
-var parseToRows = require('../parseToRows');
-var parseToObj = require('../parseToObj');
+var parseToRows = require('../utils/parseToRows');
+var parseToObj = require('../utils/parseToObj');
 var expect = require('chai').expect;
 var should = require('should');
 
 var utils = {
 	dbName: 'test',
-	tableName: 'yolo',
+	tableName: 'test',
 	testObj: {
 				users: {
 					user1: {
@@ -38,8 +38,6 @@ var utils = {
 			  { path: '/root/testObj/', _id: 'test', name: 'viable' }]
 	}
 }
-
-console.log("db is:", db);
 
 var serverAddress = 'http://127.0.0.1:3000';
 
