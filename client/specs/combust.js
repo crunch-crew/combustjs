@@ -1,6 +1,8 @@
 var io = require('socket.io-client')
 var expect = require('chai').expect;
 var should = require('should');
+var r = require('rethinkdb');
+var db = require('../../server/db');
 var Combust = require('../Combust');
 
 var serverAddress = 'http://0.0.0.0:3000';
@@ -39,8 +41,12 @@ var utils = {
 describe("Combust tests", function() {
 	var socket;
 	before(function(done) {
-		socket = io.connect(serverAddress);
-		done();
+		socket = io.connect(serverAddress, {'forceNew': true});
+		//db requires a root node to function
+		db.connect(function(conn) {
+			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+		});
+		// done();
 	})
 
 	beforeEach(function(done) {
@@ -50,7 +56,10 @@ describe("Combust tests", function() {
 
 	after(function(done) {
 		socket.disconnect();
-		done();
+		db.connect(function(conn) {
+			r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
+		});
+		// done();
 	})
 
 	describe('Non-networking', function() {
@@ -113,16 +122,33 @@ describe("Combust tests", function() {
 
 			it('should push an object into the database at the current path', function(done) {
 				var test = combustRef.push(utils.testObj, function() {
-					console.log("in callback, path is: ", test.pathArray);
 					done();
 				});
-				console.log("outside callback, path is ", test.pathArray);
 			});
 
-			// it('should return a combust reference to the new url', function() {
+			it('should return a new combust object that references the new url', function(done) {
+				var test = combustRef.push(utils.testObj, function(response) {
+					response.created.should.equal(true);
+					test.pathArray.should.eql(['/', response.key]);
+					test.should.not.equal(combustRef);
+					done();
+				});
+			});
+		});
 
-			// })
-		})
+		describe('.on()', function() {
+			it('should receive updates when children are added', function(done) {
+				var alreadyRan = false;
+				//this is a jenky test, but it works for now
+				setTimeout(function() {
+					combustRef.push({msg: "hi"});
+				},50);
+				combustRef.on('addchild', function(data) {
+					data.msg.should.equal("hi");
+					done();
+				});
+			});
+		});
 
 
 	})

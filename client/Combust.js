@@ -35,11 +35,39 @@ Combust.prototype.push = function(object, callback) {
 
 	this.socket.once('pushSuccess', function(data) {
 		newRef.child(data.key);
-		callback();
+		if (callback) {
+			callback(data);
+		}
 	});
 	this.socket.emit('push', {path: this.constructPath(), data: object});
+	// console.log("pushed to this path: ", this.constructPath());
 
 	return newRef;
+}
+
+Combust.prototype.on = function(eventType, callback) {
+	//set it here incase path changes before getSuccess is executed
+	var path = this.constructPath();
+	//this binding is lost in async calls so store it here
+	var socket = this.socket;
+	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
+	if (eventType === "addchild") {
+		socket.emit("subscribeUrlChildAdd", {url: path});
+		socket.on('subscribeUrlChildAddSuccess', function() {
+			//need a get children method
+			socket.emit('getUrl', {url: path});
+		})
+		socket.once("getSuccess", function(data) {
+			//Need a get children method
+			// for (var key in data) {
+			// 	callback(data[key]);
+			// }
+			socket.on(path + '-childaddSuccess', function(data) {
+				// console.log("successfully subscribed");
+				callback(data);
+			});
+		});
+	}
 }
 
 module.exports = Combust;
