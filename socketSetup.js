@@ -12,6 +12,7 @@ exports.setup = function(server) {
 	io.on('connection', function(socket) {
 		//notify client of successful connection
 		socket.emit('connectSuccess', "Socket connection established");
+		console.log("user connected");
 
 		socket.on('subscribeUrlChildAdd', function(childAddRequest) {
 			socket.join(childAddRequest.url + "-" + "childadd");
