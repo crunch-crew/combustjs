@@ -2,7 +2,7 @@ var parseToObj = function(root, children) {
 	//copy all properties except path and id
 	var extendData = function(obj1, obj2) {
 		for (var key in obj2) {
-			if(key !== "path" && key !== "id") {
+			if(key !== "path" && key !== "_id" && key !== "id") {
 				obj1[key] = obj2[key];
 			}
 		}
@@ -17,7 +17,7 @@ var parseToObj = function(root, children) {
 		childPath = childPath.replace(root.path, "");
 		var pathArray = childPath.split("/");
 		pathArray = pathArray.slice(1,pathArray.length-1);
-		pathArray.push(children[i].id);
+		pathArray.push(children[i]._id);
 
 		//create nested objects and copy in properties in appropriate locations
 		var currentPath = parsedObj;

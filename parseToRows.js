@@ -18,18 +18,18 @@ var obj = {
 	}
 }
 
-var parseToRows = function(obj, path, id) {
+var parseToRows = function(obj, path, _id) {
 	var path = path || null;
-	var id = id;
+	var _id = _id;
 	var rows = [];
 
-	var recurse = function(obj, path, id) {
+	var recurse = function(obj, path, _id) {
 		// var path = path || '/';
 		var nonObjs = {};
 		nonObjs.path = path;
-		nonObjs.id = id;
+		nonObjs._id = _id;
 
-		path = path + id + "/";
+		path = path + _id + "/";
 
 		for (var key in obj) {
 			if (typeof obj[key] === "object") {
@@ -46,7 +46,7 @@ var parseToRows = function(obj, path, id) {
 		rows.push(nonObjs);
 	}
 
-	recurse(obj,path, id);
+	recurse(obj,path, _id);
 	return rows;
 }
 
