@@ -33,14 +33,14 @@ exports.setup = function(server) {
 			var rootRow;
 			var childrenRows;
 			db.connect(function(conn) {
-				r.db('test').table('yolo').filter({path: rootString, _id:urlArray[urlArray.length-1]}).run(conn, function(err, cursor) {
+				r.db('test').table('test').filter({path: rootString, _id:urlArray[urlArray.length-1]}).run(conn, function(err, cursor) {
 					if (err) throw err;
 					cursor.toArray(function(err, result) {
 						console.log("first query results look like: ", result);
 						rootRow = result[0];
 						console.log("root row: ", result);
 					});
-					r.db('test').table('yolo').filter(r.row('path').match(getRequest.url+"*")).run(conn, function(err, cursor) {
+					r.db('test').table('test').filter(r.row('path').match(getRequest.url+"*")).run(conn, function(err, cursor) {
 						if (err) throw err;
 						cursor.toArray(function(err, result) {
 							childrenRows = result;
@@ -58,7 +58,7 @@ exports.setup = function(server) {
 			var rows = parseToRows(pushRequest);
 			var rootRow = rows.length-1;
 			db.connect(function(conn) {
-				r.db('test').table('yolo').insert({}).run(conn, function(err, result) {
+				r.db('test').table('test').insert({}).run(conn, function(err, result) {
 					var generatedKey = result.generated_keys[0];
 					// socket.emit("pushSuccess", {pushedId: generatedKey});
 					var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
@@ -66,8 +66,8 @@ exports.setup = function(server) {
 					var childRows = rows.slice(0,rows.length-1);
 					console.log("rootRow in push: ", rootRow);
 					console.log("childRows in push: ", childRows);
-					r.db('test').table('yolo').get(generatedKey).update(rootRow).run(conn);
-					r.table('yolo').insert(childRows).run(conn, function(err, results) {
+					r.db('test').table('test').get(generatedKey).update(rootRow).run(conn);
+					r.table('test').insert(childRows).run(conn, function(err, results) {
 						console.log("children add results:", results);
 						socket.emit('pushSuccess', {created: true, key: generatedKey});
 						//emit to clients listening for child add events at this url
@@ -85,8 +85,8 @@ exports.setup = function(server) {
 			db.connect(function(conn) {
 				console.log("setRequest.path: ", setRequest.path);
 				console.log("setRequset.id: ", setRequest._id);
-				r.db('test').table('yolo').filter({path: setRequest.path, _id: setRequest._id}).update(setRequest).run(conn);
-				r.db('test').table('yolo').filter(r.row('path').match(setRequest.path + setRequest._id + "/*")).delete().run(conn);
+				r.db('test').table('test').filter({path: setRequest.path, _id: setRequest._id}).update(setRequest).run(conn);
+				r.db('test').table('test').filter(r.row('path').match(setRequest.path + setRequest._id + "/*")).delete().run(conn);
 			}, setRequest);
 		})
 	});

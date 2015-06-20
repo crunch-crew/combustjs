@@ -8,7 +8,7 @@ var should = require('should');
 
 var utils = {
 	dbName: 'test',
-	tableName: 'yolo',
+	tableName: 'test',
 	testObj: {
 				users: {
 					user1: {
