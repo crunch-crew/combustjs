@@ -155,6 +155,11 @@ describe("server tests", function() {
 		// 		r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
 		// 	});
 		// });
+		after(function(done) {
+			db.connect(function(conn) {
+				r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
+			});
+		})
 		//delete inserted item
 		// after(function(done) {
 
