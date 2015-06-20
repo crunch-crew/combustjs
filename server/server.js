@@ -4,7 +4,7 @@ var db = require('./db');
 var dbListeners = require('./dbListeners');
 var sockets = require('socket.io');
 
-var socketSetup = require('./socketSetup')
+var socketSetup = require('./socketSetup');
 
 //if deployed to heroku will use heroku port, otherwise on local machine will use port 3000
 var port = process.env.port || 3000;
@@ -12,7 +12,8 @@ var server = app.listen(port);
 //layers socket.io ontop of the express server
 var io = socketSetup.setup(server);
 db.connect(dbListeners.setup, io);
-console.log("Express server listening on %d in %s mode", port, app.settings.env)
+console.log("Express server listening on %d in %s mode", port, app.settings.env);
+
 
 exports.app = app;
 exports.io =  io;
