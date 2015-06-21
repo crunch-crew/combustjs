@@ -84,7 +84,7 @@ exports.setup = function(server) {
 						socket.emit('pushSuccess', {created: true, key: generatedKey});
 						//emit to clients listening for child add events at this url
 						io.to(original.path + "-" + "childadd").emit(original.path + "-" + "childaddSuccess", original.data);
-						io.to(pushRequest.path + "-" + "childadd").emit(pushRequest.path + "-childaddSuccess", pushRequest.data);
+						// io.to(pushRequest.path + "-" + "childadd").emit(pushRequest.path + "-childaddSuccess", pushRequest.data);
 						console.log("emitted toL ",path + "-" + "childadd");
 						console.log("emittede event: ", pushRequest.path + "-childaddSuccess");
 						console.log("forwarded child to subscribers: ", pushRequest.data);

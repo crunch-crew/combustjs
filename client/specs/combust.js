@@ -144,6 +144,7 @@ describe("Combust tests", function() {
 					combustRef.push({msg: "hi"});
 				},50);
 				combustRef.on('addchild', function(data) {
+					// console.log("data is", data);
 					data.msg.should.equal("hi");
 					done();
 				});
