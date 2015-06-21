@@ -71,8 +71,12 @@ describe("server tests", function() {
 	var socket;
 	before(function(done) {
 		socket = io.connect(serverAddress);
-		done();
+		// done();
+		db.connect(function(conn) {
+			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+		});// done();
 	});
+	// })
 
 	after(function(done) {
 		socket.disconnect();
@@ -126,27 +130,6 @@ describe("server tests", function() {
 			done();
 		});
 	});
-	//passes sometimes
-	describe('Sockets', function() {
-		var socket;
-		before(function(done) {
-			socket = io.connect(serverAddress);
-			done();
-		});
-		after(function(done) {
-			db.connect(function(conn) {
-				r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
-			});
-		});
-
-		//fails sometimes
-		it('should successfully establish a socket connection', function(done) {
-			socket.on('connectSuccess', function() {
-				done();
-			})
-			socket = io.connect(serverAddress, {'forceNew': true});
-		});
-	});
 
 	describe('Stream', function() {
 
@@ -155,12 +138,16 @@ describe("server tests", function() {
 		// 		r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
 		// 	});
 		// });
+		after(function(done) {
+			db.connect(function(conn) {
+				r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
+			});
+		})
 		//delete inserted item
 		// after(function(done) {
 
 		// });
 
-		console.log(socket);
 		it('should push into the database', function(done) {
 
 			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
@@ -176,6 +163,7 @@ describe("server tests", function() {
 			});
 			socket.emit('push', {path:'/', data: utils.dummyObj});
 			socket.once("pushSuccess", function(data) {
+				// console.log("attempting to get: ", '/' + data.key + '/')
 				socket.emit('getUrl', {url: '/' + data.key + '/'});
 			});
 		});
@@ -184,7 +172,7 @@ describe("server tests", function() {
 			// socket.emit('getUrl', {url: '/root/messages/'});
 			socket.once('/messages/-childaddSuccess', function(data) {
 				// console.log("received new child from server: ", data);
-				console.log(data.users.user.something);
+				// console.log(data.users.user.something);
 				data.should.eql(utils.testObj);
 				done();
 			});
