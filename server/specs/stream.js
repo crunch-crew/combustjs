@@ -71,12 +71,10 @@ describe("server tests", function() {
 	var socket;
 	before(function(done) {
 		socket = io.connect(serverAddress);
-		// done();
 		db.connect(function(conn) {
 			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
-		});// done();
+		});
 	});
-	// })
 
 	after(function(done) {
 		socket.disconnect();
@@ -122,10 +120,7 @@ describe("server tests", function() {
 
 	describe("parseToObj", function() {
 		it('should parse database rows into objects', function(done) {
-			// console.log(utils.testRows.testRoot, utils.testRows.testChildren);
 			var obj = parseToObj(utils.testRows.testRoot, utils.testRows.testChildren);
-			// console.log(obj);
-			// console.log(utils.testObj);
 			obj.should.eql(utils.testObj);
 			done();
 		});
@@ -133,20 +128,11 @@ describe("server tests", function() {
 
 	describe('Stream', function() {
 
-		// after(function(done) {
-		// 	db.connect(function(conn) {
-		// 		r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
-		// 	});
-		// });
 		after(function(done) {
 			db.connect(function(conn) {
 				r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
 			});
 		})
-		//delete inserted item
-		// after(function(done) {
-
-		// });
 
 		it('should push into the database', function(done) {
 
@@ -163,33 +149,20 @@ describe("server tests", function() {
 			});
 			socket.emit('push', {path:'/', data: utils.dummyObj});
 			socket.once("pushSuccess", function(data) {
-				// console.log("attempting to get: ", '/' + data.key + '/')
 				socket.emit('getUrl', {url: '/' + data.key + '/'});
 			});
 		});
+
 		//check if received object is same as submitted message - implement
 		it('should receive updates when a child is added to a url', function(done) {
-			// socket.emit('getUrl', {url: '/root/messages/'});
 			socket.once('/messages/-childaddSuccess', function(data) {
-				// console.log("received new child from server: ", data);
-				// console.log(data.users.user.something);
 				data.should.eql(utils.testObj);
 				done();
 			});
-			// console.log("requesting add child listener on /messages/");
 			socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
 			socket.on('subscribeUrlChildAddSuccess', function(response) {
-				// console.log("successfully subscribed to child add events on /messages/");
-				// console.log("add a child to /messages/");
 				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-				// console.log("pushing this child to /messages/", message);
 			})
-			// db.connect(function(conn) {
-			// 	r.db(utils.dbName).table(utils.tableName).insert().run(conn);
-			// });
-			// socket.once('tableChange', function(change) {
-			// 	done();
-			// });
 		});
 
 
@@ -200,13 +173,8 @@ describe("server tests", function() {
 			});
 			socket.once('tableChange', function(change) {
 				done();
-				// console.log("received change: ", change);
 			});
 			socket.emit('set', {path:'/root/', _id:'users', testProperty: true});
-			// socket.once('tableChange', function(change) {
-			// 	console.log("received the following update from the server:", change);
-			// 	done();
-			// });
 		});
 	});
 });

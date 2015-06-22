@@ -32,7 +32,6 @@ var utils = {
 		activated: true,
 		messedUp: false,
 		test: {
-			// array: [{test:"hello"}, {test:'world'}],
 			name: "viable"
 		}
 	}
@@ -46,7 +45,6 @@ describe("Combust tests", function() {
 		db.connect(function(conn) {
 			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
 		});
-		// done();
 	})
 
 	beforeEach(function(done) {
@@ -59,7 +57,6 @@ describe("Combust tests", function() {
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
 		});
-		// done();
 	})
 
 	describe('Non-networking', function() {
@@ -143,8 +140,7 @@ describe("Combust tests", function() {
 				setTimeout(function() {
 					combustRef.push({msg: "hi"});
 				},50);
-				combustRef.on('addchild', function(data) {
-					// console.log("data is", data);
+				combustRef.on('child_add', function(data) {
 					data.msg.should.equal("hi");
 					done();
 				});
