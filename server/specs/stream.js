@@ -167,7 +167,7 @@ describe("server tests", function() {
 		});
 
 		it('should set to paths in the database', function(done) {
-			socket.once('setSuccess', function() {
+			socket.once('/users/-setSuccess', function() {
 				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 					done();
@@ -178,7 +178,7 @@ describe("server tests", function() {
 		});
 
 		it('should delete children of the path that is being set and set path to passed data', function(done) {
-			socket.once('setSuccess', function() {
+			socket.once('/users/-setSuccess', function() {
 				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: false});
 					done();

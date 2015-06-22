@@ -1,4 +1,4 @@
-var io = require('socket.io-client')
+var io = require('socket.io-client');
 var expect = require('chai').expect;
 var should = require('should');
 var r = require('rethinkdb');
@@ -131,6 +131,20 @@ describe("Combust tests", function() {
 					done();
 				});
 			});
+		});
+
+		describe('set()', function() {
+			beforeEach(function(done) {
+				combustRef = utils.newCombust(socket);
+				done();
+			});
+
+			it('should set an object into database at the current path', function(done) {
+				var test = combustRef.set(utils.testObj, function() {
+					done();
+				});
+			});
+			
 		});
 
 		describe('.on()', function() {

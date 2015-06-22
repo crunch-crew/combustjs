@@ -101,7 +101,6 @@ Combust.prototype.set = function(object, callback) {
 		}
 	});
 	this.socket.emit('set', {path: this.constructPath(), data: object});
-
 };
 
 /**
