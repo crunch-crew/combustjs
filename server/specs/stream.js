@@ -162,19 +162,29 @@ describe("server tests", function() {
 			socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
 			socket.on('subscribeUrlChildAddSuccess', function(response) {
 				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			})
+			});
 		});
 
+		it('should set to paths in the database', function(done) {
+			socket.once('setSuccess', function() {
+				socket.once('getSuccess', function(data) {
+					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
+					done();
+				});
+				socket.emit('getUrl', {url: '/users/'});
+			});
+			socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+		});
 
-		//fix done part of test - test is not complete
-		xit('should set to paths in the database', function(done) {
-			db.connect(function(conn) {
-				r.db(utils.dbName).table(utils.tableName).insert({path:"/root/", _id:"users"}).run(conn);
+		it('should delete children of the path that is being set and set path to passed data', function(done) {
+			socket.once('setSuccess', function() {
+				socket.once('getSuccess', function(data) {
+					data.should.eql({testProperty: false});
+					done();
+				});
+				socket.emit('getUrl', {url: '/users/'});
 			});
-			socket.once('tableChange', function(change) {
-				done();
-			});
-			socket.emit('set', {path:'/root/', _id:'users', testProperty: true});
+			socket.emit('set', {path:'/users/', data: {testProperty: false}});
 		});
 	});
 });
