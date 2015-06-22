@@ -11,7 +11,7 @@ var Combust = function(options) {
 	this.tableName = options.tableName || 'test';
 	this.socket = options.socket;
 	this.pathArray = ['/'];
-}
+};
 
 /* this method doesn't have documentation because its an internal method that the user should not use.
 	 Converts the pathArray variable into a string that can be used by other methods to interact with the server
@@ -28,7 +28,7 @@ Combust.prototype.constructPath = function() {
 		path = this.pathArray;
 	}
 	return "/" + path.join('/') + '/';
-}
+};
 
 /**
 * Change the path of the Combust object to point to one of the children of the current path.
@@ -44,7 +44,7 @@ Combust.prototype.constructPath = function() {
 Combust.prototype.child = function(childName) {
 	this.pathArray.push(childName);
 	return this;
-}
+};
 
 /**
 * Pushes an object as a new child at the current path.
@@ -75,7 +75,34 @@ Combust.prototype.push = function(object, callback) {
 	this.socket.emit('push', {path: this.constructPath(), data: object});
 
 	return newRef;
-}
+};
+
+/**
+* Sets an object at the current path.
+*
+*@method set
+*
+*@param object {Object} object The object to set at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been set at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object to be set at path. Does not return anything. */
+Combust.prototype.set = function(object, callback) {
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+
+	this.socket.once(this.constructPath() + '-setSuccess', function(data) {
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit('set', {path: this.constructPath(), data: object});
+
+};
 
 /**
 * Creates an event listener for a specified event at the current path.
@@ -108,6 +135,6 @@ Combust.prototype.on = function(eventType, callback) {
 			});
 		});
 	}
-}
+};
 
 module.exports = Combust;
