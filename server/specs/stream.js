@@ -164,8 +164,6 @@ describe("server tests", function() {
 				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 			})
 		});
-
-
 		//fix done part of test - test is not complete
 		xit('should set to paths in the database', function(done) {
 			db.connect(function(conn) {
@@ -174,7 +172,12 @@ describe("server tests", function() {
 			socket.once('tableChange', function(change) {
 				done();
 			});
-			socket.emit('set', {path:'/root/', _id:'users', testProperty: true});
+			
+			socket.emit('set', {path:'/root/', _id:'users', data: {testProperty: true}});
+			// socket.once('tableChange', function(change) {
+			// 	console.log("received the following update from the server:", change);
+			// 	done();
+			// });
 		});
 	});
 });
