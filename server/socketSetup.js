@@ -155,13 +155,6 @@ exports.setup = function(server) {
 		socket.on('push', function(pushRequest) {
 			//makes a copy of the original object - there is probably a better way to do this
 			var original = JSON.parse(JSON.stringify(pushRequest));
-<<<<<<< HEAD
-			var path = pushRequest.path;
-			var rows = parseToRows(pushRequest);
-			//the way the parseToRows function works, last item in array is always the root node/row
-			var rootRow = rows.length-1;
-=======
->>>>>>> [Feature] Set functionality, not quite done yet.
 
 			db.connect(function(conn) {
 				//insert an empty document into the database so that we can get the key back from the database to use later
@@ -180,37 +173,20 @@ exports.setup = function(server) {
 						socket.emit('pushSuccess', {created: true, key: generatedKey});
 						//emit to clients listening for child add events at this url
 						io.to(original.path + "-" + "childadd").emit(original.path + "-" + "childaddSuccess", original.data);
-<<<<<<< HEAD
-=======
-						// io.to(pushRequest.path + "-" + "childadd").emit(pushRequest.path + "-childaddSuccess", pushRequest.data);
-						// console.log("emitted toL ",path + "-" + "childadd");
-						// console.log("emittede event: ", pushRequest.path + "-childaddSuccess");
-						// console.log("forwarded child to subscribers: ", pushRequest.data);
-						// console.log("emitted to room: ", pushRequest.path + "-" + "childadd");
->>>>>>> [Feature] Set functionality, not quite done yet.
 					});
 				});
 			});
 		});
 
-<<<<<<< HEAD
-		//this function isn't implemented properly yet
-		socket.on('set', function(setRequest) {
-			//preproessing here
-			db.connect(function(conn) {
-				r.db(config.dbName).table(config.tableName).filter({path: setRequest.path, _id: setRequest._id}).update(setRequest).run(conn);
-				r.db(config.dbName).table(config.tableName).filter(r.row('path').match(setRequest.path + setRequest._id + "/*")).delete().run(conn);
-=======
 		// {path: '/root/etc', id:'_id' data: json}
 		socket.on('set', function(setRequest) {
 			// preprocessing here
 			db.connect(function(conn) {
-				var rows = parseToRows(setRequest.data, setRequest.path, setRequest._id)
-				// r.db('test').table('test').filter({path: setRequest.path, _id: setRequest._id}).update(setRequest).run(conn);
+				var rows = parseToRows(setRequest.data, setRequest.path, setRequest._id);
+				r.db('test').table('test').filter({path: setRequest.path, _id: setRequest._id}).delete().run(conn);
 				r.db('test').table('test').filter(r.row('path').match(setRequest.path + setRequest._id + "/*")).delete().run(conn);
->>>>>>> [Feature] Set functionality, not quite done yet.
 			}, setRequest);
-		})
+		});
 	});
 	return io;
-}
+};
