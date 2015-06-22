@@ -66,7 +66,7 @@ Combust.prototype.push = function(object, callback) {
 		socket: this.socket
 	});
 
-	this.socket.once('pushSuccess', function(data) {
+	this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
 		newRef.child(data.key);
 		if (callback) {
 			callback(data);
@@ -93,11 +93,11 @@ Combust.prototype.on = function(eventType, callback) {
 	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
 	if (eventType === "child_add") {
 		socket.emit("subscribeUrlChildAdd", {url: path});
-		socket.on('subscribeUrlChildAddSuccess', function() {
+		socket.once(path + '-subscribeUrlChildAddSuccess', function() {
 			//need a get children method - not desired functionality as written
 			socket.emit('getUrl', {url: path});
 		});
-		socket.once("getSuccess", function(data) {
+		socket.once(path + "-getSuccess", function(data) {
 			//once get children method is written, call callback on all children.
 			/*once all current children have been received, as listener for new ones - this might cause an issue if a child is added inbetween
 			recieving the latest children and adding the listener.
