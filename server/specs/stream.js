@@ -26,7 +26,6 @@ var utils = {
 				activated: true,
 				messedUp: false,
 				test: {
-					// array: [{test:"hello"}, {test:'world'}],
 					name: "viable"
 				}
 			},
@@ -46,21 +45,20 @@ var utils = {
 				activated: true,
 				messedUp: false,
 				test: {
-					// array: [{test:"hello"}, {test:'world'}],
 					name: "viable"
 				}
 			},
 	testRows: {
 		testRoot: { path: '/root/', _id: 'testObj', activated: true, messedUp: false },
 		testChildren: [ 
-				{ path: '/root/testObj/users/', _id: 'user1', name: 'richie' },
+			{ path: '/root/testObj/users/', _id: 'user1', name: 'richie' },
   			{ path: '/root/testObj/users/', _id: 'user2', name: 'kuldeep' },
   			{ path: '/root/testObj/users/user/something/', _id: '1', something: 'hi', _partArray: true },
   			{ '0': 'hi', path: '/root/testObj/users/user/', _id: 'something', _isArray: true, _length: 2 },
   			{ path: '/root/testObj/users/', _id: 'user', name: 'jack' },
   			{ path: '/root/testObj/', _id: 'users' },
   			{ path: '/root/testObj/', _id: 'test', name: 'viable' }
-  			]
+		]
 	}
 };
 
@@ -71,14 +69,17 @@ describe("server tests", function() {
 	var socket;
 	before(function(done) {
 		socket = io.connect(serverAddress);
-		db.connect(function(conn) {
-			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
-		});
+		done();
 	});
 
 	after(function(done) {
 		socket.disconnect();
-		done();
+		//at the end of tests, wipe the entire table and then re-insert the root node
+		db.connect(function(conn) {
+			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, results) {
+				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn, done);
+			});
+		});
 	});
 
 	describe("parseToRows", function() {
@@ -98,7 +99,6 @@ describe("server tests", function() {
 			activated: true,
 			messedUp: false,
 			test: {
-				// array: [{test:"hello"}, {test:'world'}],
 				name: "viable"
 			}
 		};
@@ -127,15 +127,7 @@ describe("server tests", function() {
 	});
 
 	describe('Stream', function() {
-
-		after(function(done) {
-			db.connect(function(conn) {
-				r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
-			});
-		})
-
 		it('should push into the database', function(done) {
-
 			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 			socket.once("/messages/-pushSuccess", function(data) {
 				done();
