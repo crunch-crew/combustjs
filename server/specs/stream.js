@@ -137,19 +137,20 @@ describe("server tests", function() {
 		it('should push into the database', function(done) {
 
 			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			socket.once("pushSuccess", function(data) {
+			socket.once("/messages/-pushSuccess", function(data) {
 				done();
 			});
 		});
 
 		it('should successfully get a url', function(done) {
-			socket.once('getSuccess', function(data) {
-					data.should.eql(utils.testObj);
-					done();
-			});
 			socket.emit('push', {path:'/', data: utils.dummyObj});
-			socket.once("pushSuccess", function(data) {
-				socket.emit('getUrl', {url: '/' + data.key + '/'});
+			socket.once("/-pushSuccess", function(data) {
+				var path = '/' + data.key + '/';
+				socket.emit('getUrl', {url: path});
+				socket.once(path + '-getSuccess', function(data) {
+						data.should.eql(utils.testObj);
+						done();
+				});
 			});
 		});
 
@@ -160,14 +161,14 @@ describe("server tests", function() {
 				done();
 			});
 			socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
-			socket.on('subscribeUrlChildAddSuccess', function(response) {
+			socket.on('/messages/-subscribeUrlChildAddSuccess', function(response) {
 				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 			});
 		});
 
 		it('should set to paths in the database', function(done) {
 			socket.once('setSuccess', function() {
-				socket.once('getSuccess', function(data) {
+				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 					done();
 				});
@@ -178,7 +179,7 @@ describe("server tests", function() {
 
 		it('should delete children of the path that is being set and set path to passed data', function(done) {
 			socket.once('setSuccess', function() {
-				socket.once('getSuccess', function(data) {
+				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: false});
 					done();
 				});

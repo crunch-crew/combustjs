@@ -21,12 +21,12 @@ exports.setup = function(server) {
 		*
 		*@apiParam {Object} ValueRequest An object that contains url as a property
 		*@apiParam {String} ValueRequest.url A string that specifies which url to listen for changed value on
-		*@apiSuccess (subscribeUrlValueSuccess) {Object} successObject object that indicates the url subscription was made
-		*@apiSuccess (subscribeUrlValueSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
+		*@apiSuccess ([path]-subscribeUrlValueSuccess) {Object} successObject object that indicates the url subscription was made
+		*@apiSuccess ([path]-subscribeUrlValueSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 		*/
 		socket.on('subscribeUrlValue', function(valueRequest) {
 			socket.join(valueRequest.url + "-" + "value");
-			socket.emit("subscribeUrlValueSuccess", {success: true});
+			socket.emit(valueRequest.url + "-subscribeUrlValueSuccess", {success: true});
 		});
 
 		/**
@@ -36,12 +36,12 @@ exports.setup = function(server) {
 		*
 		*@apiParam {Object} childAddRequest An object that contains url as a property
 		*@apiParam {String} childAddRequest.url A string that specifies which url to listen for added children on
-		*@apiSuccess (subscribeUrlChildAddSuccess) {Object} successObject object that indicates the url subscription was made
-		*@apiSuccess (subscribeUrlChildAddSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
+		*@apiSuccess ([path]-subscribeUrlChildAddSuccess) {Object} successObject object that indicates the url subscription was made
+		*@apiSuccess ([path]-subscribeUrlChildAddSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 		*/
 		socket.on('subscribeUrlChildAdd', function(childAddRequest) {
 			socket.join(childAddRequest.url + "-" + "childadd");
-			socket.emit("subscribeUrlChildAddSuccess", {success: true});
+			socket.emit(childAddRequest.url + "-subscribeUrlChildAddSuccess", {success: true});
 		});
 
 		/**
@@ -51,12 +51,12 @@ exports.setup = function(server) {
 		*
 		*@apiParam {Object} ChildRemoveRequest An object that contains url as a property
 		*@apiParam {String} ChildRemoveRequest.url A string that specifies which url to listen for removed children on
-		*@apiSuccess (subscribeUrlChildRemoveSuccess) {Object} successObject object that indicates the url subscription was made
-		*@apiSuccess (subscribeUrlChildRemoveSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
+		*@apiSuccess ([path]-subscribeUrlChildRemoveSuccess) {Object} successObject object that indicates the url subscription was made
+		*@apiSuccess ([path]-subscribeUrlChildRemoveSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 		*/
 		socket.on('subscribeUrlChildRemove', function(childRemoveRequest) {
 			socket.join(childRemoveRequest.url + "-" + "childremove");
-			socket.emit("subscribeUrlChildRemoveSuccess", {success: true});
+			socket.emit(childRemoveRequest.url + "-subscribeUrlChildRemoveSuccess", {success: true});
 		});
 
 		/**
@@ -66,12 +66,12 @@ exports.setup = function(server) {
 		*
 		*@apiParam {Object} ChildChangeRequest An object that contains url as a property
 		*@apiParam {String} ChildChangeRequest.url A string that specifies which url to listen for changed children on
-		*@apiSuccess (subscribeUrlChildChangeSuccess) {Object} successObject object that indicates the url subscription was made
-		*@apiSuccess (subscribeUrlChildChangeSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
+		*@apiSuccess ([path]-subscribeUrlChildChangeSuccess) {Object} successObject object that indicates the url subscription was made
+		*@apiSuccess ([path]-subscribeUrlChildChangeSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 		*/
 		socket.on('subscribeUrlChildChange', function(childChangeRequest) {
 			socket.join(childChangeRequest.url + "-" + "childchange");
-			socket.emit("subscribeUrlChildChangeSuccess", {success: true});
+			socket.emit(childChangeRequest.url + "-subscribeUrlChildChangeSuccess", {success: true});
 		});
 
 
@@ -115,7 +115,7 @@ exports.setup = function(server) {
 						cursor.toArray(function(err, result) {
 							childrenRows = result;
 							//convert rows into an object
-							socket.emit("getSuccess", parseToObj(rootRow, childrenRows));
+							socket.emit(getRequest.url + "-getSuccess", parseToObj(rootRow, childrenRows));
 						});
 					});
 				});
@@ -149,7 +149,9 @@ exports.setup = function(server) {
 		*@apiParam {Object} pushRequest.data A javascript object to add as a child at the specified path
 		*
 		*@apiSuccess (childAddSuccess) {Object} childAddSuccessObject The javascript object that was added as a child to the specified url
-		*
+		*@apiSuccess (pushSuccess) {Object} pushSuccessObject Javascript object that contains the generated key
+		*@apiSuccess (pushSuccess) {String} pushSuccessObject.key The key generated by the database for the newly pushed item
+		*@apiSuccess (pushSuccess) {Boolean} pushSuccessObject.created Boolean value indicating where the push was successful
 		*/
 		// create a copy of original request if you are RETURNING the original data, parseToRows WILL mutate the original data.
 		socket.on('push', function(pushRequest) {
@@ -170,7 +172,7 @@ exports.setup = function(server) {
 					//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
 					r.table(config.tableName).insert(childRows).run(conn, function(err, results) {
 						//return the key of the root node back to the user so the can use it for subsequent requests
-						socket.emit('pushSuccess', {created: true, key: generatedKey});
+						socket.emit(original.path + '-pushSuccess', {created: true, key: generatedKey});
 						//emit to clients listening for child add events at this url
 						io.to(original.path + "-" + "childadd").emit(original.path + "-" + "childaddSuccess", original.data);
 					});
