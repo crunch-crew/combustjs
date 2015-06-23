@@ -1,27 +1,8 @@
-var obj = {
-	users: {
-		user1: {
-			name: "richie"
-		},
-		user2: {
-			name: "kuldeep"
-		},
-		user: {
-			name: "jack"
-		}
-	},
-	activated: true,
-	messedUp: false,
-	test: {
-		array: [{test:"hello"}, {test:'world'}],
-		name: "viable"
-	}
-};
 
 var parseToRows = function(obj, path, _id) {
-	var path = path || null;
-	var _id = _id;
 	var rows = [];
+	path = path || null;
+	_id = _id;
 
 	var recurse = function(obj, path, _id, _isArray) {
 		// var path = path || '/';
