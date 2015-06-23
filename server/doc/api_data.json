@@ -22,7 +22,7 @@
     "type": "",
     "url": "",
     "version": "0.0.0",
-    "filename": "./doc/main.js",
+    "filename": "server/doc/main.js",
     "group": "_home_richie_Documents_makersquare_thesis_server_doc_main_js",
     "groupTitle": "_home_richie_Documents_makersquare_thesis_server_doc_main_js",
     "name": ""
@@ -74,7 +74,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/getUrlChildren.js",
     "groupTitle": "getUrlChildren"
   },
   {
@@ -117,7 +117,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/getUrl.js",
     "groupTitle": "getUrl"
   },
   {
@@ -190,7 +190,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/push.js",
     "groupTitle": "push"
   },
   {
@@ -234,7 +234,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/set.js",
     "groupTitle": "set"
   },
   {
@@ -284,7 +284,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/subscribeUrl.js",
     "groupTitle": "subscribeUrlChildAdd"
   },
   {
@@ -334,7 +334,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/subscribeUrl.js",
     "groupTitle": "subscribeUrlChildChange"
   },
   {
@@ -384,7 +384,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/subscribeUrl.js",
     "groupTitle": "subscribeUrlChildRemove"
   },
   {
@@ -434,7 +434,7 @@
       }
     },
     "version": "0.0.0",
-    "filename": "./socketSetup.js",
+    "filename": "server/socketHandlers/subscribeUrl.js",
     "groupTitle": "subscribeUrlValue"
   }
 ]

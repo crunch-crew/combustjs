@@ -66,6 +66,11 @@ var utils = {
 		password: "testPassword",
 		email: "testEmail"
 	},
+	authUser: {
+		username: "authUser",
+		password: "authPassword",
+		email: "authEmail"
+	},
 	createAgent: function(server) {
 		var server = server || serverAddress;
 		return supertest.agent(server);
@@ -76,14 +81,13 @@ var serverAddress = 'http://127.0.0.1:3000';
 
 
 describe("server tests", function() {
-	var socket;
 	before(function(done) {
-		socket = io.connect(serverAddress);
+		// socket = io.connect(serverAddress);
 		done();
 	});
 
 	after(function(done) {
-		socket.disconnect();
+		// socket.disconnect();
 		//at the end of tests, wipe the entire table and then re-insert the root node
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, results) {
@@ -207,69 +211,110 @@ describe("server tests", function() {
 	});
 
 	describe('Stream', function() {
-		it('should push into the database', function(done) {
-			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			socket.once("/messages/-pushSuccess", function(data) {
-				done();
-			});
+		var socket;
+		var agent;
+		//json web token return from server will be stored here
+		var token;
+
+		after(function(done) {
+			socket.disconnect();
+			done();
 		});
 
-		it('should successfully get a url', function(done) {
-			socket.emit('push', {path:'/', data: utils.dummyObj});
-			socket.once("/-pushSuccess", function(data) {
-				var path = '/' + data.key + '/';
-				socket.emit('getUrl', {url: path});
-				socket.once(path + '-getSuccess', function(data) {
-						data.should.eql(utils.testObj);
-						done();
-				});
-			});
-		});
-
-		//check if received object is same as submitted message - implement
-		it('should receive updates when a child is added to a url', function(done) {
-			socket.once('/messages/-childaddSuccess', function(data) {
-				data.should.eql(utils.testObj);
-				done();
-			});
-			socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
-			socket.on('/messages/-subscribeUrlChildAddSuccess', function(response) {
-				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			});
-		});
-
-		it('should set to paths in the database', function(done) {
-			socket.once('/messages/-setSuccess', function() {
-				socket.once('/messages/-getSuccess', function(data) {
-					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
-					done();
-				});
-				socket.emit('getUrl', {url: '/messages/'});
-			});
-			socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
-		});
-
-
-		it('should delete children of the path that is being set and set path to passed data', function(done) {
-			socket.once('/messages/-setSuccess', function() {
-				socket.once('/messages/-getSuccess', function(data) {
-					data.should.eql({testProperty: false});
-					done();
-				});
-				socket.emit('getUrl', {url: '/messages/'});
-			});
-			socket.emit('set', {path:'/messages/', data: {testProperty: false}});
-		});
-	});
-	
-	describe('Listeners', function() {
-		it('should emit to listeners to parents of the path has changed', function(done) {
-			socket.once('/-value', function(data) {
-				if(data) {
-					done();
+		//create a user and obtain a webtoken
+		before(function(done) {
+			agent = utils.createAgent();
+			agent.post('/signup').send(utils.authUser).expect(201).end(function(err, response) {
+				if (err) throw err;
+				else {
+					agent.post('/authenticate').send(utils.authUser).expect(200).end(function(err, response) {
+						//store the web token
+						token = response.body.token;
+						if (err) throw err;
+						else {
+							//authenticate the client with the webtoken - used for remaining tests
+							socket = io.connect(serverAddress, {
+								//send the web token with the initial websocket handshake
+								query: 'token=' + token
+							});
+							done();
+						}
+					});
 				}
-			})
-			socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
-		});	
+			});
+		})
+
+		describe('authentication', function() {
+			it("should authenticate websocket connections with a valid token", function(done) {
+				done();
+			});
+		});
+
+		describe('api', function() {
+
+			it('should push into the database', function(done) {
+				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
+				socket.once("/messages/-pushSuccess", function(data) {
+					done();
+				});
+			});
+
+			it('should successfully get a url', function(done) {
+				socket.emit('push', {path:'/', data: utils.dummyObj});
+				socket.once("/-pushSuccess", function(data) {
+					var path = '/' + data.key + '/';
+					socket.emit('getUrl', {url: path});
+					socket.once(path + '-getSuccess', function(data) {
+							data.should.eql(utils.testObj);
+							done();
+					});
+				});
+			});
+
+			//check if received object is same as submitted message - implement
+			it('should receive updates when a child is added to a url', function(done) {
+				socket.once('/messages/-childaddSuccess', function(data) {
+					data.should.eql(utils.testObj);
+					done();
+				});
+				socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
+				socket.on('/messages/-subscribeUrlChildAddSuccess', function(response) {
+					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
+				});
+			});
+
+			it('should set to paths in the database', function(done) {
+				socket.once('/messages/-setSuccess', function() {
+					socket.once('/messages/-getSuccess', function(data) {
+						data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
+						done();
+					});
+					socket.emit('getUrl', {url: '/messages/'});
+				});
+				socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+			});
+
+			it('should delete children of the path that is being set and set path to passed data', function(done) {
+				socket.once('/messages/-setSuccess', function() {
+					socket.once('/messages/-getSuccess', function(data) {
+						data.should.eql({testProperty: false});
+						done();
+					});
+					socket.emit('getUrl', {url: '/messages/'});
+				});
+				socket.emit('set', {path:'/messages/', data: {testProperty: false}});
+			});
+	
+			describe('Listeners', function() {
+				it('should emit to listeners to parents of the path has changed', function(done) {
+					socket.once('/-value', function(data) {
+						if(data) {
+							done();
+						}
+					});
+					socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
+				});	
+			});
+		});
 	});
 });

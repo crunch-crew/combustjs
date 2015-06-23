@@ -28,6 +28,7 @@ module.exports = function(req, res) {
 					});
 				}
 				else {
+					// TODO: I think this is the wrong error code, lookup the right one
 					res.status(401).send("User already exists");
 				}
 			});				

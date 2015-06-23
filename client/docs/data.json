@@ -1,8 +1,8 @@
 {
     "project": {},
     "files": {
-        "Combust.js": {
-            "name": "Combust.js",
+        "client/Combust.js": {
+            "name": "client/Combust.js",
             "modules": {},
             "classes": {
                 "Combust": 1
@@ -21,7 +21,7 @@
             "extensions": [],
             "plugin_for": [],
             "extension_for": [],
-            "file": "Combust.js",
+            "file": "client/Combust.js",
             "line": 1,
             "description": "Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,\nas well as listening for changes in data at the specified path.",
             "is_constructor": 1
@@ -29,7 +29,7 @@
     },
     "classitems": [
         {
-            "file": "Combust.js",
+            "file": "client/Combust.js",
             "line": 33,
             "description": "Change the path of the Combust object to point to one of the children of the current path.\nMethod is chainable.",
             "itemtype": "method",
@@ -48,7 +48,7 @@
             "class": "Combust"
         },
         {
-            "file": "Combust.js",
+            "file": "client/Combust.js",
             "line": 49,
             "description": "Pushes an object as a new child at the current path.",
             "itemtype": "method",
@@ -72,8 +72,28 @@
             "class": "Combust"
         },
         {
-            "file": "Combust.js",
+            "file": "client/Combust.js",
             "line": 80,
+            "description": "Sets an object at the current path.",
+            "itemtype": "method",
+            "name": "set",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to set at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the object has been set at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 106,
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",

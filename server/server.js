@@ -12,9 +12,9 @@ app.use(parser.json());
 
 var socketSetup = require('./socketSetup');
 
+//authentication 
 var signup = require('./authentication/signup');
 var authenticate = require('./authentication/authenticate');
-//authentication 
 app.post('/signup', signup);
 app.post('/authenticate', authenticate);
 
