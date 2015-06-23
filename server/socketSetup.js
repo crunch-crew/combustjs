@@ -17,6 +17,7 @@ var update = require('./socketHandlers/update');
 var io;
 //express server object is passed to this function and it attaches websockets + all the event listeners and handlers
 exports.setup = function(server) {
+	var highestUrl;
 	//this is what actually attaches socket.io to the express server
 	io = sockets(server);
 
