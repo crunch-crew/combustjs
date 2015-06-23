@@ -35,19 +35,19 @@ var utils = {
 			name: "viable"
 		}
 	}
-}
+};
 
 describe("Combust tests", function() {
 	var socket;
 	before(function(done) {
 		socket = io.connect(serverAddress, {'forceNew': true});
 		done();
-	})
+	});
 
 	beforeEach(function(done) {
 		combustRef = utils.newCombust(socket);
 		done();
-	})
+	});
 
 	after(function(done) {
 		socket.disconnect();
@@ -56,7 +56,7 @@ describe("Combust tests", function() {
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
 			});
 		});
-	})
+	});
 
 	describe('Non-networking', function() {
 		var combustRef;
@@ -107,7 +107,7 @@ describe("Combust tests", function() {
 				combustRef.child('japan');
 				combustRef.constructPath().should.equal('/library/history/japan/');
 				done();
-			})
+			});
 		});
 
 		describe('push()', function() {
@@ -159,7 +159,5 @@ describe("Combust tests", function() {
 				});
 			});
 		});
-
-
-	})
+	});
 });

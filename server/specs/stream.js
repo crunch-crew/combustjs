@@ -211,6 +211,7 @@ describe("server tests", function() {
 	});
 
 	describe('Stream', function() {
+<<<<<<< HEAD
 		var socket;
 		var agent;
 		//json web token return from server will be stored here
@@ -219,6 +220,14 @@ describe("server tests", function() {
 		after(function(done) {
 			socket.disconnect();
 			done();
+=======
+		
+		it('should push into the database', function(done) {
+			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
+			socket.once("/messages/-pushSuccess", function(data) {
+				done();
+			});
+>>>>>>> feat(gruntfile): constructed gruntfile and fixed minor syntax errors highlighted by jshint
 		});
 
 		//create a user and obtain a webtoken

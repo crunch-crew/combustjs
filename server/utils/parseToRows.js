@@ -1,6 +1,5 @@
 
 var parseToRows = function(obj, path, _id) {
-	var rows = [];
 	path = path || null;
 	_id = _id;
 
