@@ -5,6 +5,7 @@ var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var expect = require('chai').expect;
 var should = require('should');
+var supertest = require('supertest');
 
 /* Anytime you parseToRows, you need to use a dummy testObj!!!! */
 var utils = {
@@ -59,7 +60,16 @@ var utils = {
   			{ path: '/root/testObj/', _id: 'users' },
   			{ path: '/root/testObj/', _id: 'test', name: 'viable' }
 		]
-	}
+	},
+	testUser: {
+		username: "testUser",
+		password: "testPassword",
+		email: "testEmail"
+	},
+	createAgent: function(server) {
+		var server = server || serverAddress;
+		return supertest.agent(server);
+	},
 };
 
 var serverAddress = 'http://127.0.0.1:3000';
@@ -78,9 +88,45 @@ describe("server tests", function() {
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, results) {
 				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn, done);
+				r.db('test').table('test').insert({path: '/', _id: 'users'}).run(conn, done);
 			});
 		});
 	});
+
+	describe("authentication", function() {
+		var agent;
+		before(function(done) {
+			agent = utils.createAgent();
+			done();
+		});
+
+		it('should create a new user on signup', function(done) {
+			agent
+				.post('/signup')
+				.send(utils.testUser)
+				.expect(201)
+				.expect(function(res) {
+					//checks if inserting the user was successful
+					res.body.inserted.should.equal(1);
+				})
+				.end(function(err, response) {
+					if (err) throw err;
+					else {
+						//makes sure a user cant be duplicated
+						agent
+							.post('/signup')
+							.send(utils.testUser)
+							.expect(401)
+							.end(function(err, response) {
+								if (err) throw err;
+								else {
+									done();
+								}
+							})
+					}
+				})
+		});
+	})
 
 	describe("parseToRows", function() {
 		testObjDummy = {
@@ -159,26 +205,26 @@ describe("server tests", function() {
 		});
 
 		it('should set to paths in the database', function(done) {
-			socket.once('/users/-setSuccess', function() {
-				socket.once('/users/-getSuccess', function(data) {
+			socket.once('/messages/-setSuccess', function() {
+				socket.once('/messages/-getSuccess', function(data) {
 					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 					done();
 				});
-				socket.emit('getUrl', {url: '/users/'});
+				socket.emit('getUrl', {url: '/messages/'});
 			});
-			socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+			socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
 		});
 
 
 		it('should delete children of the path that is being set and set path to passed data', function(done) {
-			socket.once('/users/-setSuccess', function() {
-				socket.once('/users/-getSuccess', function(data) {
+			socket.once('/messages/-setSuccess', function() {
+				socket.once('/messages/-getSuccess', function(data) {
 					data.should.eql({testProperty: false});
 					done();
 				});
-				socket.emit('getUrl', {url: '/users/'});
+				socket.emit('getUrl', {url: '/messages/'});
 			});
-			socket.emit('set', {path:'/users/', data: {testProperty: false}});
+			socket.emit('set', {path:'/messages/', data: {testProperty: false}});
 		});
 	});
 	

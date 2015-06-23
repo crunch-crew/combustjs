@@ -2,5 +2,7 @@
 module.exports = {
 	//parameters here
 	dbName: 'test',
-	tableName: 'test'
+	tableName: 'test',
+	bcryptRepeat: 10,
+	bcryptSecret: 'combustJS'
 }
