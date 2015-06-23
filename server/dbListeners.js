@@ -16,6 +16,7 @@ var setup = function(db, io) {
 			}			
 		});
 	});
+ 
 	//checks if a users node exists, and if it doesnt, creates it
 	r.db(config.dbName).table(config.tableName).filter({path: '/', _id: 'users'}).run(db, function(err, cursor) {
 		if (err) throw err;

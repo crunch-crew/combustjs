@@ -23,7 +23,7 @@ module.exports = function(grunt) {
         options: {
           reporter: 'spec',
           },
-        src: ['server/specs/*']
+        src: ['server/specs/*', 'client/specs/*']
       }
     },
 
@@ -36,17 +36,13 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      files: ['gruntfile.js', 'client/**/*.js', 'server/spec/*.js', 'server/utils/*', 'server/*.js'],
+      files: ['gruntfile.js', 'client/specs/*.js', 'client/*.js', 'server/spec/*.js', 'server/utils/*', 'server/*.js'],
     },
 
     watch: {
       scripts: {
-        files: ['**/*.js'], 
-        task: ['dev']
-      },
-      options: {
-        spawn: false,
-        livereload: true,
+        files: ['server/server.js'], 
+        tasks: ['default']
       }
     },
 
@@ -57,6 +53,18 @@ module.exports = function(grunt) {
       dev: {
         script: 'server/server.js'
       }
+    },
+
+    shell: {
+      options: {
+        strderr: false
+      },
+      yuiDoc: {
+        command: 'yuidoc -o ./client/docs ./client/.'
+      },
+      apiDoc: {
+        command: 'apidoc -i ./server -o ./server/doc'
+      } 
     }
   });
 
@@ -67,9 +75,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha');
   grunt.loadNpmTasks('grunt-nodemon');
   grunt.loadNpmTasks('grunt-mocha-test');
+  grunt.loadNpmTasks('grunt-shell');
 
-  grunt.registerTask('default', ['jshint', 'mochaTest']);
-  grunt.registerTask('test', ['jshint', 'mocha']);
-  grunt.registerTask('development', ['jshint', 'mocha', 'mocha-test']);
+  grunt.registerTask('default', ['jshint', 'mochaTest', 'shell']);
+  grunt.registerTask('dev', ['mochaTest','jshint', 'shell']);
+  grunt.registerTask('watchtest', ['watch:scripts']);
 
 };
