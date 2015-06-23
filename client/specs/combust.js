@@ -41,10 +41,7 @@ describe("Combust tests", function() {
 	var socket;
 	before(function(done) {
 		socket = io.connect(serverAddress, {'forceNew': true});
-		//db requires a root node to function
-		db.connect(function(conn) {
-			r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
-		});
+		done();
 	})
 
 	beforeEach(function(done) {
@@ -55,7 +52,9 @@ describe("Combust tests", function() {
 	after(function(done) {
 		socket.disconnect();
 		db.connect(function(conn) {
-			r.db(utils.dbName).table(utils.tableName).delete().run(conn, done);
+			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
+				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+			});
 		});
 	})
 

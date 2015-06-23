@@ -18,19 +18,15 @@ var parseToObj = function(root, children) {
 		//create array of nested object properties
 		var childPath = children[i].path;
 		childPath = childPath.replace(root.path, "");
+		
 		var pathArray = childPath.split("/");
 		pathArray = pathArray.slice(1,pathArray.length-1);
 		pathArray.push(children[i]._id);
-		// console.log(children[i]);
-		// console.log(children[i]);
-		//create nested objects and copy in properties in appropriate locations
+
 		var currentPath = parsedObj;
-		// console.log('path array', pathArray);
+
 		for (var j = 0; j < pathArray.length; j++) {
-			// console.log('children[i]',children[i]._partArray);
-			// console.log('currentpath',currentPath[pathArray[j]]);
 			if (!currentPath[pathArray[j]]) {
-				// console.log('print', children[i] );
 				if(j === pathArray.length - 2 && children[i]._partArray){
 					currentPath[pathArray[j]] = [];
 				}	
@@ -47,7 +43,6 @@ var parseToObj = function(root, children) {
 
 		extendObj(currentPath, children[i]);
 	}
-	// console.log('parsedOBJ', parsedObj.users.user.something);
 
 	return parsedObj;
 };

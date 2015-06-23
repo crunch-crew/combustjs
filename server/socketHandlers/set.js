@@ -9,7 +9,9 @@ exports.setup = function(socket, io) {
 	/**
 	*@apiGroup set
 	*@apiName set
-	*@api {socket} set Sets a javascript object at the specified url
+	*@api {socket} Sets a javascript object at the specified url
+	*@api {socket} Emits back a [url]-setSuccess signal on success
+	*@api {socket} Emits value signal to all parents AND the specified url
 	*
 	*@apiParam {Object} setRequest An object that contains path, _id, and data as properties
 	*@apiParam {String} setRequest._id A string that specifies the key of the javascript object
