@@ -3,8 +3,20 @@ var app = express();
 var db = require('./db');
 var dbListeners = require('./dbListeners');
 var sockets = require('socket.io');
+var jwt = require('jsonwebtoken');
+var parser = require('body-parser');
+var config = require('./config');
+var r = require('rethinkdb');
+var bcrypt = require('bcrypt');
+app.use(parser.json());
 
 var socketSetup = require('./socketSetup');
+
+//authentication 
+var signup = require('./authentication/signup');
+var authenticate = require('./authentication/authenticate');
+app.post('/signup', signup);
+app.post('/authenticate', authenticate);
 
 //if deployed to heroku will use heroku port, otherwise on local machine will use port 3000
 var port = process.env.port || 3000;
@@ -19,11 +31,9 @@ exports.app = app;
 exports.io =  io;
 
 
-// var parser = require('body-parser');
 // var cors = require('cors');
 //contains a setup function that adds web sockets to the server
 
-// app.use(parser.json());
 // app.use(parser.urlencoded({extended: true}));
 
 // app.use(session({
