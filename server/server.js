@@ -13,8 +13,10 @@ app.use(parser.json());
 var socketSetup = require('./socketSetup');
 
 var signup = require('./authentication/signup');
+var authenticate = require('./authentication/authenticate');
 //authentication 
 app.post('/signup', signup);
+app.post('/authenticate', authenticate);
 
 //if deployed to heroku will use heroku port, otherwise on local machine will use port 3000
 var port = process.env.port || 3000;

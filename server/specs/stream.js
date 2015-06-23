@@ -126,6 +126,40 @@ describe("server tests", function() {
 					}
 				})
 		});
+
+		it('should authenticate valid credentials and return a json web token', function(done) {
+			agent.post('/authenticate')
+			.send(utils.testUser)
+			.expect(200)
+			.expect(function(res) {
+				res.body.success.should.equal(true);
+				res.body.token.should.exist;
+			})
+			.end(function(err, response) {
+				if (err) throw err;
+				else {
+					done();
+				}
+			});
+		});
+
+		it('should not authenticate invalid credentials', function(done) {
+			agent.post('/authenticate')
+			.send({
+				username: "testUser",
+				password: "badPassword",
+			})
+			.expect(400)
+			.expect(function(res) {
+				res.body.success.should.equal(false);
+			})
+			.end(function(err, response) {
+				if (err) throw err;
+				else {
+					done();
+				}
+			});
+		});
 	})
 
 	describe("parseToRows", function() {

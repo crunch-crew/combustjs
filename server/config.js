@@ -4,5 +4,6 @@ module.exports = {
 	dbName: 'test',
 	tableName: 'test',
 	bcryptRepeat: 10,
-	bcryptSecret: 'combustJS'
+	jwtSecret: 'combustJS',
+	tokenExpireMinutes: 60
 }

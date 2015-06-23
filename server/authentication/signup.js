@@ -11,7 +11,7 @@ module.exports = function(req, res) {
 				if (err) throw err;
 				if (result.length === 0) {
 					bcrypt.genSalt(config.bcryptRepeat, function(err, salt) {
-						bcrypt.hash(config.bcryptSecret, salt, function(err, hash) {
+						bcrypt.hash(req.body.password, salt, function(err, hash) {
 							var newUser = {
 								path: '/users/',
 								_id: req.body.username,
