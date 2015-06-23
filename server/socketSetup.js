@@ -23,10 +23,13 @@ exports.setup = function(server) {
 		var token = socket.request._query.token;
 		//decrypt the token
 		jwt.verify(token, config.jwtSecret, function(err, decoded) {
-			socket.userToken = decoded;
-			next();
+			//if token decrypts successfully, user is authenticated, otherwise reject connection
+			//temporarily disabled while client authentication methods are built
+			// if (!err) {
+				socket.userToken = decoded;
+				next();
+			// }
 		});
-		next();
 	});
 
 	io.on('connection', function(socket) {

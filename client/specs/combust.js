@@ -38,19 +38,16 @@ var utils = {
 }
 
 describe("Combust tests", function() {
-	var socket;
 	before(function(done) {
-		socket = io.connect(serverAddress, {'forceNew': true});
 		done();
 	})
 
 	beforeEach(function(done) {
-		combustRef = utils.newCombust(socket);
+		combustRef = utils.newCombust();
 		done();
 	})
 
 	after(function(done) {
-		socket.disconnect();
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
@@ -61,7 +58,7 @@ describe("Combust tests", function() {
 	describe('Non-networking', function() {
 		var combustRef;
 		beforeEach(function(done) {
-			combustRef = utils.newCombust(socket);
+			combustRef = utils.newCombust();
 			done();
 		});
 
@@ -74,7 +71,7 @@ describe("Combust tests", function() {
 
 		describe('child()', function() {
 			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				done();
 			});
 
@@ -85,7 +82,7 @@ describe("Combust tests", function() {
 			});
 
 			it('should be chainable', function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				combustRef.child('library').child('history').child('japan');
 				combustRef.pathArray.should.eql(['/', 'library', 'history', 'japan']);
 				done();
@@ -94,7 +91,7 @@ describe("Combust tests", function() {
 
 		describe('constructPath()', function() {
 			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				done();
 			});
 
@@ -109,13 +106,33 @@ describe("Combust tests", function() {
 				done();
 			})
 		});
+	});
+	describe('networking', function() {		
+		var socket;
+		before(function(done) {
+			socket = io.connect(serverAddress, {'forceNew': true});
+			done();
+		});
+		beforeEach(function(done) {
+			combustRef = utils.newCombust(socket);
+			done();
+		});
+		after(function(done) {
+			socket.disconnect();
+			done();
+		});
+
+		describe('newUser', function() {
+			it('should create a new user', function(done) {
+				combustRef.newUser({
+					username: "testUser",
+					password: "testPassword",
+					email: "testEmail"
+				});
+			})
+		})
 
 		describe('push()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
-				done();
-			});
-
 			it('should push an object into the database at the current path', function(done) {
 				var test = combustRef.push(utils.testObj, function() {
 					done();
@@ -133,11 +150,6 @@ describe("Combust tests", function() {
 		});
 
 		describe('set()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
-				done();
-			});
-
 			it('should set an object into database at the current path', function(done) {
 				var test = combustRef.set(utils.testObj, function() {
 					done();

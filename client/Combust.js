@@ -1,3 +1,6 @@
+//required for testing only - remove in production
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
 * as well as listening for changes in data at the specified path.
@@ -135,5 +138,24 @@ Combust.prototype.on = function(eventType, callback) {
 		});
 	}
 };
+
+Combust.prototype.newUser = function(newUser) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.onload = function() {
+		if (xhr.status === 201) {
+			console.log(xhr.responseText);
+		}
+		if (xhr.status === 401) {
+			console.log(xhr.responseText);
+
+		}
+		else {
+			console.log(xhr.responseText);
+		}
+	}
+	xhr.send(JSON.stringify(newUser));
+}
 
 module.exports = Combust;
