@@ -159,7 +159,7 @@ describe("server tests", function() {
 		});
 
 		it('should set to paths in the database', function(done) {
-			socket.once('/users/-setSuccess', function() {
+			socket.once('/users/-value', function() {
 				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 					done();
@@ -169,8 +169,15 @@ describe("server tests", function() {
 			socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
 		});
 
+		it('should emit to listeners to parents of the path has changed', function(done) {
+			socket.once('/-value', function(data) {
+				done();
+			})
+			socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
+		});
+
 		it('should delete children of the path that is being set and set path to passed data', function(done) {
-			socket.once('/users/-setSuccess', function() {
+			socket.once('/users/-value', function() {
 				socket.once('/users/-getSuccess', function(data) {
 					data.should.eql({testProperty: false});
 					done();
@@ -179,5 +186,6 @@ describe("server tests", function() {
 			});
 			socket.emit('set', {path:'/users/', data: {testProperty: false}});
 		});
+
 	});
 });
