@@ -3,6 +3,7 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
+var dbQuery = require('../utils/dbQuery');
 
 exports.setup = function(socket) {
 	/**
@@ -16,6 +17,14 @@ exports.setup = function(socket) {
 	*@apiSuccess (getUrlChildrenSuccess) {Array} getUrlChildrenSuccessObject.children Array of javascript objects that represent the children of the specified url
 	*/
 	socket.on('getUrlChildren', function(getRequest) {
-
+    var childrens = [];
+    dbQuery('get', getRequest, function(result) {
+      for(var key in result) {
+        var obj = {};
+        obj[key] = result[key];
+        childrens.push(obj);
+      }
+      socket.emit(getRequest.url + '-getUrlChildrenSuccess', childrens);
+    });
 	});
 }
