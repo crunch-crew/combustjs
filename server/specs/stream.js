@@ -137,7 +137,7 @@ describe("server tests", function() {
 			.expect(200)
 			.expect(function(res) {
 				res.body.success.should.equal(true);
-				res.body.token.should.exist();
+				res.body.token.should.exist;
 			})
 			.end(function(err, response) {
 				if (err) throw err;
