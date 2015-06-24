@@ -111,7 +111,7 @@ describe("server tests", function() {
 				.expect(201)
 				.expect(function(res) {
 					//checks if inserting the user was successful
-					res.body.inserted.should.equal(1);
+					res.body.success.should.equal(true);
 				})
 				.end(function(err, response) {
 					if (err) throw err;
@@ -126,9 +126,9 @@ describe("server tests", function() {
 								else {
 									done();
 								}
-							})
+							});
 					}
-				})
+				});
 		});
 
 		it('should authenticate valid credentials and return a json web token', function(done) {

@@ -34,6 +34,16 @@ var utils = {
 		test: {
 			name: "viable"
 		}
+	},
+	testUser: {
+		username: "testUser",
+		password: "testPassword",
+		email: "testEmail"
+	},
+	authUser: {
+		username: "authUser",
+		password: "authPassword",
+		email: "authEmail"
 	}
 }
 
@@ -109,8 +119,14 @@ describe("Combust tests", function() {
 	});
 	describe('networking', function() {		
 		var socket;
+		var authRef = utils.newCombust();
+		var combustRef;
 		before(function(done) {
 			socket = io.connect(serverAddress, {'forceNew': true});
+			//create a user to use for tests that require authentication
+			authRef.newUser(utils.authUser, function(response) {
+				//authenticate user here.
+			});
 			done();
 		});
 		beforeEach(function(done) {
@@ -124,17 +140,37 @@ describe("Combust tests", function() {
 
 		describe('newUser', function() {
 			it('should create a new user', function(done) {
-				combustRef.newUser({
-					username: "testUser",
-					password: "testPassword",
-					email: "testEmail"
+				combustRef.newUser(utils.testUser, function(response) {
+					response.success.should.equal(true);
+					response.status.should.equal(201);
+					done();
 				});
-			})
-		})
+			});
+			it('should not duplicate new users', function(done) {
+				combustRef.newUser(utils.testUser, function(response) {
+					response.success.should.equal(false);
+					response.status.should.equal(401);
+					done();
+				});
+			});
+		});
+
+		describe('authenticate', function() {
+			it('should receive and store a web token when presenting valid credentials', function(done) {
+				//uses already created user
+				combustRef.authenticate(utils.testUser, function(response) {
+					response.success.should.equal(true);
+					response.status.should.equal(200);
+					response.token.should.exist;
+					combustRef.token.should.exist;
+					done();
+				});
+			});
+		});
 
 		describe('push()', function() {
 			it('should push an object into the database at the current path', function(done) {
-				var test = combustRef.push(utils.testObj, function() {
+				var test = combustRef.push(utils.testObj, function(response) {
 					done();
 				});
 			});
@@ -155,7 +191,6 @@ describe("Combust tests", function() {
 					done();
 				});
 			});
-			
 		});
 
 		describe('.on()', function() {
@@ -171,7 +206,5 @@ describe("Combust tests", function() {
 				});
 			});
 		});
-
-
-	})
+	});
 });
