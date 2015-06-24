@@ -251,27 +251,82 @@ describe("server tests", function() {
 		});
 
 		describe('api', function() {
-
-			it('should push into the database', function(done) {
-				socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-				socket.once("/messages/-pushSuccess", function(data) {
-					done();
+			describe('push', function() {
+				it('should push into the database', function(done) {
+					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
+					socket.once('/messages/-pushSuccess', function(data) {
+						done();
+					});
 				});
 			});
 
-			it('should successfully get a url', function(done) {
-				socket.emit('push', {path:'/', data: utils.dummyObj});
-				socket.once("/-pushSuccess", function(data) {
-					var path = '/' + data.key + '/';
-					socket.emit('getUrl', {url: path});
-					socket.once(path + '-getSuccess', function(data) {
-							data.should.eql(utils.testObj);
-							done();
+			describe('get', function() {
+				it('should successfully get an url', function(done) {
+					socket.emit('push', {path:'/', data: utils.testObj});
+					socket.once('/-pushSuccess', function(data) {
+						var path = '/' + data.key + '/';
+						socket.emit('getUrl', {url: path});
+						socket.once(path + '-getSuccess', function(data) {
+								data.should.eql(utils.testObj);
+								done();
+						});
 					});
 				});
 			});
 
 			//check if received object is same as submitted message - implement
+			describe('set', function() {
+
+				it('should set to paths in the database', function(done) {
+					socket.once('/messages/-setSuccess', function() {
+						socket.once('/messages/-getSuccess', function(data) {
+							data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
+							done();
+						});
+						socket.emit('getUrl', {url: '/messages/'});
+					});
+					socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+				});
+
+				it('should delete children of the path that is being set and set path to passed data', function(done) {
+					socket.once('/messages/-setSuccess', function() {
+						socket.once('/messages/-getSuccess', function(data) {
+							data.should.eql({testProperty: false});
+							done();
+						});
+						socket.emit('getUrl', {url: '/messages/'});
+					});
+					socket.emit('set', {path:'/messages/', data: {testProperty: false}});
+				});
+			});
+		});
+	
+			describe('getUrlChildren', function() {
+				it('should return an array with getUrlChildren', function(done) {
+					socket.once('/-getUrlChildrenSuccess', function(data) {
+						if(Array.isArray(data)) {
+							done();
+						}
+					});
+					socket.emit('getUrlChildren', {url: '/'});
+				});
+				// will implement.
+				// it('should get the children of the url', function(done) {
+
+				// });
+			});
+
+		describe('listeners', function() {
+
+			it('should notify listeners of parent urls of value changes', function(done) {
+				socket.once('/-value', function(data) {
+					if(data) {
+						done();
+					}
+				});
+				socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
+			});	
+
 			it('should receive updates when a child is added to a url', function(done) {
 				socket.once('/messages/-childaddSuccess', function(data) {
 					data.should.eql(utils.testObj);
@@ -282,39 +337,7 @@ describe("server tests", function() {
 					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 				});
 			});
-
-			it('should set to paths in the database', function(done) {
-				socket.once('/messages/-setSuccess', function() {
-					socket.once('/messages/-getSuccess', function(data) {
-						data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
-						done();
-					});
-					socket.emit('getUrl', {url: '/messages/'});
-				});
-				socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
-			});
-
-			it('should delete children of the path that is being set and set path to passed data', function(done) {
-				socket.once('/messages/-setSuccess', function() {
-					socket.once('/messages/-getSuccess', function(data) {
-						data.should.eql({testProperty: false});
-						done();
-					});
-					socket.emit('getUrl', {url: '/messages/'});
-				});
-				socket.emit('set', {path:'/messages/', data: {testProperty: false}});
-			});
-	
-			describe('Listeners', function() {
-				it('should emit to listeners to parents of the path has changed', function(done) {
-					socket.once('/-value', function(data) {
-						if(data) {
-							done();
-						}
-					});
-					socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
-				});	
-			});
+			
 		});
 	});
 });
