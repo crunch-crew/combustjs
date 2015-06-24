@@ -51,4 +51,4 @@ exports.setup = function(socket, io) {
 			});
 		}, setRequest);
 	});
-}
+};

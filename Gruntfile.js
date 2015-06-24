@@ -36,12 +36,12 @@ module.exports = function(grunt) {
     },
 
     jshint: {
-      files: ['gruntfile.js', 'client/specs/*.js', 'client/*.js', 'server/spec/*.js', 'server/utils/*', 'server/*.js'],
+      files: ['gruntfile.js', 'client/specs/*.js', 'server/specs/*.js', 'server/authentication/*.js', 'server/socketHandlers/*.js', 'server/utils/*.js', 'server/*.js']
     },
 
     watch: {
       scripts: {
-        files: ['server/server.js'], 
+        files: ['client/**/*.js', 'server/**/*.js'], 
         tasks: ['default']
       }
     },

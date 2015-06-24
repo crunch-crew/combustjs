@@ -72,7 +72,7 @@ var utils = {
 		email: "authEmail"
 	},
 	createAgent: function(server) {
-		var server = server || serverAddress;
+		server = server || serverAddress;
 		return supertest.agent(server);
 	},
 };
@@ -126,9 +126,9 @@ describe("server tests", function() {
 								else {
 									done();
 								}
-							})
+							});
 					}
-				})
+				});
 		});
 
 		it('should authenticate valid credentials and return a json web token', function(done) {
@@ -137,7 +137,7 @@ describe("server tests", function() {
 			.expect(200)
 			.expect(function(res) {
 				res.body.success.should.equal(true);
-				res.body.token.should.exist;
+				res.body.token.should.exist();
 			})
 			.end(function(err, response) {
 				if (err) throw err;
@@ -164,7 +164,7 @@ describe("server tests", function() {
 				}
 			});
 		});
-	})
+	});
 
 	describe("parseToRows", function() {
 		testObjDummy = {
@@ -211,7 +211,6 @@ describe("server tests", function() {
 	});
 
 	describe('Stream', function() {
-<<<<<<< HEAD
 		var socket;
 		var agent;
 		//json web token return from server will be stored here
@@ -220,14 +219,6 @@ describe("server tests", function() {
 		after(function(done) {
 			socket.disconnect();
 			done();
-=======
-		
-		it('should push into the database', function(done) {
-			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			socket.once("/messages/-pushSuccess", function(data) {
-				done();
-			});
->>>>>>> feat(gruntfile): constructed gruntfile and fixed minor syntax errors highlighted by jshint
 		});
 
 		//create a user and obtain a webtoken
@@ -251,7 +242,7 @@ describe("server tests", function() {
 					});
 				}
 			});
-		})
+		});
 
 		describe('authentication', function() {
 			it("should authenticate websocket connections with a valid token", function(done) {
@@ -321,7 +312,7 @@ describe("server tests", function() {
 							done();
 						}
 					});
-					socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
+					socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}});
 				});	
 			});
 		});

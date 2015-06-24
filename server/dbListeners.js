@@ -31,6 +31,6 @@ var setup = function(db, io) {
 			}			
 		});
 	});
-}
+};
 
 exports.setup = setup;

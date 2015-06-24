@@ -21,4 +21,4 @@ exports.setup = function(socket) {
 		//are added to the db using the push method, the _id field and id field equal each other
 		//fill in here
 	});
-}
+};

@@ -18,6 +18,6 @@ exports.setup = function(socket) {
 	socket.on('getUrl', function(getRequest) {
 		dbQuery('get', getRequest, function(parsedObj) {
 			socket.emit(getRequest.url + "-getSuccess", parsedObj);
-		})
+		});
 	});
-}
+};

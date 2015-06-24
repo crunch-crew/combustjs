@@ -64,4 +64,4 @@ exports.setup = function(socket) {
 		socket.join(childChangeRequest.url + "-" + "childchange");
 		socket.emit(childChangeRequest.url + "-subscribeUrlChildChangeSuccess", {success: true});
 	});
-}
+};

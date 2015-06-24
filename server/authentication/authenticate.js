@@ -30,9 +30,9 @@ module.exports = function(req, res) {
 								success: false
 							});
 						}
-					})
+					});
 				}
 			});				
 		});
 	});
-}
+};

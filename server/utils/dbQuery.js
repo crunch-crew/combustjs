@@ -7,7 +7,7 @@ var config = require('../config');
 var dbQuery = function(queryType, request, callback) {
    
     //when queryType is get -- added this, but might not actually need.
-   if(queryType = 'get') {
+   if(queryType === 'get') {
     //handles edge case when accessing root path
     var urlArray;
     if (request.url === '/') {
