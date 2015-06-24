@@ -155,22 +155,23 @@ Combust.prototype.on = function(eventType, callback) {
 	//this binding is lost in async calls so store it here
 	var socket = this.socket;
 	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
-	if (eventType === "child_add") {
+	if (eventType === "child_added") {
+    socket.once(path + '-subscribeUrlChildAddSuccess', function() {
+      //need a get children method - not desired functionality as written
+      socket.emit('getUrlChildren', {url: path});
+    });
+    socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      data.forEach(function(child) {
+        callback(child);
+      });
+      socket.on(path + '-childaddSuccess', function(data) {
+        //call callback on new child
+        callback(data);
+      });
+      //calls callback on all current child
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+    });
 		socket.emit("subscribeUrlChildAdd", {url: path});
-		socket.once(path + '-subscribeUrlChildAddSuccess', function() {
-			//need a get children method - not desired functionality as written
-			socket.emit('getUrl', {url: path});
-		});
-		socket.once(path + "-getSuccess", function(data) {
-			//once get children method is written, call callback on all children.
-			/*once all current children have been received, as listener for new ones - this might cause an issue if a child is added inbetween
-			recieving the latest children and adding the listener.
-			*/
-			socket.on(path + '-childaddSuccess', function(data) {
-				//call callback on new child
-				callback(data);
-			});
-		});
 	}
 
 
