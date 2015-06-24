@@ -4,6 +4,7 @@ var r = require('rethinkdb');
 var parseToRows = require('./utils/parseToRows');
 var parseToObj = require('./utils/parseToObj');
 var config = require('./config');
+var jwt = require('jsonwebtoken');
 
 //socket listener setup functions
 var subscribeUrl = require('./socketHandlers/subscribeUrl');
@@ -18,6 +19,17 @@ exports.setup = function(server) {
 	var highestUrl;
 	//this is what actually attaches socket.io to the express server
 	io = sockets(server);
+
+	io.use(function(socket, next) {
+		var token = socket.request._query.token;
+		//decrypt the token
+		jwt.verify(token, config.jwtSecret, function(err, decoded) {
+			socket.userToken = decoded;
+			next();
+		});
+		next();
+	});
+
 	io.on('connection', function(socket) {
 		//notify client of successful connection
 		socket.emit('connectSuccess', "Socket connection established");
