@@ -59,9 +59,9 @@ describe("server tests", function() {
 								else {
 									done();
 								}
-							});
+							})
 					}
-				});
+				})
 		});
 
 		it('should authenticate valid credentials and return a json web token', function(done) {

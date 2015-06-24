@@ -74,6 +74,26 @@
         {
             "file": "client/Combust.js",
             "line": 80,
+            "description": "Deletes an object at the current path",
+            "itemtype": "method",
+            "name": "delete",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to be delete from database at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be exectued once the object has been set at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 106,
             "description": "Sets an object at the current path.",
             "itemtype": "method",
             "name": "set",
@@ -93,7 +113,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 106,
+            "line": 132,
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",
