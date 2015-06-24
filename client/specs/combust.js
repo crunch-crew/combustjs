@@ -14,7 +14,17 @@ var utils = {
 		return new Combust({
 			dbName: this.dbName,
 			tableName: this.tableName,
-			socket: socket
+			socket: socket,
+			io: io,
+			serverAddress: serverAddress
+		});
+	},
+	newAuthCombust: function() {
+		return new Combust({
+			dbName: this.dbName,
+			tableName: this.tableName,
+			io: io,
+			serverAddress: serverAddress
 		});
 	},
 	testObj: {
@@ -119,15 +129,24 @@ describe("Combust tests", function() {
 	});
 	describe('networking', function() {		
 		var socket;
-		var authRef = utils.newCombust();
+		var authRef;
 		var combustRef;
 		before(function(done) {
-			socket = io.connect(serverAddress, {'forceNew': true});
 			//create a user to use for tests that require authentication
+			authRef = utils.newAuthCombust();
 			authRef.newUser(utils.authUser, function(response) {
-				//authenticate user here.
+				if (response.success) {
+					authRef.authenticate(utils.authUser, function(response) {
+						socket = io.connect(serverAddress, {
+							//send the web token with the initial websocket handshake
+							query: 'token=' + response.token
+						});
+						authRef.socket = socket;
+						done();
+					});
+				}
 			});
-			done();
+			// done();
 		});
 		beforeEach(function(done) {
 			combustRef = utils.newCombust(socket);
@@ -170,16 +189,16 @@ describe("Combust tests", function() {
 
 		describe('push()', function() {
 			it('should push an object into the database at the current path', function(done) {
-				var test = combustRef.push(utils.testObj, function(response) {
+				var test = authRef.push(utils.testObj, function(response) {
 					done();
 				});
 			});
 
 			it('should return a new combust object that references the new url', function(done) {
-				var test = combustRef.push(utils.testObj, function(response) {
+				var test = authRef.push(utils.testObj, function(response) {
 					response.created.should.equal(true);
 					test.pathArray.should.eql(['/', response.key]);
-					test.should.not.equal(combustRef);
+					test.should.not.equal(authRef);
 					done();
 				});
 			});
@@ -187,7 +206,7 @@ describe("Combust tests", function() {
 
 		describe('set()', function() {
 			it('should set an object into database at the current path', function(done) {
-				var test = combustRef.set(utils.testObj, function() {
+				var test = authRef.set(utils.testObj, function() {
 					done();
 				});
 			});
@@ -198,9 +217,9 @@ describe("Combust tests", function() {
 				var alreadyRan = false;
 				//this is a jenky test, but it works for now
 				setTimeout(function() {
-					combustRef.push({msg: "hi"});
+					authRef.push({msg: "hi"});
 				},50);
-				combustRef.on('child_add', function(data) {
+				authRef.on('child_add', function(data) {
 					data.msg.should.equal("hi");
 					done();
 				});

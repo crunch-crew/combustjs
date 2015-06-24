@@ -12,7 +12,8 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var Combust = function(options) {
 	this.dbName = options.tableName || 'test';
 	this.tableName = options.tableName || 'test';
-	this.socket = options.socket;
+	this.socket = options.socket || null;
+	// this.io = options.io || null;
 	this.pathArray = ['/'];
 	//could check local storage to see if a token exists there
 	this.token = null;
@@ -175,9 +176,22 @@ Combust.prototype.authenticate = function(credentials, callback) {
 		response = JSON.parse(xhr.responseText);
 		response.status = xhr.status;
 		this.token = response.token;
-		callback(response, this.token);
+		// if (!this.socket) {
+		// 	this.connectSocket();
+		// }
+		callback(response);
 	}.bind(this);
 	xhr.send(JSON.stringify(credentials));
 }
+
+// Combust.prototype.connectSocket = function() {
+// 	var io = this.io;
+// 	var serverAddress = this.serverAddress;
+// 	var token = this.token;
+// 	this.socket = io.connect(serverAddress, {
+// 		//send the web token with the initial websocket handshake
+// 		query: 'token=' + token
+// 	});
+// }
 
 module.exports = Combust;
