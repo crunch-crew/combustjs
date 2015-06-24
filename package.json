@@ -20,6 +20,7 @@
     "should": "~7.0.1",
     "jsonwebtoken": "~5.0.2",
     "bcrypt": "~0.8.3",
-    "body-parser": "~1.13.1"
+    "body-parser": "~1.13.1",
+    "xmlhttprequest": "~1.7.0"
   }
 }

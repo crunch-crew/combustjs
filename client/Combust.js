@@ -1,3 +1,6 @@
+//required for testing only - remove in production
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
 * as well as listening for changes in data at the specified path.
@@ -9,8 +12,11 @@
 var Combust = function(options) {
 	this.dbName = options.tableName || 'test';
 	this.tableName = options.tableName || 'test';
-	this.socket = options.socket;
+	this.socket = options.socket || null;
+	// this.io = options.io || null;
 	this.pathArray = ['/'];
+	//could check local storage to see if a token exists there
+	this.token = null;
 };
 
 /* this method doesn't have documentation because its an internal method that the user should not use.
@@ -94,6 +100,8 @@ Combust.prototype.set = function(object, callback) {
 		tableName: this.tableName,
 		socket: this.socket
 	});
+	//transfer token
+	newRef.token = this.token;
 
 	this.socket.once(this.constructPath() + '-setSuccess', function(data) {
 		if (callback) {
@@ -135,5 +143,55 @@ Combust.prototype.on = function(eventType, callback) {
 		});
 	}
 };
+
+Combust.prototype.newUser = function(newUser, callback) {
+	//raw http requests
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.onload = function() {
+		response = JSON.parse(xhr.responseText);
+		response.status = xhr.status;
+		callback(response);
+		// if (xhr.status === 201) {
+		// 	callback(response);
+		// }
+		// else if (xhr.status === 401) {
+		// 	console.log(xhr.responseText);
+
+		// }
+		// else {
+		// 	console.log(xhr.responseText);
+		// }
+	}
+	xhr.send(JSON.stringify(newUser));
+}
+
+//storing token in instance of object for now, should it be stored in local storage?
+Combust.prototype.authenticate = function(credentials, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.onload = function() {
+		response = JSON.parse(xhr.responseText);
+		response.status = xhr.status;
+		this.token = response.token;
+		// if (!this.socket) {
+		// 	this.connectSocket();
+		// }
+		callback(response);
+	}.bind(this);
+	xhr.send(JSON.stringify(credentials));
+}
+
+// Combust.prototype.connectSocket = function() {
+// 	var io = this.io;
+// 	var serverAddress = this.serverAddress;
+// 	var token = this.token;
+// 	this.socket = io.connect(serverAddress, {
+// 		//send the web token with the initial websocket handshake
+// 		query: 'token=' + token
+// 	});
+// }
 
 module.exports = Combust;

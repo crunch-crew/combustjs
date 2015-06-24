@@ -14,7 +14,17 @@ var utils = {
 		return new Combust({
 			dbName: this.dbName,
 			tableName: this.tableName,
-			socket: socket
+			socket: socket,
+			io: io,
+			serverAddress: serverAddress
+		});
+	},
+	newAuthCombust: function() {
+		return new Combust({
+			dbName: this.dbName,
+			tableName: this.tableName,
+			io: io,
+			serverAddress: serverAddress
 		});
 	},
 	testObj: {
@@ -34,23 +44,30 @@ var utils = {
 		test: {
 			name: "viable"
 		}
+	},
+	testUser: {
+		username: "testUser",
+		password: "testPassword",
+		email: "testEmail"
+	},
+	authUser: {
+		username: "authUser",
+		password: "authPassword",
+		email: "authEmail"
 	}
 }
 
 describe("Combust tests", function() {
-	var socket;
 	before(function(done) {
-		socket = io.connect(serverAddress, {'forceNew': true});
 		done();
 	})
 
 	beforeEach(function(done) {
-		combustRef = utils.newCombust(socket);
+		combustRef = utils.newCombust();
 		done();
 	})
 
 	after(function(done) {
-		socket.disconnect();
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
@@ -61,7 +78,7 @@ describe("Combust tests", function() {
 	describe('Non-networking', function() {
 		var combustRef;
 		beforeEach(function(done) {
-			combustRef = utils.newCombust(socket);
+			combustRef = utils.newCombust();
 			done();
 		});
 
@@ -74,7 +91,7 @@ describe("Combust tests", function() {
 
 		describe('child()', function() {
 			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				done();
 			});
 
@@ -85,7 +102,7 @@ describe("Combust tests", function() {
 			});
 
 			it('should be chainable', function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				combustRef.child('library').child('history').child('japan');
 				combustRef.pathArray.should.eql(['/', 'library', 'history', 'japan']);
 				done();
@@ -94,7 +111,7 @@ describe("Combust tests", function() {
 
 		describe('constructPath()', function() {
 			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
+				combustRef = utils.newCombust();
 				done();
 			});
 
@@ -109,41 +126,90 @@ describe("Combust tests", function() {
 				done();
 			})
 		});
+	});
+	describe('networking', function() {		
+		var socket;
+		var authRef;
+		var combustRef;
+		before(function(done) {
+			//create a user to use for tests that require authentication
+			authRef = utils.newAuthCombust();
+			authRef.newUser(utils.authUser, function(response) {
+				if (response.success) {
+					authRef.authenticate(utils.authUser, function(response) {
+						socket = io.connect(serverAddress, {
+							//send the web token with the initial websocket handshake
+							query: 'token=' + response.token
+						});
+						authRef.socket = socket;
+						done();
+					});
+				}
+			});
+			// done();
+		});
+		beforeEach(function(done) {
+			combustRef = utils.newCombust(socket);
+			done();
+		});
+		after(function(done) {
+			socket.disconnect();
+			done();
+		});
+
+		describe('newUser', function() {
+			it('should create a new user', function(done) {
+				combustRef.newUser(utils.testUser, function(response) {
+					response.success.should.equal(true);
+					response.status.should.equal(201);
+					done();
+				});
+			});
+			it('should not duplicate new users', function(done) {
+				combustRef.newUser(utils.testUser, function(response) {
+					response.success.should.equal(false);
+					response.status.should.equal(401);
+					done();
+				});
+			});
+		});
+
+		describe('authenticate', function() {
+			it('should receive and store a web token when presenting valid credentials', function(done) {
+				//uses already created user
+				combustRef.authenticate(utils.testUser, function(response) {
+					response.success.should.equal(true);
+					response.status.should.equal(200);
+					response.token.should.exist;
+					combustRef.token.should.exist;
+					done();
+				});
+			});
+		});
 
 		describe('push()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
-				done();
-			});
-
 			it('should push an object into the database at the current path', function(done) {
-				var test = combustRef.push(utils.testObj, function() {
+				var test = authRef.push(utils.testObj, function(response) {
 					done();
 				});
 			});
 
 			it('should return a new combust object that references the new url', function(done) {
-				var test = combustRef.push(utils.testObj, function(response) {
+				var test = authRef.push(utils.testObj, function(response) {
 					response.created.should.equal(true);
 					test.pathArray.should.eql(['/', response.key]);
-					test.should.not.equal(combustRef);
+					test.should.not.equal(authRef);
 					done();
 				});
 			});
 		});
 
 		describe('set()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
-				done();
-			});
-
 			it('should set an object into database at the current path', function(done) {
-				var test = combustRef.set(utils.testObj, function() {
+				var test = authRef.set(utils.testObj, function() {
 					done();
 				});
 			});
-			
 		});
 
 		describe('.on()', function() {
@@ -151,15 +217,13 @@ describe("Combust tests", function() {
 				var alreadyRan = false;
 				//this is a jenky test, but it works for now
 				setTimeout(function() {
-					combustRef.push({msg: "hi"});
+					authRef.push({msg: "hi"});
 				},50);
-				combustRef.on('child_add', function(data) {
+				authRef.on('child_add', function(data) {
 					data.msg.should.equal("hi");
 					done();
 				});
 			});
 		});
-
-
-	})
+	});
 });

@@ -21,7 +21,9 @@ module.exports = function(req, res) {
 							r.db(config.dbName).table(config.tableName).insert(newUser).run(conn, function(err, cursor) {
 								if (err) throw (err);
 								else {
-									res.status(201).json(cursor);
+									res.status(201).json({
+										success: true
+									});
 								}
 							});
 						});
@@ -29,7 +31,7 @@ module.exports = function(req, res) {
 				}
 				else {
 					// TODO: I think this is the wrong error code, lookup the right one
-					res.status(401).send("User already exists");
+					res.status(401).send({success: false});
 				}
 			});				
 		});
