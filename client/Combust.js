@@ -86,6 +86,32 @@ Combust.prototype.push = function(object, callback) {
 };
 
 /**
+* Deletes an object at the current path
+*
+*@method delete
+*
+*@param object {Object} object The object to be delete from database at the current path.
+*@param *callback {Callback} callback The callback to be exectued once the object has been set at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object which specifies to the database the data to be removed */
+Combust.prototype.delete = function(object, callback) {
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+
+  this.socket.once(this.constructPath() + '-deleteSuccess', function(data) {
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('delete', {path: this.constructPath(), data: object});
+};
+
+/**
 * Sets an object at the current path.
 *
 *@method set
