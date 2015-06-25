@@ -43,6 +43,8 @@ exports.setup = function(socket, io) {
 			var updateOrInsert = function() {
 				r.db(config.dbName).table(config.tableName).filter({path: rows[counter].path, _id: rows[counter]._id}).update(rows[counter], {returnChanges: false
 				}).run(conn, function(err, results){
+					if (err) throw err;
+					
 					// Insert those rows for which were not replaced AND were not changed during the update attempt
 					if (!results.replaced && !results.unchanged){
 						r.table(config.tableName).insert(rows[counter]).run(conn, function(err, results){
@@ -54,13 +56,15 @@ exports.setup = function(socket, io) {
 						// Invoke this function for each of the rows in the payload
 						updateOrInsert(); 
 					}
+					if (counter === rows.length -1) {
+						//emit the success event back to the user and any response here for use for subsequent requests by client
+						socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
+						//emit to clients listening for value event at this url
+						emitToParent('value', updateRequest.path, socket);
+					}
 				});
 			}
 			updateOrInsert();
 		});
-		//emit the success event back to the user and any response here for use for subsequent requests by client
-		socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
-		//emit to clients listening for value event at this url
-		emitToParent('value', updateRequest.path, socket);
 	});
 }

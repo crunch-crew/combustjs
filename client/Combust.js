@@ -172,6 +172,9 @@ Combust.prototype.on = function(eventType, callback) {
 			});
 		});
 	}
+
+
+	
 };
 
 Combust.prototype.newUser = function(newUser, callback) {
