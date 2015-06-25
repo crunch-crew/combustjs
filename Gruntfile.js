@@ -41,8 +41,8 @@ module.exports = function(grunt) {
 
     watch: {
       scripts: {
-        files: ['server/server.js'], 
-        tasks: ['default']
+        files: ['client/*.js', 'client/specs/*.js', 'server/authentication/*', 'server/socketHandlers/*', 'server/specs/*', 'server/utils/*', 'server/*.js'], 
+        tasks: ['dev']
       }
     },
 
@@ -78,7 +78,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-shell');
 
   grunt.registerTask('default', ['jshint', 'mochaTest', 'shell']);
-  grunt.registerTask('dev', ['mochaTest','jshint', 'shell']);
+  grunt.registerTask('dev', ['mochaTest', 'shell']);
   grunt.registerTask('watchtest', ['watch:scripts']);
 
 };

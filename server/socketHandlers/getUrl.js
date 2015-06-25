@@ -19,14 +19,16 @@ exports.setup = function(socket) {
 	*/
 	socket.on('getUrl', function(getRequest) {
 		permitRequest("read", getRequest.url, socket.userToken, function(permission) {
-			if (permission) {
-				dbQuery('get', getRequest.url, function(parsedObj) {
-					socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
-				});
-			}
-			else {
-				socket.emit(getRequest.url + '-getSuccess', {success: false});
-			}
+		if (permission) {
+			dbQuery('get', getRequest.url, function(parsedObj) {
+				socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
+			});
+		}
+		else {
+			socket.emit(getRequest.url + '-getSuccess', {success: false});
+		}
+		dbQuery('get', getRequest, function(parsedObj) {
+		socket.emit(getRequest.url + "-getSuccess", parsedObj);
 		});
 	});
-}
+};

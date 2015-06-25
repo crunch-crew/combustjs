@@ -14,6 +14,7 @@ var push = require('./socketHandlers/push');
 var set = require('./socketHandlers/set');
 var update = require('./socketHandlers/update');
 var evaljs = require('./socketHandlers/evaljs');
+var deleteUrl = require('./socketHandlers/delete');
 
 var io;
 //express server object is passed to this function and it attaches websockets + all the event listeners and handlers
@@ -48,7 +49,8 @@ exports.setup = function(server) {
 		push.setup(socket, io);	
 		set.setup(socket);
 		update.setup(socket, io);
-		// evaljs.setup(socket);	
+		evaljs.setup(socket);	
+		deleteUrl.setup(socket, io);	
 	});
 
 	return io;

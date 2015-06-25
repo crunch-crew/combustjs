@@ -86,29 +86,30 @@ Combust.prototype.push = function(object, callback) {
 };
 
 /**
-* Deletes an object at the current path
+* Deletes an object at the current path.
 *
 *@method delete
-*
-*@param object {Object} object The object to be delete from database at the current path.
-*@param *callback {Callback} callback The callback to be exectued once the object has been set at the path in the database. Optional parameter.
+* 
+*@param object {Object} object The object to delete at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.
 *
 */
 
-/* Takes in an object which specifies to the database the data to be removed */
+// Takes in an object to be set at a path and emits an event to the server
 Combust.prototype.delete = function(object, callback) {
-  var newRef = new Combust({
-    dbName: this.dbName,
-    tableName: this.tableName,
-    socket: this.socket
-  });
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+	var path = this.constructPath();
 
-  this.socket.once(this.constructPath() + '-deleteSuccess', function(data) {
-    if (callback) {
-      callback(data);
-    }
-  });
-  this.socket.emit('delete', {path: this.constructPath(), data: object});
+	this.socket.once(path + '-deleteSuccess', function(data){
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit('delete', {path: path, data: object}); 
 };
 
 /**
@@ -119,7 +120,7 @@ Combust.prototype.delete = function(object, callback) {
 *@param object {Object} object The object to set at the current path.
 *@param *callback {Callback} callback The callback to be executed once the object has been set at the path in the database. Optional parameter.
 *
-*/
+**/
 
 /* Takes in an object to be set at path. Does not return anything. */
 Combust.prototype.set = function(object, callback) {
@@ -223,9 +224,9 @@ Combust.prototype.newUser = function(newUser, callback) {
 		// else {
 		// 	console.log(xhr.responseText);
 		// }
-	}
+	};
 	xhr.send(JSON.stringify(newUser));
-}
+};
 
 //storing token in instance of object for now, should it be stored in local storage?
 Combust.prototype.authenticate = function(credentials, callback) {
@@ -242,7 +243,7 @@ Combust.prototype.authenticate = function(credentials, callback) {
 		callback(response);
 	}.bind(this);
 	xhr.send(JSON.stringify(credentials));
-}
+};
 
 // Combust.prototype.connectSocket = function() {
 // 	var io = this.io;

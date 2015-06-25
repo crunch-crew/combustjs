@@ -24,8 +24,9 @@ describe("server tests", function() {
 		//at the end of tests, wipe the entire table and then re-insert the root node
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, results) {
-				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn, done);
-				r.db('test').table('test').insert({path: '/', _id: 'users'}).run(conn, done);
+				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn, function(err ,results) {
+					r.db('test').table('test').insert({path: '/', _id: 'users'}).run(conn, done);
+				});
 			});
 		});
 	});
@@ -59,9 +60,9 @@ describe("server tests", function() {
 								else {
 									done();
 								}
-							})
+							});
 					}
-				})
+				});
 		});
 
 		it('should authenticate valid credentials and return a json web token', function(done) {
@@ -144,7 +145,6 @@ describe("server tests", function() {
 	});
 
 	describe('Stream', function() {
-<<<<<<< HEAD
 		var socket;
 		var agent;
 		//json web token return from server will be stored here
@@ -153,14 +153,6 @@ describe("server tests", function() {
 		after(function(done) {
 			socket.disconnect();
 			done();
-=======
-		
-		it('should push into the database', function(done) {
-			socket.emit('push', {path:'/messages/', data: utils.dummyObj});
-			socket.once("/messages/-pushSuccess", function(data) {
-				done();
-			});
->>>>>>> feat(gruntfile): constructed gruntfile and fixed minor syntax errors highlighted by jshint
 		});
 
 		//create a user and obtain a webtoken
@@ -170,7 +162,7 @@ describe("server tests", function() {
 				if (err) throw err;
 				else {
 					agent.post('/authenticate').send(utils.authUser).expect(200).end(function(err, response) {
-						//store the web token
+					//store the web token
 						token = response.body.token;
 						if (err) throw err;
 						else {
@@ -184,7 +176,7 @@ describe("server tests", function() {
 					});
 				}
 			});
-		})
+		});
 
 		//TODO: implement this test
 		describe('authentication', function() {

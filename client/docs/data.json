@@ -22,7 +22,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "client/Combust.js",
-            "line": 1,
+            "line": 4,
             "description": "Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,\nas well as listening for changes in data at the specified path.",
             "is_constructor": 1
         }
@@ -30,7 +30,7 @@
     "classitems": [
         {
             "file": "client/Combust.js",
-            "line": 33,
+            "line": 39,
             "description": "Change the path of the Combust object to point to one of the children of the current path.\nMethod is chainable.",
             "itemtype": "method",
             "name": "child",
@@ -49,7 +49,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 49,
+            "line": 55,
             "description": "Pushes an object as a new child at the current path.",
             "itemtype": "method",
             "name": "push",
@@ -73,19 +73,19 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 80,
-            "description": "Deletes an object at the current path",
+            "line": 86,
+            "description": "Deletes an object at the current path.",
             "itemtype": "method",
             "name": "delete",
             "params": [
                 {
                     "name": "object",
-                    "description": "object The object to be delete from database at the current path.",
+                    "description": "object The object to delete at the current path.",
                     "type": "Object"
                 },
                 {
                     "name": "*callback",
-                    "description": "callback The callback to be exectued once the object has been set at the path in the database. Optional parameter.",
+                    "description": "callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.",
                     "type": "Callback"
                 }
             ],
@@ -93,7 +93,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 106,
+            "line": 113,
             "description": "Sets an object at the current path.",
             "itemtype": "method",
             "name": "set",
@@ -113,7 +113,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 132,
+            "line": 141,
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",

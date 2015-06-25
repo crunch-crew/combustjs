@@ -14,10 +14,10 @@ var emitToParent = function(event, path, socket, data) {
       }
       //not root so it emits the event and then calls emitToParent with the the closest parent route
       socket.emit(path + '-' + event, data);
-      var parentUrl = path.split('/')
+      var parentUrl = path.split('/');
       parentUrl = parentUrl.slice(0, parentUrl.length-2);
       emitToParent(event, parentUrl.join('/') + '/', socket, data);  
-    })
+    });
   }
 };
 
