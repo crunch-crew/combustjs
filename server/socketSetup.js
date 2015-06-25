@@ -47,11 +47,8 @@ exports.setup = function(server) {
 		getUrlChildren.setup(socket);
 		push.setup(socket, io);	
 		set.setup(socket);
-<<<<<<< HEAD
 		update.setup(socket, io);
-=======
 		evaljs.setup(socket);	
->>>>>>> [Feature] Created a check permissions function that can determine read/write permissions for specific urls
 	});
 
 	return io;

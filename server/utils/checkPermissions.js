@@ -6,9 +6,12 @@ module.exports = function(options) {
     return null;
   }
 
+
   var path = options.path;
   var rules = options.rules || authorization;
-  var user = options.user || null;
+  //set these to empty objects so an error wont be triggered when checking if they have properties
+  var $user = options.user || {};
+  var $data = options.data || {};
 
   //get array of keys
   var path = path.split("/");
@@ -36,15 +39,21 @@ module.exports = function(options) {
 
 //replace tokens with their actual values and evaluate the strings as javascript
 if (read) {
-  if (user) {
-    read = read.replace("$user", "user");
-  }
+  // if (user) {
+  //   read = read.replace("$user", "user");
+  // }
+  // if (data) {
+  //   read = read.replace("$data", "data");
+  // }
   var read = eval(read); 
 }
 if (write) {
-  if (user) {
-    write = write.replace("$user", "user");
-  }
+  // if (user) {
+  //   write = write.replace("$user", "user");
+  // }
+  // if (data) {
+  //   write = write.replace("$data", "data");
+  // }
   var write = eval(write);
 }
   //if rule is undefined, set it to true

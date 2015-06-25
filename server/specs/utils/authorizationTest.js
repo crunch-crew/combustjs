@@ -14,6 +14,7 @@ module.exports = {
     }
   },
   "users": {
-    ".read": "$user.id === 3"
+    ".read": "$user.id === 3",
+    ".write": "$data.name === 'test'"
   }
 }

@@ -50,6 +50,12 @@ describe('checkPermissions tests', function() {
       done();
     });
 
+    it('should replace data token with data object and evaluate expression correctly', function(done) {
+      var permissions = checkPermissions({path: '/users/', rules: rules, user: {id: 3}, data: {name: "test"}});
+      permissions.write.should.equal(true);
+      done();
+    });
+
     // it('should')
   })
 });
