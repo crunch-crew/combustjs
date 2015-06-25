@@ -307,18 +307,27 @@ Combust.prototype.newUser = function(newUser, callback) {
 	xhr.send(JSON.stringify(newUser));
 };
 
-//storing token in instance of object for now, should it be stored in local storage?
-Combust.prototype.authenticate = function(credentials, callback) {
+Combust.prototype.newUser = function(newUser, callback) {
+	//raw http requests
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.onload = function() {
 		response = JSON.parse(xhr.responseText);
 		response.status = xhr.status;
-		this.token = response.token;
 		callback(response);
+		// if (xhr.status === 201) {
+		// 	callback(response);
+		// }
+		// else if (xhr.status === 401) {
+		// 	console.log(xhr.responseText);
+
+		// }
+		// else {
+		// 	console.log(xhr.responseText);
+		// }
 	}.bind(this);
-	xhr.send(JSON.stringify(credentials));
+	xhr.send(JSON.stringify(newUser));
 };
 
 // Combust.prototype.connectSocket = function() {
