@@ -55,7 +55,15 @@ describe('checkPermissions tests', function() {
       permissions.write.should.equal(true);
       done();
     });
-
     // it('should')
-  })
+  });
+
+  describe('wildcards', function() {
+    it('should handle paths with generated ids in them using wildcards', function(done) {
+      var permissions = checkPermissions({path: '/userswildcard/02c88b5e-5c00-4d38-9a60-a404dc9c6d56/', rules: rules});
+      permissions.write.should.equal(true);
+      permissions.write.should.equal(true);
+      done();
+    });
+  });
 });

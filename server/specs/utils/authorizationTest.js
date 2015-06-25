@@ -16,5 +16,11 @@ module.exports = {
   "users": {
     ".read": "$user.id === 3",
     ".write": "$data.name === 'test'"
+  },
+  "userswildcard": {
+    "$user": {
+      ".read": "true",
+      ".write": "true"
+    }
   }
 }

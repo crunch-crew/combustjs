@@ -1,8 +1,12 @@
 module.exports = {
-  "root": {
-    ".write": "false",
-    "authtest" : {
-      ".read" : "1 + 2 === 2",
+  "/": {
+    ".read": "true",
+    ".write": "true",
+  },
+  "users": {
+    "$user": {
+      ".read": "$user.id === $data.id",
+      ".write": "$user.id === $data.id"
     }
   }
 }
