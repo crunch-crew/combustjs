@@ -95,7 +95,6 @@ Combust.prototype.push = function(object, callback) {
 
 /* Takes in an object to be set at path. Does not return anything. */
 Combust.prototype.set = function(object, callback) {
-	console.log("this was called");
 	var newRef = new Combust({
 		dbName: this.dbName,
 		tableName: this.tableName,
@@ -132,7 +131,6 @@ Combust.prototype.update = function(object, callback) {
 	});
 
 	this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
-		console.log(" in update on Combust prototype update : ", data);
 		if (callback) {
 			callback(data);
 		}
@@ -161,6 +159,8 @@ Combust.prototype.on = function(eventType, callback) {
       socket.emit('getUrlChildren', {url: path});
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      //calls callback on all current child
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
       data.forEach(function(child) {
         callback(child);
       });
@@ -168,8 +168,6 @@ Combust.prototype.on = function(eventType, callback) {
         //call callback on new child
         callback(data);
       });
-      //calls callback on all current child
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
     });
 		socket.emit("subscribeUrlChildAdd", {url: path});
 	}
