@@ -27,26 +27,33 @@ exports.setup = function(socket, io) {
 		var _idFind;
 		var rootString;
 
+
 		if (setRequest.path === '/') {
 			rootString = null;
 			_idFind = "/";
+			childrenString = '/';
+			children_idFind = "";
 		}
 		//all other paths - this is just string processing to get it into the proper format for querying the db
 		else {
 			urlArray = setRequest.path.split('/');
 			urlArray = urlArray.slice(1,urlArray.length-1);
 			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
+			childrenString = rootString;
 			_idFind = urlArray[urlArray.length-1];
+			children_idFind = urlArray[urlArray.length-1];
 		}
 		db.connect(function(conn) {
-			r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn);
-			r.db(config.dbName).table(config.tableName).filter(r.row('path').match(rootString + _idFind + "/*")).delete().run(conn, function(err, results) {
-				var rows = parseToRows(setRequest.data, rootString, _idFind);
-				r.table(config.tableName).insert(rows).run(conn, function(err, results) {
-					if(err) throw err;
-					//emits setSuccess so client to notify client of success
-					socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-					emitToParent('value', setRequest.path, socket);
+			r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
+				if (err) throw err;
+				r.db(config.dbName).table(config.tableName).filter(r.row('path').match(childrenString + children_idFind + "*")).delete().run(conn, function(err, results) {
+					var rows = parseToRows(setRequest.data, rootString, _idFind);
+					r.table(config.tableName).insert(rows).run(conn, function(err, results) {
+						if(err) throw err;
+						//emits setSuccess so client to notify client of success
+						socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
+						emitToParent('value', setRequest.path, socket);
+					});
 				});
 			});
 		}, setRequest);

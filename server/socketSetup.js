@@ -12,6 +12,7 @@ var getUrl = require('./socketHandlers/getUrl');
 var getUrlChildren = require('./socketHandlers/getUrlChildren');
 var push = require('./socketHandlers/push');
 var set = require('./socketHandlers/set');
+var update = require('./socketHandlers/update');
 
 var io;
 //express server object is passed to this function and it attaches websockets + all the event listeners and handlers
@@ -43,7 +44,8 @@ exports.setup = function(server) {
 		getUrl.setup(socket);
 		getUrlChildren.setup(socket);
 		push.setup(socket, io);	
-		set.setup(socket);	
+		set.setup(socket);
+		update.setup(socket, io);
 	});
 
 	return io;

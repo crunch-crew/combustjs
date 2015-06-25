@@ -33,27 +33,31 @@ exports.setup = function(socket, io) {
 			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
 			_idFind = urlArray[urlArray.length-1];
 		}
-
+		//Obtain the rows in the udpate payload from the request
+		var rows = parseToRows(updateRequest.data, rootString, _idFind);
+		// connect and keep it on to process entire payload
 		db.connect(function(conn) {
-			var rows = parseToRows(updateRequest.data, rootString, _idFind);
-			// get the rows from updateRequest
-			for (var i = 0; i < rows.length; i++ ){
-				//if row is found - update it
-				r.db(config.dbName).table(config.tableName).filter({path: rows[i].path, _id: rows[i]._id}).update(rows[i]).run(conn, function(err, results){
-					// if no row is selected for update; a record should be inserted - we'd likely get an error on update n such cases
-					if (err){
-						r.table(config.tableName).insert(rows[i]).run(conn, function(err, results){
+			var counter = 0;
+			// use an internal counter to address issues with async nature of this code
+			var updateOrInsert = function() {
+				r.db(config.dbName).table(config.tableName).filter({path: rows[counter].path, _id: rows[counter]._id}).update(rows[counter], {returnChanges: false
+				}).run(conn, function(err, results){
+					// Insert those rows for which were not replaced AND were not changed during the update attempt
+					if (!results.replaced && !results.unchanged){
+						r.table(config.tableName).insert(rows[counter]).run(conn, function(err, results){
 							if (err) throw err;
-							console.log('record inserted during update : ', results);
 						});
-					} else {
-						console.log("updated ", results);
+					}
+					counter++;
+					if (counter < rows.length) {
+						// Invoke this function for each of the rows in the payload
+						updateOrInsert(); 
 					}
 				});
-			} // end for
-			socket.emit(updateRequest.path + '-setSuccess', 'Successfully updated data!'); // needs to be updated to bubble up 
-		
-		}, updateRequest);
-
+			}
+			updateOrInsert();
+		});
+			// socket.emit(updateRequest.path + '-setSuccess', 'Successfully updated data!'); // needs to be updated to bubble up 
 	});
+
 }
