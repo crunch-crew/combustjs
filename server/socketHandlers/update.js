@@ -63,6 +63,12 @@ exports.setup = function(socket, io) {
 						emitToParent('value', updateRequest.path, socket);
 					}
 				});
+				if (counter === rows.length -1) {
+					//emit the success event back to the user and any response here for use for subsequent requests by client
+			    socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
+			    //emit to clients listening for value event at this url
+			    emitToParent('value', updateRequest.path, socket);
+				}
 			}
 			updateOrInsert();
 		});
