@@ -211,15 +211,18 @@ describe("server tests", function() {
 			});
 
 			it('should hear for a delete event and then remove a path from the database', function(done) {
-				console.log('INSIDE OF THE TEST')
-				socket.once('/messages/-deleteSuccess', function() {
-					socket.once('/messages/-getSuccess', function(data) {
-						data.should.eql({url: '/messages/'});
-						done();
-					});
-					socket.emit('getUrl', {path: '/messages/'});
+				socket.once('/usr1/messages/-getSuccess', function(data) {
+					console.log('RETURNED FROM GET URL:', data);
+					data.should.eql({msg1: {from: 'alex'}, msg2: {from: 'joe'}});
+					done();
+				})
+				socket.once('/usr1/messages/-deleteSuccess', function() {
+					socket.emit('getUrl', {url: '/usr1/messages/'});
+				})
+				socket.once('/usr1/messages/-setSuccess', function() {
+					socket.emit('delete', {path:'/usr1/messages/', data: {room: 'main'}});
 				});
-				socket.emit('delete', {path:'/message/', data: {testProperty: true}});
+				socket.emit('set', {path: '/usr1/messages/', data: {msg1: {from: 'alex'}, msg2: {from: 'joe'}, room: 'main'}});
 			});
 
 			//check if received object is same as submitted message - implement

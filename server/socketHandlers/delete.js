@@ -34,7 +34,8 @@ exports.setup = function(socket, io) {
       parent = urlArray[urlArray.length - 2] || '/';  
     }
 
-      var props = Object.keys(deleteRequest.data);
+    var props = Object.keys(deleteRequest.data);
+
     db.connect(function(conn) {
       r.db(config.dbName).table(config.tableName).filter({path: '/messages/', _id: props[0]}).delete().run(conn, function(err, results) {
         if (err) throw err;
@@ -44,5 +45,3 @@ exports.setup = function(socket, io) {
     }); 
   });
 };
-
-
