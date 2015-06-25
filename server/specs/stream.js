@@ -244,6 +244,7 @@ describe("server tests", function() {
 			});
 		})
 
+		//TODO: implement this test
 		describe('authentication', function() {
 			it("should authenticate websocket connections with a valid token", function(done) {
 				done();
@@ -251,6 +252,7 @@ describe("server tests", function() {
 		});
 
 		describe('api', function() {
+			//should be updated to check if pushed item is actually in db
 			describe('push', function() {
 				it('should push into the database', function(done) {
 					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
@@ -259,6 +261,7 @@ describe("server tests", function() {
 					});
 				});
 			});
+
 
 			describe('get', function() {
 				it('should successfully get an url', function(done) {
@@ -337,7 +340,6 @@ describe("server tests", function() {
 					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 				});
 			});
-			
 		});
 	});
 });

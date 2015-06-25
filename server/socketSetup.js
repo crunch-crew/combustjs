@@ -13,6 +13,7 @@ var getUrlChildren = require('./socketHandlers/getUrlChildren');
 var push = require('./socketHandlers/push');
 var set = require('./socketHandlers/set');
 var update = require('./socketHandlers/update');
+var evaljs = require('./socketHandlers/evaljs');
 
 var io;
 //express server object is passed to this function and it attaches websockets + all the event listeners and handlers
@@ -46,7 +47,11 @@ exports.setup = function(server) {
 		getUrlChildren.setup(socket);
 		push.setup(socket, io);	
 		set.setup(socket);
+<<<<<<< HEAD
 		update.setup(socket, io);
+=======
+		evaljs.setup(socket);	
+>>>>>>> [Feature] Created a check permissions function that can determine read/write permissions for specific urls
 	});
 
 	return io;
