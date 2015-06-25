@@ -94,7 +94,7 @@ describe("Combust tests", function() {
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
 				if (err) throw err;
-				console.log(cursor);
+				// console.log(cursor);
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
 				done();
 			});
@@ -244,6 +244,15 @@ describe("Combust tests", function() {
 				done();
 			});
 
+			// after(function(done) {
+			// 	db.connect(function(conn) {
+			// 		r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
+			// 			if (err) throw err;
+			// 			r.db(utils.dbName).table(utils.tableName).insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+			// 		});
+			// 	});
+			// })
+
 			it('should update values for existing keys in the object in database at the current path', function(done) {
 				var test = combustRef.update(utils.testUpdateObj, function(response) {
 					done();
@@ -257,16 +266,31 @@ describe("Combust tests", function() {
 			});
 		});
 
-		xdescribe('.on()', function() {
+
+		describe('.on()', function() {
+			before(function(done) {
+				db.connect(function(conn) {
+					r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
+						if (err) throw err;
+						r.db(utils.dbName).table(utils.tableName).insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+					});
+				});
+			})
+
 			it('should receive updates when children are added', function(done) {
-				var alreadyRan = false;
-				//this is a jenky test, but it works for now
+				var timesCalled = 0;
 				setTimeout(function() {
 					authRef.push({msg: "hi"});
 				},50);
-				authRef.on('child_add', function(data) {
-					data.msg.should.equal("hi");
-					done();
+				authRef.on('child_added', function(data) {
+					timesCalled++;
+					if(timesCalled === 1) {
+						data.msg.should.equal("this is the root node of the db");
+					}
+					if(timesCalled === 2) {
+						data.msg.should.equal("hi");
+						done();
+					}
 				});
 			});
 		});
