@@ -13,13 +13,7 @@ var parseToRows = function(obj, path, _id) {
 			nonObjs._isArray = true;
 			nonObjs._length = 0;
 		}
-		// console.log(" path before is : ", path )
-		// console.log(" _id before is : ", _id )
-		
 		path = (path === null) ? _id : path + _id + "/";
-
-		// console.log(" path AFTER is : ", path )
-
 		for (var key in obj) {
 			if (Array.isArray(obj[key])) {
 				if(_isArray) {

@@ -3,6 +3,7 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
+var emitToParent = require('../utils/emitToParent');
 
 exports.setup = function(socket, io) {
 	/**
@@ -57,7 +58,9 @@ exports.setup = function(socket, io) {
 			}
 			updateOrInsert();
 		});
-			// socket.emit(updateRequest.path + '-setSuccess', 'Successfully updated data!'); // needs to be updated to bubble up 
+		//emit the success event back to the user and any response here for use for subsequent requests by client
+		socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
+		//emit to clients listening for value event at this url
+		emitToParent('value', updateRequest.path, socket);
 	});
-
 }

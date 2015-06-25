@@ -51,7 +51,7 @@ exports.setup = function(socket, io) {
 					r.table(config.tableName).insert(rows).run(conn, function(err, results) {
 						if(err) throw err;
 						//emits setSuccess so client to notify client of success
-						socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
+						socket.emit(setRequest.path + '-setSuccess', );
 						emitToParent('value', setRequest.path, socket);
 					});
 				});
