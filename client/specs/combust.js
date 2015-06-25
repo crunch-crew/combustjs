@@ -257,7 +257,7 @@ describe("Combust tests", function() {
 			});
 		});
 
-		xdescribe('.on()', function() {
+		describe('.on()', function() {
 			it('should receive updates when children are added', function(done) {
 				var alreadyRan = false;
 				//this is a jenky test, but it works for now
