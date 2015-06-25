@@ -1,7 +1,15 @@
 var authorization = require('../authorization');
 //TODO: handle edge case of root
-module.exports = function(path, rules, user) {
-  var rules = rules || authorization;
+module.exports = function(options) {
+  //if no path, return null
+  if (!options || !options.path) {
+    return null;
+  }
+
+  var path = options.path;
+  var rules = options.rules || authorization;
+  var user = options.user || null;
+
   //get array of keys
   var path = path.split("/");
   var path = path.slice(1, path.length-1);
@@ -26,13 +34,19 @@ module.exports = function(path, rules, user) {
     }
   }
 
-  //evaluate the strings as javascript
-  if (read) {
-    var read = eval(read); 
+//replace tokens with their actual values and evaluate the strings as javascript
+if (read) {
+  if (user) {
+    read = read.replace("$user", "user");
   }
-  if (write) {
-    var write = eval(write);
+  var read = eval(read); 
+}
+if (write) {
+  if (user) {
+    write = write.replace("$user", "user");
   }
+  var write = eval(write);
+}
   //if rule is undefined, set it to true
   return {
     "read": read !== undefined ? read : false,

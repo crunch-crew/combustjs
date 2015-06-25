@@ -12,5 +12,8 @@ module.exports = {
         } 
       },
     }
+  },
+  "users": {
+    ".read": "$user.id === 3"
   }
 }
