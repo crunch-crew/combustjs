@@ -272,5 +272,4 @@ describe("server tests", function() {
 				});
 			});
 		});
-	});
 });

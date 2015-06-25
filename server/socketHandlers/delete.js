@@ -8,26 +8,36 @@ exports.setup = function(socket, io) {
     console.log('DELETE REQUEST', deleteRequest);
     var urlArray,
         _idFind,
-        rootString;
+        rootString,
+        parent;
+
     if (deleteRequest.path === '/') {
       rootString = null; 
       _idFind = '/';
     } else {
-      console.log('deleteRequest before split:', deleteRequest);
       urlArray = deleteRequest.path.split('/');
       urlArray.slice(1, urlArray.length - 1);
-      console.log("after string manipulation, urlArray is: ", urlArray);
+      // console.log(urlArray, 'URL ARRAY');
       rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/';
-      _idFind = urlArray[urlArray.length - 1];
+      _idFind = urlArray[urlArray.length - 2];
+      parent = urlArray[urlArray.length - 3];
+      var key = Object.keys(deleteRequest.data).slice(0, 1).join('');
+      // console.log(key);
+      // // console.log('PARENT', parent);
+      // // console.log('ROOTSTRING', rootString);
+      // // console.log('_idFind:', _idFind);
+      // console.log('DATA', deleteRequest.data);
       db.connect(function(conn) {
-        r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn);
-        r.db(config.dbName).table(config.tableName).filter(r.row('path').match(rootString + _idFind + '/*')).delete().run(conn, function(err, results) {
+        r.db(config.dbName).table(config.tableName).filter({path: null, _id: parent}).delete().run(conn, function(err, results) {
           if (err) throw err;
-          console.log("emitting to: ", deleteRequest.path + '-deleteSuccess');
-          socket.emit(deleteRequest.path + '-deleteSuccess', 'Data has successfully been deleted!');
-          emitToParent('value', deleteRequest.path, socket);
+          r.db(config.dbName).table(config.tableName).replace(r.row(parent).without(key)).run(conn, function(err, results) {
+            if (err) throw err;
+            socket.emit(deleteRequest.path + '-deleteSuccess', 'Data was deleted from database!');
+          });
         });
       });
     }
   });
 };
+
+//[ path: /  id: null]

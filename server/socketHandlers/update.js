@@ -70,7 +70,8 @@ exports.setup = function(socket, io) {
 			    emitToParent('value', updateRequest.path, socket);
 				}
 			}
+		};
 			updateOrInsert();
 		});
 	});
-}
+};
