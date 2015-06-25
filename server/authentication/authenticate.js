@@ -4,9 +4,10 @@ var r = require('rethinkdb');
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
+//TODO: need to index username property
 module.exports = function(req, res) {
 	db.connect(function(conn) {
-		r.db(config.dbName).table(config.tableName).filter({path: '/users/', _id: req.body.username}).run(conn, function(err, cursor) {
+		r.db(config.dbName).table(config.tableName).filter({path: '/users/', username: req.body.username}).run(conn, function(err, cursor) {
 			if (err) throw err;
 			cursor.toArray(function(err, result) {
 				if (err) throw err;
