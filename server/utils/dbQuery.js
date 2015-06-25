@@ -44,34 +44,5 @@ var dbQuery = function(queryType, request, callback) {
       });
     }); 
    }
-
-  // if(queryType === 'getChildren') {
-  //   var results = [];
-  //   r.db(config.dbName).table(config.tableName).filter({path: rootString, _idFind}).run(conn, function(err, cursor) {
-  //     cursor.toArray(function(err, result) {
-  //       for(var key in result[0]) {
-  //         if(key !== "path" && key !== "_id" && key !== "id" && key !== "_length" && key !== "_isArray" && key !== "_partArray") {
-            
-  //         }
-  //       }
-  //     });
-  //     r.db(config.dbName).table(config.tableName).filter(r.row('path').match(request.url+"*/")).run(conn, function(err, cursor) {
-  //         if (err) throw err;
-  //           cursor.toArray(function(err, result) {
-  //             childrenRows = result;
-  //           childrenRows.forEach(function(row) {
-  //             results.push(parseToObj({}, row));
-  //           });
-  //           if(callback) {
-  //             callback(results);
-  //           }
-  //           else {
-  //             return results;
-  //           }
-  //         });
-  //     });
-  //   });
-  // }
-
 };
 module.exports = dbQuery;
