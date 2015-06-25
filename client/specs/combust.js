@@ -54,11 +54,34 @@ var utils = {
 		username: "authUser",
 		password: "authPassword",
 		email: "authEmail"
+	},
+	testUpdateObj: {
+		users: {
+			user1: {
+				name: "richie Updated"
+			},
+			user2: {
+				name: "kuldeep Updated"
+			},
+			user3: {
+				name: "jack"
+			},
+			user4: {
+				name: "new insert"
+			}
+		},
+		activated: false,
+		messedUp: false,
+		test: {
+			name: "viable not"
+		}
 	}
+	
 }
 
 describe("Combust tests", function() {
 	before(function(done) {
+		socket = io.connect(serverAddress, {'forceNew': false});
 		done();
 	})
 
@@ -70,7 +93,10 @@ describe("Combust tests", function() {
 	after(function(done) {
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
+				if (err) throw err;
+				console.log(cursor);
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
+				done();
 			});
 		});
 	})
@@ -212,7 +238,26 @@ describe("Combust tests", function() {
 			});
 		});
 
-		describe('.on()', function() {
+		describe('update()', function() {
+			beforeEach(function(done) {
+				combustRef = utils.newCombust(socket);
+				done();
+			});
+
+			it('should update values for existing keys in the object in database at the current path', function(done) {
+				var test = combustRef.update(utils.testUpdateObj, function(response) {
+					done();
+				});
+			});
+
+			xit('should insert new keys and values in database at the current path', function(done) {
+				var test = combustRef.update(utils.testObj, function(response) {
+					done();
+				});
+			});
+		});
+
+		xdescribe('.on()', function() {
 			it('should receive updates when children are added', function(done) {
 				var alreadyRan = false;
 				//this is a jenky test, but it works for now

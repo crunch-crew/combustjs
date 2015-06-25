@@ -95,6 +95,7 @@ Combust.prototype.push = function(object, callback) {
 
 /* Takes in an object to be set at path. Does not return anything. */
 Combust.prototype.set = function(object, callback) {
+	console.log("this was called");
 	var newRef = new Combust({
 		dbName: this.dbName,
 		tableName: this.tableName,
@@ -110,6 +111,35 @@ Combust.prototype.set = function(object, callback) {
 	});
 	this.socket.emit('set', {path: this.constructPath(), data: object});
 };
+
+
+/**
+* Updates object at the current path.
+*
+*@method update
+*
+*@param object {Object} object The object to update the existing object at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
+Combust.prototype.update = function(object, callback) {
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+
+	this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
+		console.log(" in update on Combust prototype update : ", data);
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit('update', {path: this.constructPath(), data: object});
+};
+
 
 /**
 * Creates an event listener for a specified event at the current path.
