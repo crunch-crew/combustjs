@@ -33,6 +33,7 @@ module.exports = function(req, res) {
 										else {
 											console.log("sent success");
 											res.status(201).json({
+												id: generatedKey,
 												success: true
 											});
 										}

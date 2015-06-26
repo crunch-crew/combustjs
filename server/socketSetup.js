@@ -48,7 +48,7 @@ exports.setup = function(server) {
 		push.setup(socket, io);	
 		set.setup(socket);
 		update.setup(socket, io);
-		evaljs.setup(socket);	
+		// evaljs.setup(socket);	
 	});
 
 	return io;

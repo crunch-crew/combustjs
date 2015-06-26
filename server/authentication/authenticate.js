@@ -22,6 +22,7 @@ module.exports = function(req, res) {
 							var token = jwt.sign(result[0], config.jwtSecret, {expiresInMinutes: config.tokenExpireMinutes});
 							res.status(200).json({
 								success: true,
+								id: result[0].id,
 								token: token
 							});
 						}

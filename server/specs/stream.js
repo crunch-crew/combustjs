@@ -195,7 +195,6 @@ describe("server tests", function() {
 				});
 			});
 
-
 			describe('get', function() {
 				it('should successfully get an url', function(done) {
 					socket.emit('push', {path:'/', data: utils.testObj});
@@ -212,11 +211,10 @@ describe("server tests", function() {
 
 			//check if received object is same as submitted message - implement
 			describe('set', function() {
-
 				it('should set to paths in the database', function(done) {
 					socket.once('/messages/-setSuccess', function() {
 						socket.once('/messages/-getSuccess', function(data) {
-							data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
+							data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 							done();
 						});
 						socket.emit('getUrl', {url: '/messages/'});
@@ -227,13 +225,12 @@ describe("server tests", function() {
 				it('should delete children of the path that is being set and set path to passed data', function(done) {
 					socket.once('/messages/-setSuccess', function() {
 						socket.once('/messages/-getSuccess', function(data) {
-							data.should.eql({testProperty: false});
+							data.data.should.eql({testProperty: false});
 							done();
 						});
 						socket.emit('getUrl', {url: '/messages/'});
 					});
 					socket.emit('set', {path:'/messages/', data: {testProperty: false}});
-				});
 			});
 		});
 	

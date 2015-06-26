@@ -4,6 +4,8 @@ var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var dbQuery = require('../utils/dbQuery');
 var config = require('../config');
+var checkPermissions = require('../utils/checkPermissions');
+var permitRequest = require('../utils/permitRequest');
 
 exports.setup = function(socket) {
 	/**
@@ -16,8 +18,15 @@ exports.setup = function(socket) {
 	*@apiSuccess (getSuccess) {Object} getSuccessObject Javascript object that represents the requested url
 	*/
 	socket.on('getUrl', function(getRequest) {
-		dbQuery('get', getRequest, function(parsedObj) {
-			socket.emit(getRequest.url + "-getSuccess", parsedObj);
-		})
+		permitRequest("read", getRequest.url, socket.userToken, function(permission) {
+			if (permission) {
+				dbQuery('get', getRequest.url, function(parsedObj) {
+					socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
+				});
+			}
+			else {
+				socket.emit(getRequest.url + '-getSuccess', {success: false});
+			}
+		});
 	});
 }
