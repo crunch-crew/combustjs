@@ -219,6 +219,34 @@ Combust.prototype.set = function(object, callback) {
 	this.socket.emit(&#x27;set&#x27;, {path: this.constructPath(), data: object});
 };
 
+
+/**
+* Updates object at the current path.
+*
+*@method update
+*
+*@param object {Object} object The object to update the existing object at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
+Combust.prototype.update = function(object, callback) {
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+
+	this.socket.once(this.constructPath() + &#x27;-updateSuccess&#x27;, function(data) {
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit(&#x27;update&#x27;, {path: this.constructPath(), data: object});
+};
+
+
 /**
 * Creates an event listener for a specified event at the current path.
 *
@@ -233,23 +261,27 @@ Combust.prototype.on = function(eventType, callback) {
 	//this binding is lost in async calls so store it here
 	var socket = this.socket;
 	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
-	if (eventType === &quot;child_add&quot;) {
+	if (eventType === &quot;child_added&quot;) {
+    socket.once(path + &#x27;-subscribeUrlChildAddSuccess&#x27;, function() {
+      //need a get children method - not desired functionality as written
+      socket.emit(&#x27;getUrlChildren&#x27;, {url: path});
+    });
+    socket.once(path + &quot;-getUrlChildrenSuccess&quot;, function(data) {
+      //calls callback on all current child
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      socket.on(path + &#x27;-childaddSuccess&#x27;, function(data) {
+        //call callback on new child
+        callback(data);
+      });
+    });
 		socket.emit(&quot;subscribeUrlChildAdd&quot;, {url: path});
-		socket.once(path + &#x27;-subscribeUrlChildAddSuccess&#x27;, function() {
-			//need a get children method - not desired functionality as written
-			socket.emit(&#x27;getUrl&#x27;, {url: path});
-		});
-		socket.once(path + &quot;-getSuccess&quot;, function(data) {
-			//once get children method is written, call callback on all children.
-			/*once all current children have been received, as listener for new ones - this might cause an issue if a child is added inbetween
-			recieving the latest children and adding the listener.
-			*/
-			socket.on(path + &#x27;-childaddSuccess&#x27;, function(data) {
-				//call callback on new child
-				callback(data);
-			});
-		});
 	}
+
+
+	
 };
 
 Combust.prototype.newUser = function(newUser, callback) {

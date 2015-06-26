@@ -113,7 +113,27 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 141,
+            "line": 142,
+            "description": "Updates object at the current path.",
+            "itemtype": "method",
+            "name": "update",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to update the existing object at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 169,
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",

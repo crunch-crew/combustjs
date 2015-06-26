@@ -195,7 +195,7 @@ describe("server tests", function() {
 				});
 			});
 
-			xdescribe('get', function() {
+			describe('get', function() {
 				it('should successfully get an url', function(done) {
 					socket.emit('push', {path:'/', data: utils.testObj});
 					socket.once('/-pushSuccess', function(data) {
@@ -277,7 +277,7 @@ describe("server tests", function() {
 				// });
 			});
 
-		xdescribe('listeners', function() {
+		describe('listeners', function() {
 
 			it('should notify listeners of parent urls of value changes', function(done) {
 				socket.once('/-value', function(data) {
