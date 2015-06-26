@@ -10,6 +10,10 @@ var r = require('rethinkdb');
 var bcrypt = require('bcrypt');
 app.use(parser.json());
 
+//cors
+var cors = require('cors');
+app.use(cors());
+
 var socketSetup = require('./socketSetup');
 
 //authentication 
@@ -31,15 +35,12 @@ exports.app = app;
 exports.io =  io;
 
 
-// var cors = require('cors');
 //contains a setup function that adds web sockets to the server
 
 // app.use(parser.urlencoded({extended: true}));
 
 // app.use(session({
-// 	secret: 'chillestWhales',
-// 	resave: false,
-// 	saveUninitialized: false
+//  secret: 'chillestWhales',
+//  resave: false,
+//  saveUninitialized: false
 // }));
-
-// app.use(cors());

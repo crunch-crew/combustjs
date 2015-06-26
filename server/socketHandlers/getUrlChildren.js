@@ -20,9 +20,10 @@ exports.setup = function(socket) {
     var childrens = [];
     dbQuery('get', getRequest.url, function(result) {
       for(var key in result) {
-        var obj = {};
-        obj[key] = result[key];
-        childrens.push(obj);
+        result.id = key; 
+        // var obj = {};
+        // obj[key] = result[key];
+        childrens.push(result[key]);
       }
       socket.emit(getRequest.url + '-getUrlChildrenSuccess', childrens);
     });
