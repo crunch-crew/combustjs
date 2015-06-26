@@ -18,7 +18,7 @@ exports.setup = function(socket) {
 	*/
 	socket.on('getUrlChildren', function(getRequest) {
     var childrens = [];
-    dbQuery('get', getRequest, function(result) {
+    dbQuery('get', getRequest.url, function(result) {
       for(var key in result) {
         var obj = {};
         obj[key] = result[key];

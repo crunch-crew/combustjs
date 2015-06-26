@@ -5,7 +5,7 @@ var emitToParent = function(event, path, socket, data) {
   data = data || null;
   //if the event is 'value', will query the db for the new data for every parent path.
   if(event === 'value') {
-    dbQuery('get', {url: path}, function(parsedObj) {
+    dbQuery('get', path, function(parsedObj) {
       data = parsedObj;
       //at absolute root path emits event and returns out of function
       if (path === '/') {

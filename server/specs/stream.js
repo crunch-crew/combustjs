@@ -6,79 +6,12 @@ var parseToObj = require('../utils/parseToObj');
 var expect = require('chai').expect;
 var should = require('should');
 var supertest = require('supertest');
+var configTest = require('./configTest');
 
 /* Anytime you parseToRows, you need to use a dummy testObj!!!! */
-var utils = {
-	dbName: 'test',
-	tableName: 'test',
-	testObj: {
-				users: {
-					user1: {
-						name: "richie"
-					},
-					user2: {
-						name: "kuldeep"
-					},
-					user: {
-						name: "jack",
-						something: ['hi', {something: 'hi'}]
-					}
-				},
-				activated: true,
-				messedUp: false,
-				test: {
-					name: "viable"
-				}
-			},
-	dummyObj: {
-				users: {
-					user1: {
-						name: "richie"
-					},
-					user2: {
-						name: "kuldeep"
-					},
-					user: {
-						name: "jack",
-						something: ['hi', {something: 'hi'}]
-					}
-				},
-				activated: true,
-				messedUp: false,
-				test: {
-					name: "viable"
-				}
-			},
-	testRows: {
-		testRoot: { path: '/root/', _id: 'testObj', activated: true, messedUp: false },
-		testChildren: [ 
-			{ path: '/root/testObj/users/', _id: 'user1', name: 'richie' },
-  			{ path: '/root/testObj/users/', _id: 'user2', name: 'kuldeep' },
-  			{ path: '/root/testObj/users/user/something/', _id: '1', something: 'hi', _partArray: true },
-  			{ '0': 'hi', path: '/root/testObj/users/user/', _id: 'something', _isArray: true, _length: 2 },
-  			{ path: '/root/testObj/users/', _id: 'user', name: 'jack' },
-  			{ path: '/root/testObj/', _id: 'users' },
-  			{ path: '/root/testObj/', _id: 'test', name: 'viable' }
-		]
-	},
-	testUser: {
-		username: "testUser",
-		password: "testPassword",
-		email: "testEmail"
-	},
-	authUser: {
-		username: "authUser",
-		password: "authPassword",
-		email: "authEmail"
-	},
-	createAgent: function(server) {
-		var server = server || serverAddress;
-		return supertest.agent(server);
-	},
-};
+var utils = configTest.utils;
 
-var serverAddress = 'http://127.0.0.1:3000';
-
+var serverAddress = configTest.serverAddress;
 
 describe("server tests", function() {
 	before(function(done) {
@@ -100,7 +33,7 @@ describe("server tests", function() {
 	describe("authentication", function() {
 		var agent;
 		before(function(done) {
-			agent = utils.createAgent();
+			agent = utils.createAgent(serverAddress);
 			done();
 		});
 
@@ -223,7 +156,7 @@ describe("server tests", function() {
 
 		//create a user and obtain a webtoken
 		before(function(done) {
-			agent = utils.createAgent();
+			agent = utils.createAgent(serverAddress);
 			agent.post('/signup').send(utils.authUser).expect(201).end(function(err, response) {
 				if (err) throw err;
 				else {
@@ -244,13 +177,15 @@ describe("server tests", function() {
 			});
 		})
 
+		//TODO: implement this test
 		describe('authentication', function() {
 			it("should authenticate websocket connections with a valid token", function(done) {
 				done();
 			});
 		});
 
-		describe('api', function() {
+		// describe('api', function() {
+			//should be updated to check if pushed item is actually in db
 			describe('push', function() {
 				it('should push into the database', function(done) {
 					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
@@ -267,7 +202,7 @@ describe("server tests", function() {
 						var path = '/' + data.key + '/';
 						socket.emit('getUrl', {url: path});
 						socket.once(path + '-getSuccess', function(data) {
-								data.should.eql(utils.testObj);
+								data.data.should.eql(utils.testObj);
 								done();
 						});
 					});
@@ -276,11 +211,10 @@ describe("server tests", function() {
 
 			//check if received object is same as submitted message - implement
 			describe('set', function() {
-
 				it('should set to paths in the database', function(done) {
 					socket.once('/messages/-setSuccess', function() {
 						socket.once('/messages/-getSuccess', function(data) {
-							data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
+							data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
 							done();
 						});
 						socket.emit('getUrl', {url: '/messages/'});
@@ -291,13 +225,12 @@ describe("server tests", function() {
 				it('should delete children of the path that is being set and set path to passed data', function(done) {
 					socket.once('/messages/-setSuccess', function() {
 						socket.once('/messages/-getSuccess', function(data) {
-							data.should.eql({testProperty: false});
+							data.data.should.eql({testProperty: false});
 							done();
 						});
 						socket.emit('getUrl', {url: '/messages/'});
 					});
 					socket.emit('set', {path:'/messages/', data: {testProperty: false}});
-				});
 			});
 		});
 	
@@ -337,7 +270,6 @@ describe("server tests", function() {
 					socket.emit('push', {path:'/messages/', data: utils.dummyObj});
 				});
 			});
-			
 		});
 	});
 });
