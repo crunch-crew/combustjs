@@ -16,8 +16,6 @@ module.exports = function(options) {
   var path = path.split("/");
   var path = path.slice(1, path.length-1);
 
-  console.log(path);
-
   //initialize to whatever rules are set at root
   var read = rules[".read"];
   var write = rules[".write"];

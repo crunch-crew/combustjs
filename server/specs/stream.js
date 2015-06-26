@@ -184,7 +184,7 @@ describe("server tests", function() {
 			});
 		});
 
-		describe('api', function() {
+		// describe('api', function() {
 			//should be updated to check if pushed item is actually in db
 			describe('push', function() {
 				it('should push into the database', function(done) {
@@ -202,7 +202,7 @@ describe("server tests", function() {
 						var path = '/' + data.key + '/';
 						socket.emit('getUrl', {url: path});
 						socket.once(path + '-getSuccess', function(data) {
-								data.should.eql(utils.testObj);
+								data.data.should.eql(utils.testObj);
 								done();
 						});
 					});

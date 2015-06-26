@@ -21,8 +21,8 @@ describe('checkPermissions tests', function() {
       done();
     });
 
-    it('should default permissions to true if none exist', function(done) {
-      var permissions = checkPermissions({path: 'this/path/does/not/have/permissions'});
+    it('should default permissions to false if none exist', function(done) {
+      var permissions = checkPermissions({path: 'this/path/does/not/have/permissions', rules: rules});
       permissions.read.should.equal(false);
       permissions.write.should.equal(false);
       done();
@@ -55,7 +55,6 @@ describe('checkPermissions tests', function() {
       permissions.write.should.equal(true);
       done();
     });
-    // it('should')
   });
 
   describe('wildcards', function() {
