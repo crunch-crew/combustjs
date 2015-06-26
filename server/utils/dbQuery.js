@@ -42,6 +42,7 @@ var dbQuery = function(queryType, path, callback) {
 
     db.connect(function(conn) {
       //query to find root node
+      // console.log('')
       r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run(conn, function(err, cursor) {
         if (err) throw err;
         cursor.toArray(function(err, result) {

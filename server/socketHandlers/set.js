@@ -37,14 +37,11 @@ exports.setup = function(socket, io) {
 		//all other paths - this is just string processing to get it into the proper format for querying the db
 		else {
 			urlArray = setRequest.path.split('/');
-			urlArray = urlArray.slice(1,urlArray.length-1);
+			urlArray = urlArray.slice(1, urlArray.length-1);
 			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
 			childrenString = rootString;
-			console.log('CHILDREN STRING', childrenString);
 			_idFind = urlArray[urlArray.length-1];
-			console.log('INSIDE OF SET', _idFind);
 			children_idFind = urlArray[urlArray.length-1];
-			console.log(children_idFind);
 		}
 		db.connect(function(conn) {
 			r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
