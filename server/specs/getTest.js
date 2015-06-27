@@ -24,6 +24,7 @@ describe('get', function() {
   });
 
   after(function(done) {
+    socket.disconnect();
     configTest.resetDb(function() {
       done();
     });

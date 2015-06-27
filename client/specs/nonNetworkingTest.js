@@ -11,7 +11,7 @@ var serverAddress = config.serverAddress;
 describe('Non-networking', function() {
   var combustRef;
   beforeEach(function(done) {
-    combustRef = utils.newCombust();
+    combustRef = new Combust({});
     done();
   });
 
@@ -33,7 +33,7 @@ describe('Non-networking', function() {
     });
 
     it('should be chainable', function(done) {
-      combustRef = utils.newCombust();
+      combustRef = new Combust({});
       combustRef.child('library').child('history').child('japan');
       combustRef.pathArray.should.eql(['/', 'library', 'history', 'japan']);
       done();
@@ -42,7 +42,7 @@ describe('Non-networking', function() {
 
   describe('constructPath()', function() {
     beforeEach(function(done) {
-      combustRef = utils.newCombust();
+      combustRef = new Combust({});
       done();
     });
 

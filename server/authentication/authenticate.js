@@ -12,13 +12,14 @@ module.exports = function(req, res) {
 			cursor.toArray(function(err, result) {
 				if (err) throw err;
 				if (result.length === 0) {
-					res.status(400).send("Invalid credentials");
+					res.status(400).json({success: false});
 				}
 				else {
 					bcrypt.compare(req.body.password, result[0].password, function(err, same) {
 						if (err) throw err;
 						if (same) {
-							console.log("Password matches!");
+							//send back entire user object, except for password
+							delete result[0].password;
 							var token = jwt.sign(result[0], config.jwtSecret, {expiresInMinutes: config.tokenExpireMinutes});
 							res.status(200).json({
 								success: true,
@@ -27,7 +28,6 @@ module.exports = function(req, res) {
 							});
 						}
 						else {
-							console.log("Password doesn't match");
 							res.status(400).json({
 								success: false
 							});

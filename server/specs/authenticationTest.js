@@ -15,8 +15,8 @@ describe('user management', function() {
   var agent;
   before(function(done) {
     configTest.resetDb(function() {
-      configTest.authenticateSocket(function(socket, newAgent) {
-        socket = socket;
+      configTest.authenticateSocket(function(newSocket, newAgent) {
+        socket = newSocket;
         agent = newAgent;
         done();
       });
@@ -24,6 +24,7 @@ describe('user management', function() {
   });
 
   after(function(done) {
+    socket.disconnect();
     configTest.resetDb(function() {
       done();
     });

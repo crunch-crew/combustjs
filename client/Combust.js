@@ -1,5 +1,6 @@
 //required for testing only - remove in production
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+var io = require('socket.io-client');
 
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
@@ -9,15 +10,52 @@ var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 *
 *@constructor
 */
-var Combust = function(options) {
+var Combust = function(options, callback) {
+	this.callback = callback || function() {};
+	this.auth = options.auth || null;
+	this.serverAddress = options.serverAddress || null;
 	this.dbName = options.tableName || 'test';
 	this.tableName = options.tableName || 'test';
-	this.socket = options.socket || null;
+	//manage socket connection
+	if (options.socket) {
+		this.socket = options.socket;
+	}
+	else if (this.serverAddress) {
+		this.socket = this.connectSocket(this.callback);
+	}
+	else {
+		this.socket = null;
+	}
 	// this.io = options.io || null;
 	this.pathArray = ['/'];
 	//could check local storage to see if a token exists there
 	this.token = null;
 };
+
+//create socket connection to server
+Combust.prototype.connectSocket = function(callback) {
+	if (this.auth) {
+		this.authenticate(this.auth, function(response) {
+			this.socket = io.connect(this.serverAddress, {
+				forceNew: true,
+	      //send the web token with the initial websocket handshake
+	      query: 'token=' + response.token
+	    });
+	    this.token = response.token;
+			this.socket.on('connectSuccess', function() {
+	    	callback(response);
+			});
+		}.bind(this));
+	}
+	else {
+		this.socket = io.connect(this.serverAddress, {
+			forceNew: true
+		});
+    this.socket.on('connectSuccess', function() {
+    	callback();
+		});
+	}
+}
 
 /* this method doesn't have documentation because its an internal method that the user should not use.
 	 Converts the pathArray variable into a string that can be used by other methods to interact with the server
@@ -71,7 +109,6 @@ Combust.prototype.push = function(object, callback) {
 		tableName: this.tableName,
 		socket: this.socket
 	});
-
 	// newRef.token = this.token;
 
 	this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
@@ -266,7 +303,7 @@ Combust.prototype.newUser = function(newUser, callback) {
 		// else {
 		// 	console.log(xhr.responseText);
 		// }
-	};
+	}.bind(this);
 	xhr.send(JSON.stringify(newUser));
 };
 
@@ -279,9 +316,6 @@ Combust.prototype.authenticate = function(credentials, callback) {
 		response = JSON.parse(xhr.responseText);
 		response.status = xhr.status;
 		this.token = response.token;
-		// if (!this.socket) {
-		// 	this.connectSocket();
-		// }
 		callback(response);
 	}.bind(this);
 	xhr.send(JSON.stringify(credentials));
