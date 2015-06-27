@@ -3,6 +3,7 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var emitToParent = require('../utils/emitToParent');
+var dbQuery = require('../utils/dbQuery');
 var config = require('../config');
 
 exports.setup = function(socket, io) {
@@ -26,34 +27,76 @@ exports.setup = function(socket, io) {
 		var urlArray;
 		var _idFind;
 		var rootString;
+		var incompletePath = false;
+		var neededParents = [];
 
-		if (setRequest.path === '/') {
-			rootString = null;
-			_idFind = "/";
-			childrenString = '/';
-			children_idFind = "";
-		}
-		//all other paths - this is just string processing to get it into the proper format for querying the db
-		else {
-			urlArray = setRequest.path.split('/');
-			urlArray = urlArray.slice(1, urlArray.length-1);
-			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
-			childrenString = rootString;
-			_idFind = urlArray[urlArray.length-1];
-			children_idFind = urlArray[urlArray.length-1];
-		}
 		db.connect(function(conn) {
-			r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
-				if (err) throw err;
-				r.db(config.dbName).table(config.tableName).filter(r.row('path').match(childrenString + children_idFind + "*")).delete().run(conn, function(err, results) {
-					var rows = parseToRows(setRequest.data, rootString, _idFind);
+			dbQuery('get', '/', function(rootObject) {
+				if (setRequest.path === '/') {
+					rootString = null;
+					_idFind = "/";
+					childrenString = '/';
+					children_idFind = "";
+				}
+				//all other paths - this is just string processing to get it into the proper format for querying the db
+				else {
+					urlArray = setRequest.path.split('/');
+					//urlArray will look something like [users, messages, comments]
+					urlArray = urlArray.slice(1,urlArray.length-1);
+
+					for(var i = 0; i < urlArray.length - 1; i++) {
+						//iterates through urlArray and checks to see if the properties in urlArray exist in our current database.
+						if(!rootObject[urlArray[i]]) {
+							//keeps track of a variable called "incompletePath" that we will use later. Also pushes the props we need to create
+							incompletePath = true;
+							neededParents.push(urlArray[i]);
+						}
+					}
+					//sets the rootString which is the path we will use in dbqueries
+					rootString = (urlArray.slice(0, urlArray.length - 1 - neededParents.length).join("/")) + "/";
+					_idFind = urlArray[urlArray.length-1];
+					childrenString = rootString;
+					children_idFind = urlArray[urlArray.length-1];
+				}	
+							
+				if(!incompletePath) {
+					//if in here, it means that the database contains all parent paths leading up to our target path
+					r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
+						if (err) throw err;
+						r.db(config.dbName).table(config.tableName).filter(r.row('path').match(childrenString + children_idFind + "*")).delete().run(conn, function(err, results) {
+							var rows = parseToRows(setRequest.data, rootString, _idFind);
+							r.table(config.tableName).insert(rows).run(conn, function(err, results) {
+								if(err) throw err;
+								//emits setSuccess so client to notify client of success
+								socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
+								emitToParent('value', setRequest.path, socket);
+							});
+						});
+					});			
+				}
+				else {
+					//starts by building an empty object
+					var buildObj = {}
+					//currentPoint will deeper and deeper into our buildObj as we start building all the missing path to our target path
+					var currentPointer = buildObj;
+					//iterates through the parents we need to build
+					for(var i = 1; i < neededParents.length; i++) {
+						currentPointer = currentPointer[neededParents[i]] = {};
+					}
+					//finally after we have built all the parents sets our path id as a property in the parent row
+					currentPointer[_idFind] = rootObject;
+					//we parse the whole obj that we are building into rows so it can be inserted into db
+					//ie. if we were setting an object at /users/message/ and users doesn't exist,
+					//buildObj would equal {message: sldfksdlf}
+					//rootString would be '/'
+					//neededParents[0] would be the _id which is 'users'
+					var rows = parseToRows(buildObj, rootString, neededParents[0]);
 					r.table(config.tableName).insert(rows).run(conn, function(err, results) {
 						if(err) throw err;
-						//emits setSuccess so client to notify client of success
-						socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
+						socket.emit(setRequest.path+'-setSuccess', 'Successfully set data!');
 						emitToParent('value', setRequest.path, socket);
 					});
-				});
+				}
 			});
 		});
 	});
