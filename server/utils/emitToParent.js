@@ -19,6 +19,38 @@ var emitToParent = function(event, path, socket, data) {
       emitToParent(event, parentUrl.join('/') + '/', socket, data);  
     })
   }
+  
+  //if the event is 'child_added'
+  if(event === 'child_added') {
+    // this should be invoked on parent by the child at the time of event on itself
+    // a 'child_added', 'child_changed', 'child_removed' event here should bubble up to parent resulting in triggering 'child_changed' and 'value' events on appropriate parents in the chain
+    emitToParent('value', path, socket, data); // emit value here and bubble up
+    // invoke_child changed on parents of this
+
+  }
+
+  //if the event is 'child_changed'
+  if(event === 'child_changed') {
+    console.log('child changed - in emitToParent - to be completed')
+    // this should be invoked on parent by the child at the time of event on itself
+    // a 'child_added', 'child_changed', 'child_removed' event here should bubble up to parent resulting in triggering 'child_changed' and 'value' events on appropriate parents in the chain
+    emitToParent('value', path, socket, data); // emit value here and bubble up
+    // invoke_child changed on parents of this
+  }
+
+  //if the event is 'child_removed'
+  if(event === 'child_removed') {
+    // this should be invoked on parent by the child at the time of event on itself
+    // a 'child_added', 'child_changed', 'child_removed' event here should bubble up to parent resulting in triggering 'child_changed' and 'value' events on appropriate parents in the chain
+    emitToParent('value', path, socket, data); // emit value here and bubble up
+    // invoke_child changed on parents of this
+  }
+
+  //if the event is 'child_moved'
+  if(event === 'child_moved') {
+    //placeholder for now
+  }
+
 };
 
 module.exports = emitToParent;

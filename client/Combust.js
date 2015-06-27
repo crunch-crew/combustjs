@@ -146,7 +146,7 @@ Combust.prototype.update = function(object, callback) {
 *
 *@method on
 *
-*@param eventType {String} eventType The type of event to listen for at the current path.
+*@param eventType {String} eventType The type of event to listen for at the current path - currently supported values are "child_added", "child_changed", "child_removed", "value"
 *@param *callback {Function} callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.
 */
 Combust.prototype.on = function(eventType, callback) {
@@ -173,9 +173,51 @@ Combust.prototype.on = function(eventType, callback) {
     });
 		socket.emit("subscribeUrlChildAdd", {url: path});
 	}
-
-
-	
+	// the client side method that enables execution of callback with child_changed response
+	if (eventType === "child_changed") {
+    socket.once(path + '-subscribeUrlChildChangeSuccess', function() {
+      //listens to completion of subscribe event on server
+      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
+      socket.emit('getUrlChildren', {url: path});
+      //emit for getUrlChildren action on server; for the 'path'
+    });
+    socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      //listens to getChildren Success and executes callback on all current children; does this first time
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      socket.on(path + '-childchangeSuccess', function(data) {
+        //continues to listen to child change events and executes callback with returned data
+        callback(data);
+      });
+    });
+		socket.emit("subscribeUrlChildChange", {url: path});
+		// emits for registeration of subscribe event at the path on server handler
+	}
+	// the client side method that enables execution of callback with child_changed response
+	if (eventType === "value") {
+    socket.once(path + '-subscribeUrlValueSuccess', function() {
+      //listens to completion of subscribe event on server
+      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
+      socket.emit('getUrlChildren', {url: path});
+      //emit for getUrlChildren action on server; for the 'path'
+    });
+    socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      //listens to getChildren Success and executes callback on all current children; does this first time
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      // confirm what should this be --- 
+      socket.on(path + '-value', function(data) {
+        //continues to listen to child change events and executes callback with returned data
+        callback(data);
+      });
+    });
+		socket.emit("subscribeUrlValue", {url: path});
+		// emits for registeration of subscribe event at the path on server handler
+	}
 };
 
 Combust.prototype.newUser = function(newUser, callback) {
