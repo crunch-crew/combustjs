@@ -4,6 +4,19 @@ var emitToParent = require('../utils/emitToParent');
 var config = require('../config');
 
 exports.setup = function(socket, io) {
+  /**
+  *@apiGroup delete
+  *@apiName delete
+  *@api {socket} Deletes a javascript object at the specified url
+  *@api {socket} Emits back a [url]-deleteSuccess signal on success
+  *@api {socket} Emits value signal to all parents AND the specified url
+  *
+  *@apiParam {Object} deleteSuccess An object that contains path, _id, and data as properties
+  *@apiParam {String} deleteSuccess._id A string that specifies the key of the javascript object
+  *
+  *
+  */
+
   socket.on('delete', function(deleteRequest) {
     console.log('DELETE REQUEST', deleteRequest.path);
     var urlArray,
@@ -11,18 +24,16 @@ exports.setup = function(socket, io) {
         rootString,
         parent;
 
+    if (deleteRequest.path === '/') {
+      rootString = null;
+      _idFind = "/";
+    } else { 
     var props = Object.keys(deleteRequest.data);
-    console.log('Key to DELETE from specified path:', props);
-
     urlArray = deleteRequest.path.split('/');
-    rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/'
-    console.log('rootString after slice', rootString)
-
+    rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/';
     _idFind = urlArray[urlArray.length - 2] || '/';
-    parent = urlArray[urlArray.length - 2] || '/';
-
-    console.log('ROOTSTRING: ', rootString);
-    console.log('_IDFIND: ', _idFind);
+    parent = urlArray[urlArray.length - 2] || '/';  
+    }
 
     db.connect(function(conn) {
       r.db(config.dbName).table(config.tableName).filter({path: '/messages/', _id: props[0]}).delete().run(conn, function(err, results) {
