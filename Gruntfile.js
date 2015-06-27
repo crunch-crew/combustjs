@@ -23,7 +23,7 @@ module.exports = function(grunt) {
         options: {
           reporter: 'spec',
           },
-        src: ['server/specs/*', 'client/specs/*']
+        src: ['server/specs/*.js', 'client/specs/*.js']
       }
     },
 
