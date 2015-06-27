@@ -10,26 +10,28 @@ exports.setup = function(socket, io) {
         _idFind,
         rootString,
         parent;
-    if (deleteRequest.path === '/') {
-      // rootString = null; 
-      // _idFind = '/';
-    } else {
-      urlArray = deleteRequest.path.split('/');
-      urlArray.slice(1, urlArray.length - 1);
-      console.log('urlArray after slice::::', urlArray);
-      rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/';
-      _idFind = urlArray[urlArray.length - 1];
-      parent = urlArray[urlArray.length - 2];
-      var key = Object.keys(deleteRequest.data).slice(0, 1).join('');
-      db.connect(function(conn) {
-        r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
-          console.log('delete to database call was a success');
-          if (err) throw err;
-          socket.emit(deleteRequest.path + '-deleteSuccess', 'Data successfully deleted!');
-          emitToParent('value', deleteRequest.path, socket);
-          console.log('Query results from delete socket handler', results);
-        });
+
+    var props = Object.keys(deleteRequest.data);
+    console.log('Key to DELETE from specified path:', props);
+
+    urlArray = deleteRequest.path.split('/');
+    rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/'
+    console.log('rootString after slice', rootString)
+
+    _idFind = urlArray[urlArray.length - 2] || '/';
+    parent = urlArray[urlArray.length - 2] || '/';
+
+    console.log('ROOTSTRING: ', rootString);
+    console.log('_IDFIND: ', _idFind);
+
+    db.connect(function(conn) {
+      r.db(config.dbName).table(config.tableName).filter({path: '/messages/', _id: props[0]}).delete().run(conn, function(err, results) {
+        if (err) throw err;
+        socket.emit(deleteRequest.path + '-deleteSuccess', 'Data successfully deleted!');
+        emitToParent('value', deleteRequest.path, socket);
       });
-    }
+    }); 
   });
 };
+
+

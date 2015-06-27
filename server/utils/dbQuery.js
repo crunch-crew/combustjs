@@ -21,7 +21,6 @@ var config = require('../config');
 //   if(queryType === 'get') {
 //     //all other paths - this is just string processing to get it into the proper format for querying the db
 var dbQuery = function(queryType, path, callback) {
-   
   //when queryType is get -- added this, but might not actually need.
   if(queryType === 'get') {
     //handles edge case when accessing root path
