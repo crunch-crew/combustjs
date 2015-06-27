@@ -36,6 +36,9 @@ module.exports = function(grunt) {
     },
 
     jshint: {
+      options: {
+        ignores: ['server/utils/checkPermissions.js']
+      },
       files: ['gruntfile.js','server/authentication/*.js', 'server/socketHandlers/*.js', 'server/utils/*.js', 'server/*.js', 'client/*.js']
     },
 

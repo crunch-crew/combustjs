@@ -288,9 +288,10 @@ describe("Combust tests", function() {
 					authRef.push({msg: "hi"});
 				},50);
 				authRef.on('child_added', function(data) {
+					console.log('INSIDE OF COMBUST.JS LOGGING DATA', data)
 					timesCalled++;
 					if(timesCalled === 1) {
-						data.msg.should.equal("this is the root node of the db");
+						data.should.equal("this is the root node of the db");
 					}
 					if(timesCalled === 2) {
 						data.msg.should.equal("hi");
