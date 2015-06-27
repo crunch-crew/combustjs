@@ -72,6 +72,8 @@ Combust.prototype.push = function(object, callback) {
 		socket: this.socket
 	});
 
+	// newRef.token = this.token;
+
 	this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
 		newRef.child(data.key);
 		if (callback) {
