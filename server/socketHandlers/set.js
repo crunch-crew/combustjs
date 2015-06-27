@@ -27,7 +27,6 @@ exports.setup = function(socket, io) {
 		var _idFind;
 		var rootString;
 
-
 		if (setRequest.path === '/') {
 			rootString = null;
 			_idFind = "/";
