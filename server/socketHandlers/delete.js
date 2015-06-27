@@ -28,13 +28,14 @@ exports.setup = function(socket, io) {
       rootString = null;
       _idFind = "/";
     } else { 
-    var props = Object.keys(deleteRequest.data);
-    urlArray = deleteRequest.path.split('/');
-    rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/';
-    _idFind = urlArray[urlArray.length - 2] || '/';
-    parent = urlArray[urlArray.length - 2] || '/';  
+      urlArray = deleteRequest.path.split('/');
+      rootString = (urlArray.slice(0, urlArray.length - 1).join('/')) + '/';
+      _idFind = urlArray[urlArray.length - 2] || '/';
+      parent = urlArray[urlArray.length - 2] || '/';  
     }
 
+      var props = Object.keys(deleteRequest.data);
+      console.log("PROP", props);
     db.connect(function(conn) {
       r.db(config.dbName).table(config.tableName).filter({path: '/messages/', _id: props[0]}).delete().run(conn, function(err, results) {
         if (err) throw err;
