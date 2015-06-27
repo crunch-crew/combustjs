@@ -54,3 +54,26 @@ var emitToParent = function(event, path, socket, data) {
 };
 
 module.exports = emitToParent;
+
+// var dbQuery = require('./dbQuery');
+// //emits to all parents of current path AND current path. 
+// var emitToParent = function(event, path, socket, data, highestUrl) {
+//   var childrens, currentPath, currentData;
+//   //throws error if no data is given
+//   if(!data) {
+//     throw 'bad input';
+//   }
+//   socket.emit(highestUrl + '-' + event, data);
+
+//   currentPath = [];
+//   currentData = data;
+//   childrens = path.split('/')
+//   childrens = childrens.slice(1, childrens.length-1); 
+//   for(var i = 0; i < childrens.length; i++) {
+//     currentPath.push(childrens[i]);
+//     currentData = currentData[childrens[i]];
+//     socket.emit('/' + currentPath.join('/') + '/-' + event, currentData);
+//   } 
+// };
+
+// module.exports = emitToParent;
