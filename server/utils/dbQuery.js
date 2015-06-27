@@ -22,8 +22,8 @@ var config = require('../config');
 //     //all other paths - this is just string processing to get it into the proper format for querying the db
 var dbQuery = function(queryType, path, callback) {
    
-    //when queryType is get -- added this, but might not actually need.
-   if(queryType = 'get') {
+  //when queryType is get -- added this, but might not actually need.
+  if(queryType === 'get') {
     //handles edge case when accessing root path
     var urlArray;
     if (path === '/') {
@@ -42,6 +42,7 @@ var dbQuery = function(queryType, path, callback) {
 
     db.connect(function(conn) {
       //query to find root node
+      // console.log('')
       r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run(conn, function(err, cursor) {
         if (err) throw err;
         cursor.toArray(function(err, result) {

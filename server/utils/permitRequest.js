@@ -11,4 +11,4 @@ module.exports = function(permissionType, path, user, callback) {
     });
     callback(permission[permissionType]);
   });
-} 
+};

@@ -27,6 +27,9 @@ exports.setup = function(socket) {
 			else {
 				socket.emit(getRequest.url + '-getSuccess', {success: false});
 			}
+			dbQuery('get', getRequest, function(parsedObj) {
+				socket.emit(getRequest.url + "-getSuccess", parsedObj);
+			});
 		});
 	});
-}
+};

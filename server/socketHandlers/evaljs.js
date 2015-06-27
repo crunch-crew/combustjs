@@ -15,4 +15,4 @@ exports.setup = function(socket, io) {
       console.log("Permission denied!");
     }
   });
-}
+};

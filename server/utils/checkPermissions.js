@@ -13,8 +13,8 @@ module.exports = function(options) {
   var $data = options.data || {};
 
   //get array of keys
-  var path = path.split("/");
-  var path = path.slice(1, path.length-1);
+  path = path.split("/");
+  path = path.slice(1, path.length-1);
 
   //initialize to whatever rules are set at root
   var read = rules[".read"];
@@ -62,10 +62,10 @@ module.exports = function(options) {
 
 //replace tokens with their actual values and evaluate the strings as javascript
 if (read) {
-  var read = eval(read); 
+  read = eval(read); 
 }
 if (write) {
-  var write = eval(write);
+  write = eval(write);
 }
   //if rule is undefined, set it to true
   return {

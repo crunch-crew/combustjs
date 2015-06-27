@@ -28,4 +28,4 @@ exports.setup = function(socket) {
       socket.emit(getRequest.url + '-getUrlChildrenSuccess', childrens);
     });
 	});
-}
+};

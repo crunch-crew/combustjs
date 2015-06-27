@@ -24,7 +24,7 @@ describe("server tests", function() {
 		//at the end of tests, wipe the entire table and then re-insert the root node
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, results) {
-				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn, done);
+				r.db('test').table('test').insert({path: null, _id: '/'}).run(conn);
 				r.db('test').table('test').insert({path: '/', _id: 'users'}).run(conn, done);
 			});
 		});
@@ -209,6 +209,34 @@ describe("server tests", function() {
 				});
 			});
 
+			describe('delete', function() {
+
+				db.connect(function(conn) {
+					r.db(config.dbName).table(config.tableName).insert({path: '/', _id: 'usr1'}).run(conn, function(err, results) {
+						if (err) throw err;
+						console.log('Inserted usr1 into database', results); 
+					});
+				});
+
+				it('should remove a static property at specified path', function(done) {
+
+					socket.once('/usr1/messages/-setSuccess', function() {
+						socket.emit('delete', {path:'/usr1/messages/', data:{room: 'main'}});
+						console.log('EMITTED DELETE ')
+					});
+					socket.once('/usr1/messages/-deleteSuccess', function() {
+						console.log('deleteSuccess');
+						socket.emit('getUrl', {url: '/usr1/messages/'})
+					});
+					socket.once('/usr1/messages/-getSuccess', function(data) {
+						console.log('DATA AFTER SUCCESS', data);
+						data.should.eql({});
+						done();
+					});
+					socket.emit('set', {path: '/usr1/messages/', data: {msg1: { from: 'Mike' }, msg2: { from: 'Hunt' }, room: 'main'}});
+				});
+			});
+
 			//check if received object is same as submitted message - implement
 			describe('set', function() {
 				it('should set to paths in the database', function(done) {
@@ -234,7 +262,7 @@ describe("server tests", function() {
 			});
 		});
 	
-			describe('getUrlChildren', function() {
+			xdescribe('getUrlChildren', function() {
 				it('should return an array with getUrlChildren', function(done) {
 					socket.once('/-getUrlChildrenSuccess', function(data) {
 						if(Array.isArray(data)) {

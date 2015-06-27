@@ -6,4 +6,5 @@ module.exports = {
 	bcryptRepeat: 10,
 	jwtSecret: 'combustJS',
 	tokenExpireMinutes: 60
-}
+};
+
