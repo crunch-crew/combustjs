@@ -77,29 +77,22 @@ var utils = {
 		}
 	}
 	
-}
+};
 
 describe("Combust tests", function() {
 	before(function(done) {
 		socket = io.connect(serverAddress, {'forceNew': false});
 		done();
-	})
-
-	beforeEach(function(done) {
-		combustRef = utils.newCombust();
-		done();
-	})
+	});
 
 	after(function(done) {
 		db.connect(function(conn) {
 			r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
 				if (err) throw err;
-				// console.log(cursor);
 				r.db('test').table('test').insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
-				done();
 			});
 		});
-	})
+	});
 
 	describe('Non-networking', function() {
 		var combustRef;
@@ -108,18 +101,16 @@ describe("Combust tests", function() {
 			done();
 		});
 
-		it('should initialize properly based on the passed parameters', function(done) {
-			combustRef.dbName.should.equal('test');
-			combustRef.tableName.should.equal('test');
-			combustRef.pathArray.should.eql(['/']);
-			done();
+		describe('intialization', function() {
+			it('should initialize properly based on the passed parameters', function(done) {
+				combustRef.dbName.should.equal('test');
+				combustRef.tableName.should.equal('test');
+				combustRef.pathArray.should.eql(['/']);
+				done();
+			});
 		});
 
 		describe('child()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust();
-				done();
-			});
 
 			it('should change the referenced path when called', function(done) {
 				combustRef.child('users');
@@ -150,7 +141,7 @@ describe("Combust tests", function() {
 				combustRef.child('japan');
 				combustRef.constructPath().should.equal('/library/history/japan/');
 				done();
-			})
+			});
 		});
 	});
 	describe('networking', function() {		
@@ -239,11 +230,6 @@ describe("Combust tests", function() {
 		});
 
 		describe('update()', function() {
-			beforeEach(function(done) {
-				combustRef = utils.newCombust(socket);
-				done();
-			});
-
 			// after(function(done) {
 			// 	db.connect(function(conn) {
 			// 		r.db(utils.dbName).table(utils.tableName).delete().run(conn, function(err, cursor) {
@@ -254,13 +240,13 @@ describe("Combust tests", function() {
 			// })
 
 			it('should update values for existing keys in the object in database at the current path', function(done) {
-				var test = combustRef.update(utils.testUpdateObj, function(response) {
+				combustRef.update(utils.testUpdateObj, function(response) {
 					done();
 				});
 			});
 
-			xit('should insert new keys and values in database at the current path', function(done) {
-				var test = combustRef.update(utils.testObj, function(response) {
+			it('should insert new keys and values in database at the current path', function(done) {
+				 combustRef.update(utils.testObj, function(response) {
 					done();
 				});
 			});
@@ -274,7 +260,7 @@ describe("Combust tests", function() {
 						r.db(utils.dbName).table(utils.tableName).insert({path: null, _id: '/', msg:"this is the root node of the db"}).run(conn, done);
 					});
 				});
-			})
+			});
 
 			it('should receive updates when children are added', function(done) {
 				var timesCalled = 0;
