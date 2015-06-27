@@ -37,7 +37,7 @@ exports.setup = function(socket, io) {
 		//all other paths - this is just string processing to get it into the proper format for querying the db
 		else {
 			urlArray = setRequest.path.split('/');
-			urlArray = urlArray.slice(1,urlArray.length-1);
+			urlArray = urlArray.slice(1, urlArray.length-1);
 			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
 			childrenString = rootString;
 			_idFind = urlArray[urlArray.length-1];
@@ -58,4 +58,4 @@ exports.setup = function(socket, io) {
 			});
 		});
 	});
-}
+};

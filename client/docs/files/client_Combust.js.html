@@ -79,6 +79,9 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
+//required for testing only - remove in production
+var XMLHttpRequest = require(&quot;xmlhttprequest&quot;).XMLHttpRequest;
+
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
 * as well as listening for changes in data at the specified path.
@@ -90,8 +93,11 @@
 var Combust = function(options) {
 	this.dbName = options.tableName || &#x27;test&#x27;;
 	this.tableName = options.tableName || &#x27;test&#x27;;
-	this.socket = options.socket;
+	this.socket = options.socket || null;
+	// this.io = options.io || null;
 	this.pathArray = [&#x27;/&#x27;];
+	//could check local storage to see if a token exists there
+	this.token = null;
 };
 
 /* this method doesn&#x27;t have documentation because its an internal method that the user should not use.
@@ -159,6 +165,33 @@ Combust.prototype.push = function(object, callback) {
 };
 
 /**
+* Deletes an object at the current path.
+*
+*@method delete
+* 
+*@param object {Object} object The object to delete at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.
+*
+*/
+
+// Takes in an object to be set at a path and emits an event to the server
+Combust.prototype.delete = function(object, callback) {
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+	var path = this.constructPath();
+
+	this.socket.once(path + &#x27;-deleteSuccess&#x27;, function(data){
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit(&#x27;delete&#x27;, {path: path, data: object}); 
+};
+
+/**
 * Sets an object at the current path.
 *
 *@method set
@@ -166,7 +199,7 @@ Combust.prototype.push = function(object, callback) {
 *@param object {Object} object The object to set at the current path.
 *@param *callback {Callback} callback The callback to be executed once the object has been set at the path in the database. Optional parameter.
 *
-*/
+**/
 
 /* Takes in an object to be set at path. Does not return anything. */
 Combust.prototype.set = function(object, callback) {
@@ -175,6 +208,8 @@ Combust.prototype.set = function(object, callback) {
 		tableName: this.tableName,
 		socket: this.socket
 	});
+	//transfer token
+	newRef.token = this.token;
 
 	this.socket.once(this.constructPath() + &#x27;-setSuccess&#x27;, function(data) {
 		if (callback) {
@@ -183,6 +218,34 @@ Combust.prototype.set = function(object, callback) {
 	});
 	this.socket.emit(&#x27;set&#x27;, {path: this.constructPath(), data: object});
 };
+
+
+/**
+* Updates object at the current path.
+*
+*@method update
+*
+*@param object {Object} object The object to update the existing object at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
+Combust.prototype.update = function(object, callback) {
+	var newRef = new Combust({
+		dbName: this.dbName,
+		tableName: this.tableName,
+		socket: this.socket
+	});
+
+	this.socket.once(this.constructPath() + &#x27;-updateSuccess&#x27;, function(data) {
+		if (callback) {
+			callback(data);
+		}
+	});
+	this.socket.emit(&#x27;update&#x27;, {path: this.constructPath(), data: object});
+};
+
 
 /**
 * Creates an event listener for a specified event at the current path.
@@ -198,24 +261,78 @@ Combust.prototype.on = function(eventType, callback) {
 	//this binding is lost in async calls so store it here
 	var socket = this.socket;
 	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
-	if (eventType === &quot;child_add&quot;) {
+	if (eventType === &quot;child_added&quot;) {
+    socket.once(path + &#x27;-subscribeUrlChildAddSuccess&#x27;, function() {
+      //need a get children method - not desired functionality as written
+      socket.emit(&#x27;getUrlChildren&#x27;, {url: path});
+    });
+    socket.once(path + &quot;-getUrlChildrenSuccess&quot;, function(data) {
+      //calls callback on all current child
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      socket.on(path + &#x27;-childaddSuccess&#x27;, function(data) {
+        //call callback on new child
+        callback(data);
+      });
+    });
 		socket.emit(&quot;subscribeUrlChildAdd&quot;, {url: path});
-		socket.once(path + &#x27;-subscribeUrlChildAddSuccess&#x27;, function() {
-			//need a get children method - not desired functionality as written
-			socket.emit(&#x27;getUrl&#x27;, {url: path});
-		});
-		socket.once(path + &quot;-getSuccess&quot;, function(data) {
-			//once get children method is written, call callback on all children.
-			/*once all current children have been received, as listener for new ones - this might cause an issue if a child is added inbetween
-			recieving the latest children and adding the listener.
-			*/
-			socket.on(path + &#x27;-childaddSuccess&#x27;, function(data) {
-				//call callback on new child
-				callback(data);
-			});
-		});
 	}
+
+
+	
 };
+
+Combust.prototype.newUser = function(newUser, callback) {
+	//raw http requests
+	var xhr = new XMLHttpRequest();
+	xhr.open(&#x27;POST&#x27;, encodeURI(&#x27;http://0.0.0.0:3000/signup&#x27;));
+	xhr.setRequestHeader(&#x27;Content-Type&#x27;, &#x27;application/json&#x27;);
+	xhr.onload = function() {
+		response = JSON.parse(xhr.responseText);
+		response.status = xhr.status;
+		callback(response);
+		// if (xhr.status === 201) {
+		// 	callback(response);
+		// }
+		// else if (xhr.status === 401) {
+		// 	console.log(xhr.responseText);
+
+		// }
+		// else {
+		// 	console.log(xhr.responseText);
+		// }
+	};
+	xhr.send(JSON.stringify(newUser));
+};
+
+//storing token in instance of object for now, should it be stored in local storage?
+Combust.prototype.authenticate = function(credentials, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open(&#x27;POST&#x27;, encodeURI(&#x27;http://0.0.0.0:3000/authenticate&#x27;));
+	xhr.setRequestHeader(&#x27;Content-Type&#x27;, &#x27;application/json&#x27;);
+	xhr.onload = function() {
+		response = JSON.parse(xhr.responseText);
+		response.status = xhr.status;
+		this.token = response.token;
+		// if (!this.socket) {
+		// 	this.connectSocket();
+		// }
+		callback(response);
+	}.bind(this);
+	xhr.send(JSON.stringify(credentials));
+};
+
+// Combust.prototype.connectSocket = function() {
+// 	var io = this.io;
+// 	var serverAddress = this.serverAddress;
+// 	var token = this.token;
+// 	this.socket = io.connect(serverAddress, {
+// 		//send the web token with the initial websocket handshake
+// 		query: &#x27;token=&#x27; + token
+// 	});
+// }
 
 module.exports = Combust;
     </pre>

@@ -29,4 +29,4 @@ exports.setup = function(socket) {
 			}
 		});
 	});
-}
+};
