@@ -28,6 +28,16 @@ describe('set', function() {
       done();
     });
   });
+  it('should delete children of the path that is being set and set path to passed data', function(done) {
+    socket.once('/messages/-setSuccess', function() {
+      socket.once('/messages/-getSuccess', function(data) {
+        data.data.should.eql({testProperty: false});
+        done();
+      });
+      socket.emit('getUrl', {url: '/messages/'});
+    });
+    socket.emit('set', {path:'/messages/', data: {testProperty: false}});
+  });
 
   it('should set to paths in the database', function(done) {
     socket.once('/messages/-setSuccess', function() {
@@ -40,15 +50,5 @@ describe('set', function() {
     socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
   });
 
-  it('should delete children of the path that is being set and set path to passed data', function(done) {
-    socket.once('/messages/-setSuccess', function() {
-      socket.once('/messages/-getSuccess', function(data) {
-        data.data.should.eql({testProperty: false});
-        done();
-      });
-      socket.emit('getUrl', {url: '/messages/'});
-    });
-    socket.emit('set', {path:'/messages/', data: {testProperty: false}});
-  });
 });
 
