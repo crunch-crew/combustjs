@@ -55,12 +55,12 @@ exports.setup = function(socket, io) {
 					//sets the rootString which is the path we will use in dbqueries
 					rootString = (urlArray.slice(0, urlArray.length - 1 - neededParents.length).join("/")) + "/";
 					_idFind = urlArray[urlArray.length-1];
+					childrenString = rootString;
+					children_idFind = urlArray[urlArray.length-1];
 				}	
 							
 				if(!incompletePath) {
 					//if in here, it means that the database contains all parent paths leading up to our target path
-					childrenString = rootString;
-					children_idFind = urlArray[urlArray.length-1];
 					r.db(config.dbName).table(config.tableName).filter({path: rootString, _id: _idFind}).delete().run(conn, function(err, results) {
 						if (err) throw err;
 						r.db(config.dbName).table(config.tableName).filter(r.row('path').match(childrenString + children_idFind + "*")).delete().run(conn, function(err, results) {
