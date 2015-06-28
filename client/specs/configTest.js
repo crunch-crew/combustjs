@@ -10,23 +10,6 @@ module.exports = {
   utils: {
     dbName: 'test',
     tableName: 'test',
-    newCombust: function(socket) {
-      return new Combust({
-        dbName: this.dbName,
-        tableName: this.tableName,
-        socket: socket,
-        io: io,
-        serverAddress: this.serverAddress
-      });
-    },
-    newAuthCombust: function() {
-      return new Combust({
-        dbName: this.dbName,
-        tableName: this.tableName,
-        io: io,
-        serverAddress: this.serverAddress
-      });
-    },
     testObj: {
       users: {
         user1: {
@@ -94,21 +77,13 @@ module.exports = {
   combustToken: function(callback) {
     var that = this;
     //create a user to use for tests that require authentication
-    authRef = that.utils.newAuthCombust();
+    authRef = new Combust({serverAddress: this.serverAddress});
     authRef.newUser(that.utils.authUser, function(response) {
       if (response.success) {
-        authRef.authenticate(that.utils.authUser, function(response) {
-          socket = io.connect(that.serverAddress, {
-            forceNew: true,
-            //send the web token with the initial websocket handshake
-            query: 'token=' + response.token
-          });
-          authRef.socket = socket;
-          socket.on('connectSuccess', function() {
-            callback(authRef);
-          });
-        });
-      }
+        authRef.connectSocket(function() {
+          callback(authRef);
+        })
+      };
     });
   }
 }

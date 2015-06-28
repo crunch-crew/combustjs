@@ -24,6 +24,7 @@ describe('getUrlChildren', function() {
   });
 
   after(function(done) {
+    socket.disconnect();
     configTest.resetDb(function() {
       done();
     });

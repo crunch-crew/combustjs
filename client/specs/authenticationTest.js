@@ -17,7 +17,7 @@ describe('authentication', function() {
   });
 
   beforeEach(function(done) {
-    combustRef = utils.newCombust();
+    combustRef = new Combust({serverAddress: serverAddress});
     done();
   });
 
@@ -52,6 +52,19 @@ describe('authentication', function() {
         response.status.should.equal(200);
         response.token.should.exist;
         combustRef.token.should.exist;
+        done();
+      });
+    });
+  });
+
+  describe('initialize authenticated', function() {
+    var newTest;
+    it('should created an authenticated web socket connection when instantiated with valid credentials', function(done) {
+      newTest = new Combust({serverAddress: serverAddress, auth: utils.testUser}, function(response) {
+        response.token.should.exist;
+        newTest.token.should.exist;
+        response.success.should.equal(true);
+        response.status.should.equal(200);
         done();
       });
     });

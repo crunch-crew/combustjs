@@ -3,3 +3,4 @@ rethinkdb_data/
 *.txt
 docs/
 client/index.html
+npm-debug.log
