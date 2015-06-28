@@ -1,0 +1,160 @@
+{
+    "project": {},
+    "files": {
+        "client/Combust.js": {
+            "name": "client/Combust.js",
+            "modules": {},
+            "classes": {
+                "Combust": 1
+            },
+            "fors": {},
+            "namespaces": {}
+        }
+    },
+    "modules": {},
+    "classes": {
+        "Combust": {
+            "name": "Combust",
+            "shortname": "Combust",
+            "classitems": [],
+            "plugins": [],
+            "extensions": [],
+            "plugin_for": [],
+            "extension_for": [],
+            "file": "client/Combust.js",
+            "line": 5,
+            "description": "Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,\nas well as listening for changes in data at the specified path.",
+            "is_constructor": 1
+        }
+    },
+    "classitems": [
+        {
+            "file": "client/Combust.js",
+            "line": 77,
+            "description": "Change the path of the Combust object to point to one of the children of the current path.\nMethod is chainable.",
+            "itemtype": "method",
+            "name": "child",
+            "params": [
+                {
+                    "name": "childName",
+                    "description": "childName Name of the child of the current path to point Combust at",
+                    "type": "String"
+                }
+            ],
+            "return": {
+                "description": "Returns a mutated instance of the same Combust instance so that it can be chained.",
+                "type": "Object"
+            },
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 93,
+            "description": "Pushes an object as a new child at the current path.",
+            "itemtype": "method",
+            "name": "push",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to push as a new child at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the new child has been synchronized with the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "return": {
+                "description": "Returns a new instance of Combust that points to the path of the newly created child.",
+                "type": "Object"
+            },
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 125,
+
+            "description": "Deletes an object at the current path.",
+            "itemtype": "method",
+            "name": "delete",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to delete at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 152,
+
+            "description": "Sets an object at the current path.",
+            "itemtype": "method",
+            "name": "set",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to set at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the object has been set at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 181,
+
+            "description": "Updates object at the current path.",
+            "itemtype": "method",
+            "name": "update",
+            "params": [
+                {
+                    "name": "object",
+                    "description": "object The object to update the existing object at the current path.",
+                    "type": "Object"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.",
+                    "type": "Callback"
+                }
+            ],
+            "class": "Combust"
+        },
+        {
+            "file": "client/Combust.js",
+            "line": 208,
+
+            "description": "Creates an event listener for a specified event at the current path.",
+            "itemtype": "method",
+            "name": "on",
+            "params": [
+                {
+                    "name": "eventType",
+                    "description": "eventType The type of event to listen for at the current path - currently supported values are \"child_added\", \"child_changed\", \"child_removed\", \"value\"",
+                    "type": "String"
+                },
+                {
+                    "name": "*callback",
+                    "description": "callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.",
+                    "type": "Function"
+                }
+            ],
+            "class": "Combust"
+        }
+    ],
+    "warnings": []
+}
