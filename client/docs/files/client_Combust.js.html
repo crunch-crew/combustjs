@@ -81,6 +81,7 @@
     <pre class="code prettyprint linenums">
 //required for testing only - remove in production
 var XMLHttpRequest = require(&quot;xmlhttprequest&quot;).XMLHttpRequest;
+var io = require(&#x27;socket.io-client&#x27;);
 
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
@@ -90,14 +91,51 @@ var XMLHttpRequest = require(&quot;xmlhttprequest&quot;).XMLHttpRequest;
 *
 *@constructor
 */
-var Combust = function(options) {
+var Combust = function(options, callback) {
+	this.callback = callback || function() {};
+	this.auth = options.auth || null;
+	this.serverAddress = options.serverAddress || null;
 	this.dbName = options.tableName || &#x27;test&#x27;;
 	this.tableName = options.tableName || &#x27;test&#x27;;
-	this.socket = options.socket || null;
+	//manage socket connection
+	if (options.socket) {
+		this.socket = options.socket;
+	}
+	else if (this.serverAddress) {
+		this.socket = this.connectSocket(this.callback);
+	}
+	else {
+		this.socket = null;
+	}
 	// this.io = options.io || null;
 	this.pathArray = [&#x27;/&#x27;];
 	//could check local storage to see if a token exists there
 	this.token = null;
+};
+
+//create socket connection to server
+Combust.prototype.connectSocket = function(callback) {
+	if (this.auth) {
+		this.authenticate(this.auth, function(response) {
+			this.socket = io.connect(this.serverAddress, {
+				forceNew: true,
+	      //send the web token with the initial websocket handshake
+	      query: &#x27;token=&#x27; + response.token
+	    });
+	    this.token = response.token;
+			this.socket.on(&#x27;connectSuccess&#x27;, function() {
+	    	callback(response);
+			});
+		}.bind(this));
+	}
+	else {
+		this.socket = io.connect(this.serverAddress, {
+			forceNew: true
+		});
+    this.socket.on(&#x27;connectSuccess&#x27;, function() {
+    	callback();
+		});
+	}
 };
 
 /* this method doesn&#x27;t have documentation because its an internal method that the user should not use.
@@ -152,6 +190,7 @@ Combust.prototype.push = function(object, callback) {
 		tableName: this.tableName,
 		socket: this.socket
 	});
+	// newRef.token = this.token;
 
 	this.socket.once(this.constructPath() + &#x27;-pushSuccess&#x27;, function(data) {
 		newRef.child(data.key);
@@ -252,7 +291,7 @@ Combust.prototype.update = function(object, callback) {
 *
 *@method on
 *
-*@param eventType {String} eventType The type of event to listen for at the current path.
+*@param eventType {String} eventType The type of event to listen for at the current path - currently supported values are &quot;child_added&quot;, &quot;child_changed&quot;, &quot;child_removed&quot;, &quot;value&quot;
 *@param *callback {Function} callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.
 */
 Combust.prototype.on = function(eventType, callback) {
@@ -279,9 +318,51 @@ Combust.prototype.on = function(eventType, callback) {
     });
 		socket.emit(&quot;subscribeUrlChildAdd&quot;, {url: path});
 	}
-
-
-	
+	// the client side method that enables execution of callback with child_changed response
+	if (eventType === &quot;child_changed&quot;) {
+    socket.once(path + &#x27;-subscribeUrlChildChangeSuccess&#x27;, function() {
+      //listens to completion of subscribe event on server
+      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
+      socket.emit(&#x27;getUrlChildren&#x27;, {url: path});
+      //emit for getUrlChildren action on server; for the &#x27;path&#x27;
+    });
+    socket.once(path + &quot;-getUrlChildrenSuccess&quot;, function(data) {
+      //listens to getChildren Success and executes callback on all current children; does this first time
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      socket.on(path + &#x27;-childchangeSuccess&#x27;, function(data) {
+        //continues to listen to child change events and executes callback with returned data
+        callback(data);
+      });
+    });
+		socket.emit(&quot;subscribeUrlChildChange&quot;, {url: path});
+		// emits for registeration of subscribe event at the path on server handler
+	}
+	// the client side method that enables execution of callback with child_changed response
+	if (eventType === &quot;value&quot;) {
+    socket.once(path + &#x27;-subscribeUrlValueSuccess&#x27;, function() {
+      //listens to completion of subscribe event on server
+      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
+      socket.emit(&#x27;getUrlChildren&#x27;, {url: path});
+      //emit for getUrlChildren action on server; for the &#x27;path&#x27;
+    });
+    socket.once(path + &quot;-getUrlChildrenSuccess&quot;, function(data) {
+      //listens to getChildren Success and executes callback on all current children; does this first time
+      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+      data.forEach(function(child) {
+        callback(child);
+      });
+      // confirm what should this be --- 
+      socket.on(path + &#x27;-value&#x27;, function(data) {
+        //continues to listen to child change events and executes callback with returned data
+        callback(data);
+      });
+    });
+		socket.emit(&quot;subscribeUrlValue&quot;, {url: path});
+		// emits for registeration of subscribe event at the path on server handler
+	}
 };
 
 Combust.prototype.newUser = function(newUser, callback) {
@@ -303,7 +384,7 @@ Combust.prototype.newUser = function(newUser, callback) {
 		// else {
 		// 	console.log(xhr.responseText);
 		// }
-	};
+	}.bind(this);
 	xhr.send(JSON.stringify(newUser));
 };
 
@@ -316,9 +397,6 @@ Combust.prototype.authenticate = function(credentials, callback) {
 		response = JSON.parse(xhr.responseText);
 		response.status = xhr.status;
 		this.token = response.token;
-		// if (!this.socket) {
-		// 	this.connectSocket();
-		// }
 		callback(response);
 	}.bind(this);
 	xhr.send(JSON.stringify(credentials));
