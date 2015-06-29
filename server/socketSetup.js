@@ -29,9 +29,7 @@ exports.setup = function(server) {
 		jwt.verify(token, config.jwtSecret, function(err, decoded) {
 			//if token decrypts successfully, user is authenticated, otherwise reject connection
 			//temporarily disabled while client authentication methods are built
-			console.log("token received: ", token);
 			// if (!err) {
-				console.log("password decoded!");
 				socket.userToken = decoded;
 				next();
 			// }
@@ -41,7 +39,6 @@ exports.setup = function(server) {
 	io.on('connection', function(socket) {
 		//notify client of successful connection
 		socket.emit('connectSuccess', "Socket connection established");
-		console.log("emitted success");
 
 		//setup all the individual socket listeners
 		subscribeUrl.setup(socket);

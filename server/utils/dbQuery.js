@@ -41,12 +41,10 @@ var dbQuery = function(queryType, path, callback) {
 
     db.connect(function(conn) {
       //query to find root node
-      // console.log('')
       r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run(conn, function(err, cursor) {
         if (err) throw err;
         cursor.toArray(function(err, result) {
           //first one because query returns an array, even if there is only one result
-          console.log('search for path: ', rootString, ' and _id: ', _idFind);
           rootRow = result[0];
         });
         //query to find all children of root node
