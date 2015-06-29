@@ -21,7 +21,7 @@ var Combust = function(options, callback) {
 		this.socket = options.socket;
 	}
 	else if (this.serverAddress) {
-		this.socket = this.connectSocket(this.callback);
+		this.connectSocket(this.callback);
 	}
 	else {
 		this.socket = null;

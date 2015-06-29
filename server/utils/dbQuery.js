@@ -46,6 +46,7 @@ var dbQuery = function(queryType, path, callback) {
         if (err) throw err;
         cursor.toArray(function(err, result) {
           //first one because query returns an array, even if there is only one result
+          console.log('search for path: ', rootString, ' and _id: ', _idFind);
           rootRow = result[0];
         });
         //query to find all children of root node
