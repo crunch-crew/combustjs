@@ -74,7 +74,6 @@
         {
             "file": "client/Combust.js",
             "line": 125,
-
             "description": "Deletes an object at the current path.",
             "itemtype": "method",
             "name": "delete",
@@ -95,7 +94,6 @@
         {
             "file": "client/Combust.js",
             "line": 152,
-
             "description": "Sets an object at the current path.",
             "itemtype": "method",
             "name": "set",
@@ -116,7 +114,6 @@
         {
             "file": "client/Combust.js",
             "line": 181,
-
             "description": "Updates object at the current path.",
             "itemtype": "method",
             "name": "update",
@@ -137,7 +134,6 @@
         {
             "file": "client/Combust.js",
             "line": 208,
-
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",
