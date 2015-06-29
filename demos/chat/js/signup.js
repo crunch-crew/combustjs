@@ -1,12 +1,7 @@
 $(function() {
   var serverAddress = 'http://0.0.0.0:3000';
-  var socket = io.connect(serverAddress, {'forceNew': false});
 
   var combust = new Combust({
-    dbName: 'test',
-    tableName: 'test',
-    socket: socket,
-    io: io,
     serverAddress: serverAddress
   });
 
@@ -20,6 +15,7 @@ $(function() {
     combust.newUser(newUser, function(response) {
       if (response.success) {
         alert("new user created!");
+        window.location.replace('./index.html');
       }
       else {
         alert("new user was not created");

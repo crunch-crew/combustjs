@@ -21,7 +21,7 @@ var Combust = function(options, callback) {
 		this.socket = options.socket;
 	}
 	else if (this.serverAddress) {
-		this.socket = this.connectSocket(this.callback);
+		this.connectSocket(this.callback);
 	}
 	else {
 		this.socket = null;
@@ -55,7 +55,7 @@ Combust.prototype.connectSocket = function(callback) {
     	callback();
 		});
 	}
-}
+};
 
 /* this method doesn't have documentation because its an internal method that the user should not use.
 	 Converts the pathArray variable into a string that can be used by other methods to interact with the server

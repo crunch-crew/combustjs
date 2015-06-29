@@ -76,12 +76,12 @@ exports.setup = function(socket, io) {
 				}
 				else {
 					//starts by building an empty object
-					var buildObj = {}
+					var buildObj = {};
 					//currentPoint will deeper and deeper into our buildObj as we start building all the missing path to our target path
 					var currentPointer = buildObj;
 					//iterates through the parents we need to build
-					for(var i = 1; i < neededParents.length; i++) {
-						currentPointer = currentPointer[neededParents[i]] = {};
+					for(var j = 1; j < neededParents.length; j++) {
+						currentPointer = currentPointer[neededParents[j]] = {};
 					}
 					//finally after we have built all the parents sets our path id as a property in the parent row
 					currentPointer[_idFind] = rootObject;

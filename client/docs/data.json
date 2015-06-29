@@ -22,7 +22,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "client/Combust.js",
-            "line": 4,
+            "line": 5,
             "description": "Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,\nas well as listening for changes in data at the specified path.",
             "is_constructor": 1
         }
@@ -30,7 +30,7 @@
     "classitems": [
         {
             "file": "client/Combust.js",
-            "line": 39,
+            "line": 77,
             "description": "Change the path of the Combust object to point to one of the children of the current path.\nMethod is chainable.",
             "itemtype": "method",
             "name": "child",
@@ -49,7 +49,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 55,
+            "line": 93,
             "description": "Pushes an object as a new child at the current path.",
             "itemtype": "method",
             "name": "push",
@@ -73,7 +73,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 86,
+            "line": 125,
             "description": "Deletes an object at the current path.",
             "itemtype": "method",
             "name": "delete",
@@ -93,7 +93,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 113,
+            "line": 152,
             "description": "Sets an object at the current path.",
             "itemtype": "method",
             "name": "set",
@@ -113,7 +113,7 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 142,
+            "line": 181,
             "description": "Updates object at the current path.",
             "itemtype": "method",
             "name": "update",
@@ -133,14 +133,14 @@
         },
         {
             "file": "client/Combust.js",
-            "line": 169,
+            "line": 208,
             "description": "Creates an event listener for a specified event at the current path.",
             "itemtype": "method",
             "name": "on",
             "params": [
                 {
                     "name": "eventType",
-                    "description": "eventType The type of event to listen for at the current path.",
+                    "description": "eventType The type of event to listen for at the current path - currently supported values are \"child_added\", \"child_changed\", \"child_removed\", \"value\"",
                     "type": "String"
                 },
                 {

@@ -1,11 +1,7 @@
 $(function() {
   var serverAddress = 'http://0.0.0.0:3000';
-  var combust = new Combust({
-      dbName: 'test',
-      tableName: 'test',
-      serverAddress: serverAddress
-  });
   var userId;
+  var combust;
   $('#login_form').submit(function(event) {
     event.preventDefault();
     var user= {
@@ -13,34 +9,27 @@ $(function() {
       password: $('#password_input').val(),
       email: $('#email_input').val()
     };
-    combust.authenticate(user, function(response) {
+    combust = new Combust({
+        serverAddress: serverAddress,
+        auth: user
+    }, function(response) {
       if (response.success) {
         userId = response.id;
-        startApp(response.token);
+        alert("Successfully logged in!");
+        startApp();
       }
       else {
-        alert("new user was not created");
+        alert("invalid credentials");
       }
     });
   });
 
   var startApp = function(token) {
-    var socket = io.connect(serverAddress, {
-      query: "query=" + token
-    });
-
-    var combust = new Combust({
-      dbName: 'test',
-      tableName: 'test',
-      socket: socket,
-      io: io,
-      serverAddress: serverAddress
-    });
-
     var counter = 0;
-    combust.on("child_added", function(newChild) {
+    //won't need this once we update push to automatically create paths
+    combust.update({'messages': {}});
+    combust.child('messages').on("child_added", function(newChild) {
       $('#chatbox').prepend("<div>" + newChild.userId + ": " + newChild.msg + "</div>");
-      console.log(counter++);
     });
 
     $('#chat_form').submit(function(event) {

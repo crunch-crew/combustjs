@@ -60,9 +60,10 @@ describe('authentication', function() {
   describe('initialize authenticated', function() {
     var newTest;
     it('should created an authenticated web socket connection when instantiated with valid credentials', function(done) {
-      newTest = new Combust({serverAddress: serverAddress, auth: utils.testUser}, function(response) {
+      authenticatedCombust = new Combust({serverAddress: serverAddress, auth: utils.testUser}, function(response) {
         response.token.should.exist;
-        newTest.token.should.exist;
+        authenticatedCombust.token.should.exist;
+        authenticatedCombust.socket.should.exist;
         response.success.should.equal(true);
         response.status.should.equal(200);
         done();
