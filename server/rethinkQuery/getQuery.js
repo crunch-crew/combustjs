@@ -36,9 +36,6 @@ var getQuery = function(input, callback) {
             if(callback) {
               callback(parseToObj(rootRow, childrenRows));
             }
-            else {
-              return parseToObj(rootRow, result);
-            }
           });
 
         });

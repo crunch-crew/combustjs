@@ -2,7 +2,7 @@ var db = require('../db');
 var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
-var emitToParent = require('../utils/emitToParent');
+var bubbleUp = require('../utils/bubbleUp');
 var getQuery = require('../rethinkQuery/getQuery');
 var config = require('../config');
 
@@ -69,7 +69,7 @@ exports.setup = function(socket, io) {
                 if(err) throw err;
                 //emits setSuccess so client to notify client of success
                 socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-                emitToParent('value', setRequest.path, socket);
+                bubbleUp('value', setRequest.path, socket);
               });
             });
           });     
@@ -94,7 +94,7 @@ exports.setup = function(socket, io) {
           r.table(config.tableName).insert(rows).run(conn, function(err, results) {
             if(err) throw err;
             socket.emit(setRequest.path+'-setSuccess', 'Successfully set data!');
-            emitToParent('value', setRequest.path, socket);
+            bubbleUp('value', setRequest.path, socket);
           });
         }
       });

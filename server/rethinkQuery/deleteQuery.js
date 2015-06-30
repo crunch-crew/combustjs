@@ -7,7 +7,11 @@ var deleteQuery = function(input, callback) {
   db.connect(function(conn) {
     r.db(config.dbName).table(config.tableName).filter(input).delete().run(conn, function(err, results) {
       if (err) throw err;
-      callback(results);
+      if(callback) {
+        callback(results);
+      }
     });
   });
 };
+
+module.exports = deleteQuery;

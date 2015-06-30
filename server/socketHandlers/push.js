@@ -3,6 +3,8 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
+var insertQuery = require('../rethinkQuery/insertQuery');
+var updateByKeyQuery = require('../rethinkQuery/updateByKeyQuery');
 
 
 exports.setup = function(socket, io) {
@@ -24,19 +26,17 @@ exports.setup = function(socket, io) {
 	socket.on('push', function(pushRequest) {
 		//makes a copy of the original object - there is probably a better way to do this
 		var original = JSON.parse(JSON.stringify(pushRequest));
-		db.connect(function(conn) {
-			//insert an empty document into the database so that we can get the key back from the database to use later
-			r.db(config.dbName).table(config.tableName).insert({}).run(conn, function(err, result) {
-				//returns an array even if only once key was made
-				var generatedKey = result.generated_keys[0];
-				//convert object to be pushed into rows to store in the db
-				var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
-				var rootRow = rows.slice(rows.length-1)[0];
-				var childRows = rows.slice(0,rows.length-1);
-				//update the empty document we inserted to contain the properties of the root node/row
-				r.db(config.dbName).table(config.tableName).get(generatedKey).update(rootRow).run(conn);
+		//insert an empty document into the database so that we can get the key back from the database to use later
+		insertQuery({}, function(result) {
+			var generatedKey = result.generated_keys[0];
+			//convert object to be pushed into rows to store in the db
+			var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
+			var rootRow = rows.slice(rows.length-1)[0];
+			var childRows = rows.slice(0,rows.length-1);
+			//update the empty document we inserted to contain the properties of the root node/row
+			updateByKeyQuery(generatedKey, rootRow, function(result) {
 				//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
-				r.table(config.tableName).insert(childRows).run(conn, function(err, results) {
+				insertQuery(childRows, function(result) {
 					//return the key of the root node back to the user so the can use it for subsequent requests
 					socket.emit(original.path + '-pushSuccess', {created: true, key: generatedKey});
 					//emit to clients listening for child add events at this url
