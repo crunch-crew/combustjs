@@ -22,7 +22,6 @@ exports.setup = function(socket, io) {
 	*/
 	// create a copy of original request if you are RETURNING the original data, parseToRows WILL mutate the original data.
 	socket.on('push', function(pushRequest) {
-		console.log('in here push: ', pushRequest);
 		//makes a copy of the original object - there is probably a better way to do this
 		var original = JSON.parse(JSON.stringify(pushRequest));
 		db.connect(function(conn) {

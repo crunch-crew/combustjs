@@ -1,4 +1,4 @@
-var dbQuery = require('./dbQuery');
+var getQuery = require('../rethinkQuery/getQuery');
 var getParent = require('./getParent');
 var isolateData = require('./isolateData');
 //emits to all parents of current path AND current path. 
@@ -54,7 +54,7 @@ var emitToParent = function(event, path, socket, inputData) {
     // }
   };
 
-  dbQuery('get', '/', function(parsedObj) {
+  getQuery('/', function(parsedObj) {
     rootObject = parsedObj;
     recurse(event, path);
   });

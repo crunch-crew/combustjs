@@ -2,7 +2,7 @@ var db = require('../db');
 var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
-var dbQuery = require('../utils/dbQuery');
+var getQuery = require('../rethinkQuery/getQuery');
 var config = require('../config');
 var checkPermissions = require('../utils/checkPermissions');
 var permitRequest = require('../utils/permitRequest');
@@ -20,7 +20,7 @@ exports.setup = function(socket) {
 	socket.on('getUrl', function(getRequest) {
 		permitRequest("read", getRequest.url, socket.userToken, function(permission) {
 			if (permission) {
-				dbQuery('get', getRequest.url, function(parsedObj) {
+				getQuery(getRequest.url, function(parsedObj) {
 					socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
 				});
 			}

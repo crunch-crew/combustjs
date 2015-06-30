@@ -3,7 +3,7 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var emitToParent = require('../utils/emitToParent');
-var dbQuery = require('../utils/dbQuery');
+var getQuery = require('../rethinkQuery/getQuery');
 var config = require('../config');
 
 exports.setup = function(socket, io) {
@@ -31,7 +31,7 @@ exports.setup = function(socket, io) {
     var neededParents = [];
 
     db.connect(function(conn) {
-      dbQuery('get', '/', function(rootObject) {
+      getQuery('/', function(rootObject) {
         if (setRequest.path === '/') {
           rootString = null;
           _idFind = "/";
