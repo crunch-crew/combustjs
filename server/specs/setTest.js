@@ -51,5 +51,15 @@ describe('set', function() {
     socket.emit('set', {path:'/messages/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
   });
 
+  it('should try setting', function(done) {
+    socket.once('/asdf/fddsa/qwer/tqew/-setSuccess', function() {
+      socket.once('/asdf/fddsa/qwer/tqew/-getSuccess', function(data) {
+        done();
+      });
+      socket.emit('getUrl', {url: '/asdf/fddsa/qwer/tqew/'});
+    });
+    socket.emit('set', {path:'/asdf/fddsa/qwer/tqew/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+  });
+
 });
 

@@ -1,4 +1,5 @@
-var dbQuery = require('../utils/dbQuery');
+var getQuery = require('../rethinkQuery/getQuery');
+
 var setDifference = function(setPath, inputObject, callback) {
  //[[path, newObject], [path2, newObject2]]
  var addProps = [];
@@ -7,7 +8,7 @@ var setDifference = function(setPath, inputObject, callback) {
  //[path, path2, path3]
  var deleteProps = [];
 
-  dbQuery('get', setPath, function(databaseObj) {
+  getQuery(setPath, function(databaseObj) {
     var compareObjects = function(path, newObject, oldObject) {
       for(var prop in newObject) {
         if(newObject[prop] === null || newObject[prop] === undefined) {

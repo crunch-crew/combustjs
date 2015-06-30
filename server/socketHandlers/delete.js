@@ -1,6 +1,6 @@
 var db = require('../db');
 var r = require('rethinkdb');
-var emitToParent = require('../utils/emitToParent');
+var bubbleUp = require('../utils/bubbleUp');
 var config = require('../config');
 
 exports.setup = function(socket, io) {
@@ -35,12 +35,11 @@ exports.setup = function(socket, io) {
     }
 
       var props = Object.keys(deleteRequest.data);
-      console.log("PROP", props);
     db.connect(function(conn) {
       r.db(config.dbName).table(config.tableName).filter({path: '/messages/', _id: props[0]}).delete().run(conn, function(err, results) {
         if (err) throw err;
         socket.emit(deleteRequest.path + '-deleteSuccess', 'Data successfully deleted!');
-        emitToParent('value', deleteRequest.path, socket);
+        bubbleUp('value', deleteRequest.path, socket);
       });
     }); 
   });

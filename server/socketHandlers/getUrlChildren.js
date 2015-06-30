@@ -3,7 +3,7 @@ var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
-var dbQuery = require('../utils/dbQuery');
+var getQuery = require('../rethinkQuery/getQuery');
 
 exports.setup = function(socket) {
 	/**
@@ -18,7 +18,7 @@ exports.setup = function(socket) {
 	*/
 	socket.on('getUrlChildren', function(getRequest) {
     var childrens = [];
-    dbQuery('get', getRequest.url, function(result) {
+    getQuery(getRequest.url, function(result) {
       for(var key in result) {
         result.id = key; 
         // var obj = {};

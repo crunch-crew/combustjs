@@ -1,9 +1,12 @@
 var db = require('../db');
 var r = require('rethinkdb');
+var config = require('../config');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
-var config = require('../config');
-var emitToParent = require('../utils/emitToParent');
+var bubbleUp = require('../utils/bubbleUp');
+var updateByFilterQuery = require('../rethinkQuery/updateByFilterQuery');
+var insertQuery = require('../rethinkQuery/insertQuery');
+
 
 exports.setup = function(socket, io) {
 	/**
@@ -34,28 +37,24 @@ exports.setup = function(socket, io) {
 			rootString = (urlArray.slice(0, urlArray.length-1).join("/")) + "/";
 			_idFind = urlArray[urlArray.length-1];
 		}
+		//{path: rows[counter].path, _id: rows[counter]._id}
+		//rows[counter]
 		//Obtain the rows in the udpate payload from the request
 		var rows = parseToRows(updateRequest.data, rootString, _idFind);
 		// connect and keep it on to process entire payload
-		db.connect(function(conn) {
 			var counter = 0;
 			// use an internal counter to address issues with async nature of this code
 			var updateOrInsert = function() {
-				r.db(config.dbName).table(config.tableName).filter({path: rows[counter].path, _id: rows[counter]._id}).update(rows[counter], {returnChanges: false
-				}).run(conn, function(err, results){
-
-					if (err) throw err;
-					
+				updateByFilterQuery({path: rows[counter].path, _id: rows[counter]._id}, rows[counter], function(result) {					
 					// Insert those rows for which were not replaced AND were not changed during the update attempt
-					if (!results.replaced && !results.unchanged){
-						r.table(config.tableName).insert(rows[counter]).run(conn, function(err, results){
-							if (err) throw err;
-							emitToParent('child_added', updateRequest.path, socket, rows[counter]);
+					if (!result.replaced && !result.unchanged){
+						insertQuery(rows[counter], function(result) {
+							bubbleUp('child_added', updateRequest.path, socket, rows[counter]);
 						});
 					} else {
 						//this was an update; refine it further based on the attributes in results
 						// for now simply emit child changed
-						emitToParent('child_changed', updateRequest.path, socket, rows[counter]);
+						bubbleUp('child_changed', updateRequest.path, socket, rows[counter]);
 					}
 					counter++;
 					if (counter < rows.length) {
@@ -66,11 +65,10 @@ exports.setup = function(socket, io) {
 						//emit the success event back to the user and any response here for use for subsequent requests by client
 						socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
 						//emit to clients listening for value event at this url
-						// emitToParent('child_changed', updateRequest.path, socket);
+						// bubbleUp('child_changed', updateRequest.path, socket);
 					}
 				});
 			};
 			updateOrInsert();
 		});
-	});
 };
