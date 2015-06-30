@@ -26,12 +26,12 @@ var setDifference = function(setPath, inputObject, callback) {
           compareObjects(path + prop + '/', newObject[prop], oldObject[prop]);
         }
       }
-      for(var prop in oldObject) {
+      for(prop in oldObject) {
         if(!(prop in newObject)) {
           deleteProps.push(path + prop + '/');
         }
       } 
-    }
+    };
     compareObjects(setPath, inputObject, databaseObj);
     callback({
       addProps: addProps,
