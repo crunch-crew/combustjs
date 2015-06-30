@@ -36,12 +36,6 @@ describe('delete', function() {
    });
  });
 
- after(function(done) {
-   configTest.resetDb(function() {
-     done();
-   });
- });
-
  it('should delete static properties', function(done) {
    socket.once('/user5/messages/room/-deleteSuccess', function() {
      db.connect(function(conn) {
