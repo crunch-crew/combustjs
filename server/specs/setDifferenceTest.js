@@ -31,7 +31,7 @@ describe('setDifference', function() {
   });
 
   describe('un-nested objects', function() {
-    it('should find all the added properties and events between two objects', function(done) {
+    it('should find all the added properties between two objects', function(done) {
       var oldObj = {
         name: "Richie"
       }
@@ -61,7 +61,6 @@ describe('setDifference', function() {
       }
       insertDb('/', oldObj, function() {
         setDifference('/', newObj, function(results) {
-          // console.log("results: ", results.emitEvents['/'].child_changed);
           results.emitEvents['/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
           results.changeProps.should.eql([['/name/', 'Kuldeep'], ['/age/', 23]]);
           done();
@@ -69,7 +68,7 @@ describe('setDifference', function() {
       });
     });
 
-    xit('should find all the deleted properties between two objects', function(done) {
+    it('should find all the deleted properties between two objects', function(done) {
       var oldObj = {
         name: "Richie"
       }
@@ -80,6 +79,73 @@ describe('setDifference', function() {
           results.deleteProps.should.eql(['/name/']);
           results.changeProps.should.eql([]);
           results.addProps.should.eql([]);
+          done();
+        });
+      });
+    });
+
+    it('should find all the child_added events between two objects', function(done) {
+      var oldObj = {
+        name: "Richie"
+      }
+      var newObj = {
+        name: "Richie",
+        school: "MKS"
+      }
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/'].child_added.should.eql([{school: 'MKS'}]);
+          done();
+        });
+      });
+    });
+
+    it('should find all the changed events between two objects', function(done) {
+      var oldObj = {
+        name: "Richie",
+        age: 22
+      }
+      var newObj = {
+        name: "Kuldeep",
+        age: 23
+      }
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
+          done();
+        });
+      });
+    });
+
+    it('should find all the value events between two objects', function(done) {
+      var oldObj = {
+        name: "Richie",
+        age: 22
+      }
+      var newObj = {
+        name: "Kuldeep",
+        age: 23
+      }
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/'].value.should.eql(newObj);
+          results.emitEvents['/name/'].value.should.equal('Kuldeep');
+          results.emitEvents['/age/'].value.should.equal(23);
+          done();
+        });
+      });
+    });
+
+    it('should find all the child_removed events between two objects', function(done) {
+      var oldObj = {
+        name: "Richie"
+      }
+      var newObj = {
+      }
+      insertDb('/', oldObj, function() {
+        console.log("about to call set difference in child_removed");
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/'].child_removed[0].should.eql({name: "Richie"});
           done();
         });
       });
@@ -203,7 +269,194 @@ describe('setDifference', function() {
       });
     });
 
-    xit('should find all the deleted properties between two objects', function(done) {
+    it('should find all the deleted properties between two objects', function(done) {
+      var oldObj = {
+        userList: {
+          user1: {
+            name: 'Richie'
+          },
+          user2: {
+            name: 'Kuldeep'
+          }
+        }
+      }
+      var newObj = {
+        userList: {
+          user1: {
+          },
+        }
+      }
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.deleteProps.should.eql(['/userList/user1/name/', '/userList/user2/']);
+          results.changeProps.should.eql([]);
+          results.addProps.should.eql([]);
+          done();
+        });
+      });
+    });
+
+    it('should find all the child_added events between two objects', function(done) {
+      var oldObj = {
+        userList: {
+          user1: {
+            name: 'Richie',
+            messages: {
+              list: ["hi"]
+            }
+          },
+          user2: {
+            name: 'Kuldeep'
+          }
+        }
+      };
+      var newObj = {
+        userList: {
+          user1: {
+            name: 'Richie',
+            messages: {
+              list: ['hi', 'richie']
+            }
+          },
+          user2: {
+            name: 'Kuldeep',
+            profile: {
+              names: {
+                first: 'Kuldeep'
+              }
+            }
+          },
+          user3: {
+            name: 'Alex'
+          }
+        }
+      };
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/userList/user1/messages/list/'].child_added.should.eql([{'1': 'richie'}]);
+          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          done();
+        });
+      });
+    });
+
+    it('should find all the child_changed events between two objects', function(done) {
+      var oldObj = {
+        userList: {
+          user1: {
+            name: 'Richie',
+            messages: {
+              list: ['hi', 'richie']
+            }
+          },
+          user2: {
+            name: 'Kuldeep',
+            profile: {
+              names: {
+                first: 'Kuldeep'
+              }
+            }
+          },
+          user3: {
+            name: 'Alex'
+          }
+        }
+      };
+      var newObj = {
+        userList: {
+          user1: {
+            name: 'Jack',
+            messages: {
+              list: ['yo', 'richie']
+            }
+          },
+          user2: {
+            name: 'Kuldeep',
+            profile: {
+              names: {
+                first: 'Kuldeep'
+              }
+            }
+          },
+          user3: {
+            name: 'Alex'
+          }
+        }
+      };
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
+          results.emitEvents['/userList/user1/messages/'].child_changed.should.eql({list: ['yo', 'richie']});
+          results.emitEvents['/userList/user1/'].child_changed.should.eql({messages: {list: ['yo', 'richie']}});
+          results.emitEvents['/userList/'].child_changed.should.eql({user1: {name: 'Jack', messages: {list: ['yo', 'richie']}}});
+          results.emitEvents['/'].child_changed.should.eql(newObj);
+          done();
+        });
+      });
+    });
+
+    it('should find all the value events between two objects', function(done) {
+      var oldObj = {
+        userList: {
+          user1: {
+            name: 'Richie',
+            messages: {
+              list: ['hi', 'richie']
+            }
+          },
+          user2: {
+            name: 'Kuldeep',
+            profile: {
+              names: {
+                first: 'Kuldeep'
+              }
+            }
+          },
+          user3: {
+            name: 'Alex'
+          }
+        }
+      };
+      var newObj = {
+        userList: {
+          user1: {
+            name: 'Jack',
+            messages: {
+              list: ['yo', 'richie']
+            }
+          },
+          user2: {
+            name: 'Kuldeep',
+            profile: {
+              names: {
+                first: 'Kuldeep'
+              }
+            }
+          },
+          user3: {
+            name: 'Alex'
+          }
+        }
+      };
+      insertDb('/', oldObj, function() {
+        setDifference('/', newObj, function(results) {
+          results.emitEvents['/userList/user1/messages/list/0/'].value.should.eql('yo');
+          results.emitEvents['/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
+          results.emitEvents['/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
+          results.emitEvents['/userList/user1/'].value.should.eql(newObj.userList.user1);
+          results.emitEvents['/userList/'].value.should.eql(newObj.userList);
+          results.emitEvents['/'].value.should.eql(newObj);
+          var user2Path = '/user2/' in results.emitEvents;
+          var user3Path = '/user3/' in results.emitEvents;
+          user2Path.should.equal(false);
+          user3Path.should.equal(false);
+          done();
+        });
+      });
+    });
+
+    it('should find all the child_removed events between two objects', function(done) {
       var oldObj = {
         userList: {
           user1: {
@@ -231,7 +484,7 @@ describe('setDifference', function() {
     });
   });
 
-  xdescribe('edge-casing', function() {
+  describe('edge-casing', function() {
     var oldObj = {
       userList: {
         user1: {
