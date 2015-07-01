@@ -25,7 +25,8 @@ exports.setup = function(socket, io) {
         parent_path;
 
     if (deleteRequest.path === '/') {
-      console.log('Error, you are trying to delete database');
+      socket.emit(deleteRequest.path +'-deleteSuccess', {success: false});
+      return;
     } else { 
       urlArray = deleteRequest.path.split('/');
       rootString = urlArray.slice(0, urlArray.length - 2).join('/') + '/';

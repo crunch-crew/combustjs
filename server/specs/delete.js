@@ -10,7 +10,7 @@ var configTest = require('./configTest');
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
 
-xdescribe('delete', function() {
+describe('delete', function() {
  var socket;
  var agent;
  before(function(done) {
