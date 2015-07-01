@@ -1,65 +1,71 @@
 var getQuery = require('../rethinkQuery/getQuery');
 
-var setDifference = function(setPath, inputObject, callback) {
+//creates the data structure which keeps track of which events need to be emitted at each indivdual path
+var initializeParentPaths = function(emitEvents, path, prop) {
+  var initializePath = function() {
+    return {
+      child_added: [],
+      child_removed: [],
+      child_changed: {},
+      value: false
+    };
+  };
 
-  var initializeParentPaths = function(emitEvents, path, prop) {
-    // console.log("in initializeparentpaths, path is: ", path, " and prop is: ", prop);
-    var initializePath = function() {
-      return {
-        child_added: [],
-        child_removed: [],
-        child_changed: {},
-        value: false
-      }
+  if (path === '/') {
+    if (!emitEvents['/']) {
+      emitEvents['/'] = initializePath();
     }
-
-    if (path === '/') {
-      if (!emitEvents['/']) {
-        emitEvents['/'] = initializePath();
-      }
-      if (!emitEvents[path + prop + '/'] && prop) {
-        // console.log(path+prop+'/', 'initialized');
-        emitEvents[path + prop + '/'] = initializePath();
-      }
-      return;
+    if (!emitEvents[path + prop + '/'] && prop) {
+      emitEvents[path + prop + '/'] = initializePath();
     }
+    return;
+  }
 
-
-    if (!emitEvents[path+prop+'/']) {
-      // console.log(path+prop+'/', 'initialized');
-      // console.log("created path: ", path + prop + '/');
-      emitEvents[path+prop+'/'] = initializePath();
-      var parent = getParent(path + prop + '/');
-      while(parent) {
-        if (!emitEvents[parent]) {
-          emitEvents[parent] = initializePath();
-        }
-        parent = getParent(parent);
+  if (!emitEvents[path+prop+'/']) {
+    emitEvents[path+prop+'/'] = initializePath();
+    var parent = getParent(path + prop + '/');
+    while(parent) {
+      if (!emitEvents[parent]) {
+        emitEvents[parent] = initializePath();
       }
+      parent = getParent(parent);
     }
   }
- //[[path, newObject], [path2, newObject2]]
- var addProps = [];
- //[[path, changedObject], [path2, changedObject2]]
- var changeProps = [];
- //[path, path2, path3]
- var deleteProps = [];
- //store events
- var emitEvents = {}
+};
 
+/*creates an array of objects that need to be added to the database, that needed to be changed in the database,
+ and that need to be removed from the database. Also creates a data structure for each path (all contained in emitEvents)
+ that specifies which events need to be emitted for each path*/
+
+var setDifference = function(setPath, inputObject, callback) {
+  // things to add to the database
+  var addProps = [];
+  //things to change in the database
+  var changeProps = [];
+  //things to delete from the database
+  var deleteProps = [];
+  //events to emit at each path
+  var emitEvents = {};
+
+  //get object that represents current state of database
   getQuery(setPath, function(databaseObj) {
+    /*compare the object that the user is trying to set with the object that already exists in the database
+    This function is very similar to a deep equals function, however, in addition to keeping track of adds,
+    changes, and delete, it calls the bubbleUp function which will determine which events to trigger on the parents
+    of the current path based on the change that is happening at that path*/
     var compareObjects = function(path, newObject, oldObject) {
+      var inputData;
       for(var prop in newObject) {
         if(newObject[prop] === null || newObject[prop] === undefined) {
           initializeParentPaths(emitEvents, path, prop);
-          var inputData = {};
+          inputData = {};
           inputData[prop] = oldObject[prop];
           bubbleUp(emitEvents, 'value', path + prop + '/', inputObject, newObject[prop]);
-          bubbleUp(emitEvents, 'child_removed', path + prop + '/', databaseObj, inputData);
+          bubbleUp(emitEvents, 'child_removed', path + prop + '/', inputObject, inputData);
           deleteProps.push(path + prop + '/');
         }
         else if(oldObject[prop] === undefined) {
-          var inputData = {};
+          inputData = {};
           inputData[prop] = newObject[prop];
           initializeParentPaths(emitEvents, path, prop);
           addProps.push([path + prop + '/', newObject[prop]]);
@@ -79,16 +85,18 @@ var setDifference = function(setPath, inputObject, callback) {
       }
       for(prop in oldObject) {
         if(!(prop in newObject)) {
-          var inputData = {};
-          inputData = oldObject;
+          inputData = {};
+          inputData[prop] = oldObject[prop];
           initializeParentPaths(emitEvents, path, prop);
           bubbleUp(emitEvents, 'value', path + prop + '/', inputObject, newObject[prop]);
-          bubbleUp(emitEvents, 'child_removed', path + prop + '/', databaseObj, inputData);
+          bubbleUp(emitEvents, 'child_removed', path + prop + '/', inputObject, inputData);
           deleteProps.push(path + prop + '/');
         }
       } 
     };
+    //call the compare function
     compareObjects(setPath, inputObject, databaseObj);
+    //execute the callback with all the differences and events to emit in an object
     callback({
       addProps: addProps,
       changeProps: changeProps,
@@ -98,15 +106,17 @@ var setDifference = function(setPath, inputObject, callback) {
   });
 };
 
+//function that gets a pointer to a location in an object based on a url/path
 var isolateData = require('./isolateData');
+//gets the path/url that is the parent of the passed parameter - string manipulation only
 var getParent = require('./getParent');
+
+//determines which events to trigger on the parents of the passed path based on the event type that is happening at that location
 var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
   var parentPath;
-  var rootObject;
   var data;
 
   var recurse = function(event, path, inputData) {
-    //if the event is 'value', will query the db for the new data for every parent path.
     if(event === 'value') {
         data = isolateData(path, rootObject);
         if (data === undefined) {
@@ -120,10 +130,6 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
     }
     if(event === 'child_added') {
       if(path) {
-        // recurse('value', path);
-        // console.log("path is: ", path);
-        // console.log("object is: ", emitEvents);
-        // emitEvents[path].value = isolateData(path,rootObject);
         parentPath = getParent(path);
         emitEvents[parentPath][event].push(inputData);
         if (parentPath) {
@@ -131,17 +137,13 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
         }
       }
     }
+    var key;
     if(event === 'child_changed') {
       if(path) {
           parentPath = getParent(path);
           if (parentPath) {
-            // if (parentPath === '/') {
-            //   key = path.replace('/', '');
-            // }
-            // else {
-              var key = path.split('/');
+              key = path.split('/');
               key = key[key.length-2];
-            // }
             emitEvents[parentPath][event][key] = inputData;
             recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
           }
@@ -151,11 +153,9 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
       if(path) {
         if (path !== '/' && path !== null) {
           parentPath = getParent(path);
-          var key = path.split('/');
+          key = path.split('/');
           key = key[key.length-2];
-          var removedChild = {};
-          removedChild[key] = isolateData(path,rootObject);
-          emitEvents[parentPath][event].push(removedChild);
+          emitEvents[parentPath][event].push(inputData);
           recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
         }
       }

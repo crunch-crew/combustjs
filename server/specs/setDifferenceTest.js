@@ -18,10 +18,12 @@ describe('setDifference', function() {
   }
 
   before(function(done) {
-    configTest.authenticateSocket(function(newSocket, newAgent) {
-      socket = newSocket;
-      done();
-    });
+    configTest.resetDb(function() {
+      configTest.authenticateSocket(function(newSocket, newAgent) {
+        socket = newSocket;
+        done();
+      });
+    })
   });
 
   after(function(done) {
@@ -542,11 +544,6 @@ describe('setDifference', function() {
           },
           user2: {
             name: 'Kuldeep',
-            profile: {
-              names: {
-                first: 'Kuldeep'
-              }
-            }
           }
         }
       };
@@ -555,7 +552,7 @@ describe('setDifference', function() {
           user1: {
             name: 'Jack',
             messages: {
-              list: ['yo', 'richie']
+              list: ['yo']
             }
           },
           user2: {
@@ -573,17 +570,38 @@ describe('setDifference', function() {
       };
       insertDb('/', oldObj, function() {
         setDifference('/', newObj, function(results) {
+          //child_changed events
           results.emitEvents['/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
-          results.emitEvents['/userList/user1/messages/'].child_changed.should.eql({list: ['yo', 'richie']});
-          results.emitEvents['/userList/user1/'].child_changed.should.eql({messages: {list: ['yo', 'richie']}, name: 'Jack'});
-          results.emitEvents['/userList/'].child_changed.should.eql({user1: {name: 'Jack', messages: {list: ['yo', 'richie']}}});
+          results.emitEvents['/userList/user1/messages/'].child_changed.should.eql({list: ['yo']});
+          results.emitEvents['/userList/user1/'].child_changed.should.eql({messages: {list: ['yo']}, name: 'Jack'});
+          results.emitEvents['/userList/'].child_changed.should.eql({user1: newObj.userList.user1, user2: newObj.userList.user2});
           results.emitEvents['/'].child_changed.should.eql(newObj);
+          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          //value_events
+          results.emitEvents['/userList/user1/messages/list/0/'].value.should.eql('yo');
+          results.emitEvents['/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
+          results.emitEvents['/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
+          results.emitEvents['/userList/user1/'].value.should.eql(newObj.userList.user1);
+          results.emitEvents['/userList/'].value.should.eql(newObj.userList);
+          results.emitEvents['/'].value.should.eql(newObj);
+          results.emitEvents['/userList/user2/profile/'].value.should.eql(newObj.userList.user2.profile);
+          results.emitEvents['/userList/user3/'].value.should.eql(newObj.userList.user3);
+          should(results.emitEvents['/userList/user2/name/']).equal(undefined);
+          //child_added events
+          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          results.emitEvents['/userList/user1/'].child_added.should.eql([]);
+          //child_removed events
+          results.emitEvents['/userList/user1/messages/list/'].child_removed[0].should.eql({'1': 'richie'});
+
+          //propArrays
           results.changeProps.should.eql([
             ['/userList/user1/name/', 'Jack'],
             ['/userList/user1/messages/list/0/', 'yo']
             ]);
-          // results.addProps.should.eql([]);
-          results.deleteProps.should.eql([]);
+          results.addProps.should.eql([['/userList/user2/profile/', newObj.userList.user2.profile], ['/userList/user3/', newObj.userList.user3]]);
+          results.deleteProps.should.eql(['/userList/user1/messages/list/1/']);
           done();
         });
       });
