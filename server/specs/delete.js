@@ -10,39 +10,75 @@ var configTest = require('./configTest');
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
 
-
-
 describe('delete', function() {
-  var socket;
-  var agent;
-  before(function(done) {
-    configTest.resetDb(function() {
-      configTest.authenticateSocket(function(newSocket, newAgent) {
-        socket = newSocket;
-        agent = newAgent;
-        done();
-      });
-    });
-  });
+ var socket;
+ var agent;
+ before(function(done) {
+   configTest.resetDb(function() {
+     configTest.authenticateSocket(function(newSocket, newAgent) {
+       socket = newSocket;
+       agent = newAgent;
+       done();
+     });
+   });
+ });
 
-  after(function(done) {
-    configTest.resetDb(function() {
-      done();
-    });
-  });
+ beforeEach(function(done) {
+   var rows = parseToRows({msg1: {from:'mom'}, msg2: {from: 'dad'}, room: 'main'}, '/user5/', 'messages');
+   db.connect(function(conn) {
+     r.db(utils.dbName).table(utils.tableName).insert({path: '/', _id: 'user5'}).run(conn, function(err, results) {
+       if (err) throw err;
+       r.db(utils.dbName).table(utils.tableName).insert(rows).run(conn, function(err, results) {
+         if (err) throw err;
+         done();
+       })
+     });
+   });
+ });
 
-  it('should hear for a delete event and then remove a path from the database', function(done) {
-    socket.once('/messages/-setSuccess', function() {
-      socket.emit('delete', {path: '/messages/', data: {msg2: {from: 'joe'}}});
-    });
-    socket.once('/messages/-deleteSuccess', function() {
-      socket.emit('getUrl', {url: '/messages/'});
-    })
-    socket.once('/messages/-getSuccess', function(response) {
-      response.data.should.eql({msg1: {from: 'alex'}, room: 'main'});
-      done();
-    })
-    socket.emit('set', {path: '/messages/', data: {msg1: {from: 'alex'}, msg2: {from: 'joe'}, room: 'main'}});
-  });
+ after(function(done) {
+   configTest.resetDb(function() {
+     done();
+   });
+ });
 
+ it('should delete static properties', function(done) {
+   socket.once('/user5/messages/room/-deleteSuccess', function() {
+     db.connect(function(conn) {
+       r.db(utils.dbName).table(utils.tableName).filter({path: '/user5/', _id: 'messages'}).run(conn, function(err, cursor) {
+         if (err) throw err;
+         cursor.toArray(function(err, array) {
+           if (err) throw err;
+           array[0].should.not.have.property('room');
+           done();
+         });
+       });
+     });
+   });
+   socket.emit('delete', {path: '/user5/messages/room/'});
+ });
+
+ it('should delete nested objects', function(done) {
+   socket.once('/user5/messages/-deleteSuccess', function() {
+     db.connect(function(conn) {
+       //check if root node was deleted
+       r.db(utils.dbName).table(utils.tableName).filter({path: '/user5/', _id: 'messages'}).run(conn, function(err, cursor) {
+         if (err) throw err;
+         cursor.toArray(function(err, array) {
+           if (err) throw err;
+           //check if children were deleted
+           r.db(utils.dbName).table(utils.tableName).filter(r.row('path').match('/user5/messages/*')).run(conn, function(err, cursor) {
+             if (err) throw err;
+             cursor.toArray(function(err, array) {
+               var results = array[0];
+               should(results).be.undefined;
+               done();
+             });
+           });
+         });
+       });
+     });
+   });
+   socket.emit('delete', {path: '/user5/messages/'});
+ });
 });
