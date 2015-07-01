@@ -137,7 +137,8 @@ Combust.prototype.delete = function(object, callback) {
 	var newRef = new Combust({
 		dbName: this.dbName,
 		tableName: this.tableName,
-		socket: this.socket
+		socket: this.socket,
+    token: this.token
 	});
 	var path = this.constructPath();
 
@@ -146,7 +147,7 @@ Combust.prototype.delete = function(object, callback) {
 			callback(data);
 		}
 	});
-	this.socket.emit('delete', {path: path, data: object}); 
+	this.socket.emit('delete', {path: path}); 
 };
 
 /**
