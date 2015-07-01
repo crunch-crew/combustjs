@@ -18,6 +18,7 @@ var setDifference = function(setPath, inputObject, callback) {
         emitEvents['/'] = initializePath();
       }
       if (!emitEvents[path + prop + '/'] && prop) {
+        // console.log(path+prop+'/', 'initialized');
         emitEvents[path + prop + '/'] = initializePath();
       }
       return;
@@ -25,11 +26,14 @@ var setDifference = function(setPath, inputObject, callback) {
 
 
     if (!emitEvents[path+prop+'/']) {
+      // console.log(path+prop+'/', 'initialized');
       // console.log("created path: ", path + prop + '/');
       emitEvents[path+prop+'/'] = initializePath();
       var parent = getParent(path + prop + '/');
       while(parent) {
-        emitEvents[parent] = initializePath();
+        if (!emitEvents[parent]) {
+          emitEvents[parent] = initializePath();
+        }
         parent = getParent(parent);
       }
     }
@@ -50,6 +54,7 @@ var setDifference = function(setPath, inputObject, callback) {
           initializeParentPaths(emitEvents, path, prop);
           var inputData = {};
           inputData[prop] = oldObject[prop];
+          bubbleUp(emitEvents, 'value', path + prop + '/', inputObject, newObject[prop]);
           bubbleUp(emitEvents, 'child_removed', path + prop + '/', databaseObj, inputData);
           deleteProps.push(path + prop + '/');
         }
@@ -77,6 +82,7 @@ var setDifference = function(setPath, inputObject, callback) {
           var inputData = {};
           inputData = oldObject;
           initializeParentPaths(emitEvents, path, prop);
+          bubbleUp(emitEvents, 'value', path + prop + '/', inputObject, newObject[prop]);
           bubbleUp(emitEvents, 'child_removed', path + prop + '/', databaseObj, inputData);
           deleteProps.push(path + prop + '/');
         }
@@ -103,6 +109,9 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
     //if the event is 'value', will query the db for the new data for every parent path.
     if(event === 'value') {
         data = isolateData(path, rootObject);
+        if (data === undefined) {
+          data = null;
+        }
         emitEvents[path][event] = data;
         parentPath = getParent(path);
         if (parentPath) {
@@ -118,30 +127,35 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
         parentPath = getParent(path);
         emitEvents[parentPath][event].push(inputData);
         if (parentPath) {
-          recurse('child_changed', parentPath);
+          recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
         }
       }
     }
     if(event === 'child_changed') {
       if(path) {
-        // emitEvents[path].value = isolateData(path,rootObject);
-        if (path !== '/' && path !== null) {
           parentPath = getParent(path);
-          var key = path.split('/');
-          key = key[key.length-2];
-          emitEvents[parentPath][event][key] = inputData;
-          recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
-        }
+          if (parentPath) {
+            // if (parentPath === '/') {
+            //   key = path.replace('/', '');
+            // }
+            // else {
+              var key = path.split('/');
+              key = key[key.length-2];
+            // }
+            emitEvents[parentPath][event][key] = inputData;
+            recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
+          }
       }
     }
     if(event === 'child_removed') {
       if(path) {
         if (path !== '/' && path !== null) {
-          // var removedChild = isolateData(path,rootObject);
           parentPath = getParent(path);
           var key = path.split('/');
           key = key[key.length-2];
-          emitEvents[parentPath][event].push(inputData);
+          var removedChild = {};
+          removedChild[key] = isolateData(path,rootObject);
+          emitEvents[parentPath][event].push(removedChild);
           recurse('child_changed', parentPath, isolateData(parentPath, rootObject));
         }
       }
