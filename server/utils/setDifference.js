@@ -161,7 +161,7 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
       }
     }
   };
-    recurse(event, path, inputData);
+  recurse(event, path, inputData);
 };
 
 module.exports = setDifference;
