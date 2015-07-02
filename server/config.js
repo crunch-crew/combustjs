@@ -11,3 +11,4 @@ module.exports = {
     return id.length === 36 && id.split("-").length - 1 === 4;
   }
 };
+
