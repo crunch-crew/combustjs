@@ -1,8 +1,7 @@
-var db = require('../db');
-var r = require('rethinkdb');
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var bubbleUp = require('../utils/bubbleUp');
+var setDifference = require('../utils/setDifference');
 var getQuery = require('../rethinkQuery/getQuery');
 var bulkDeleteQuery = require('../rethinkQuery/bulkDeleteQuery');
 var deleteQuery = require('../rethinkQuery/deleteQuery');
@@ -64,42 +63,58 @@ exports.setup = function(socket, io) {
         childrenString = rootString;
         children_idFind = urlArray[urlArray.length-1];
       } 
+
+
+        if(!incompletePath) {
+          // setDifference(setRequest.path, setRequest.data, function(diff) {
             
-      if(!incompletePath) {
-        //if in here, it means that the database contains all parent paths leading up to our target path
-        deleteQuery({path: rootString, _id: _idFind}, function(result) {
-          bulkDeleteQuery('path', childrenString + children_idFind + "*", function(result) {
-            var rows = parseToRows(setRequest.data, rootString, _idFind);
-            insertQuery(rows, function(result) {
-              //emits setSuccess so client to notify client of success
-              socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-              bubbleUp('value', setRequest.path, socket);
+          //   var updateHandler = function() {
+
+          //   };
+            
+          //   var deleteHandler = function() {
+
+          //   };
+
+
+          //   var addHandler = function() {
+
+          //   };
+          // });   
+          // if in here, it means that the database contains all parent paths leading up to our target path
+          deleteQuery({path: rootString, _id: _idFind}, function(result) {
+            bulkDeleteQuery('path', childrenString + children_idFind + "*", function(result) {
+              var rows = parseToRows(setRequest.data, rootString, _idFind);
+              insertQuery(rows, function(result) {
+                //emits setSuccess so client to notify client of success
+                socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
+                bubbleUp('value', setRequest.path, socket);
+              });
             });
           });
-        });
-      }
-      else {
-        //starts by building an empty object
-        var buildObj = {};
-        //currentPoint will deeper and deeper into our buildObj as we start building all the missing path to our target path
-        var currentPointer = buildObj;
-        //iterates through the parents we need to build
-        for(var j = 1; j < neededParents.length; j++) {
-          currentPointer = currentPointer[neededParents[j]] = {};
         }
-        //finally after we have built all the parents sets our path id as a property in the parent row
-        currentPointer[_idFind] = setRequest.data;
-        //we parse the whole obj that we are building into rows so it can be inserted into db
-        //ie. if we were setting an object at /users/message/ and users doesn't exist,
-        //buildObj would equal {message: sldfksdlf}
-        //rootString would be '/'
-        //neededParents[0] would be the _id which is 'users'
-        var rows = parseToRows(buildObj, rootString, neededParents[0]);
-        insertQuery(rows, function(result) {
-          socket.emit(setRequest.path+'-setSuccess', 'Successfully set data!');
-          bubbleUp('value', setRequest.path, socket);
-        });
-      }
+        else {
+          //starts by building an empty object
+          var buildObj = {};
+          //currentPoint will deeper and deeper into our buildObj as we start building all the missing path to our target path
+          var currentPointer = buildObj;
+          //iterates through the parents we need to build
+          for(var j = 1; j < neededParents.length; j++) {
+            currentPointer = currentPointer[neededParents[j]] = {};
+          }
+          //finally after we have built all the parents sets our path id as a property in the parent row
+          currentPointer[_idFind] = setRequest.data;
+          //we parse the whole obj that we are building into rows so it can be inserted into db
+          //ie. if we were setting an object at /users/message/ and users doesn't exist,
+          //buildObj would equal {message: sldfksdlf}
+          //rootString would be '/'
+          //neededParents[0] would be the _id which is 'users'
+          var rows = parseToRows(buildObj, rootString, neededParents[0]);
+          insertQuery(rows, function(result) {
+            socket.emit(setRequest.path+'-setSuccess', 'Successfully set data!');
+            bubbleUp('value', setRequest.path, socket);
+          });
+        }   
     });
   });
 };

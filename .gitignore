@@ -6,3 +6,4 @@ client/index.html
 npm-debug.log
 /server/doc
 /client/docs
+.DS_Store

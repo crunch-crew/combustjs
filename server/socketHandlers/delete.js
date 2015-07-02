@@ -35,6 +35,7 @@ exports.setup = function(socket, io) {
     }
     // check to see if the deleteObject is a static property on parent level
     var parentId;
+
     db.connect(function(conn) {
       // considers the senario that the delete path specifies the root row to be deleted
       if (parent_path === '/' && parent_id === '/') {
