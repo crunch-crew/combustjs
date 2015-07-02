@@ -61,11 +61,11 @@ Combust.prototype.connectSocket = function(callback) {
     }
     this.socket.once('connectSuccess', function(response) {
       if (response.success) {
-        callback(response.success);
+        callback(response);
       }
       else {
         console.log('CombustJS: Connection refused by server');
-        callback(response.success);
+        callback(response);
       }
     });
     this.socket.once('error', function(err) {
@@ -73,9 +73,13 @@ Combust.prototype.connectSocket = function(callback) {
         console.log('CombustJS: Token expired. Please reauthenticate.');
         callback({success: false, error: err});
       }
-      if (err === 'TokenCorruptError') {
+      else if (err === 'TokenCorruptError') {
         console.log('CombustJS: Token is corrupt');
         callback({success: false, error: err});
+      }
+      else {
+        console.log('CombustJS: Connection refused by server.');
+        callback({success: false, error: 'Unknown'});
       }
     });
   }

@@ -17,6 +17,9 @@ var Combust = function(options, callback) {
   this.serverAddress = options.serverAddress || null;
   this.dbName = options.tableName || 'test';
   this.tableName = options.tableName || 'test';
+  //checks localStorage to see if token is already stored
+  this.token = localStorage.getItem('token') || null;
+  
   //manage socket connection
   if (options.socket) {
     this.socket = options.socket;
@@ -28,8 +31,6 @@ var Combust = function(options, callback) {
     this.socket = null;
   }
   this.pathArray = ['/'];
-  //checks localStorage to see if token is already stored
-  this.token = localStorage.getItem('token') || null;
 };
 
 //create socket connection to server
@@ -64,18 +65,25 @@ Combust.prototype.connectSocket = function(callback) {
     }
     this.socket.once('connectSuccess', function(response) {
       if (response.success) {
-        callback();
+        callback(response);
       }
       else {
         console.log('CombustJS: Connection refused by server');
+        callback(response);
       }
     });
     this.socket.once('error', function(err) {
       if (err === 'TokenExpiredError') {
         console.log('CombustJS: Token expired. Please reauthenticate.');
+        callback({success: false, error: err});
       }
-      if (err === 'TokenCorruptError') {
+      else if (err === 'TokenCorruptError') {
         console.log('CombustJS: Token is corrupt');
+        callback({success: false, error: err});
+      }
+      else {
+        console.log('CombustJS: Connection refused by server.');
+        callback({success: false, error: 'Unknown'});
       }
     });
   }
