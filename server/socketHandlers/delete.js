@@ -3,7 +3,6 @@ var r = require('rethinkdb');
 var bubbleUp = require('../utils/bubbleUp.js');
 var config = require('../config');
 var parseToRows = require('../utils/parseToRows.js');
-var _ = require('underscore');
 
 exports.setup = function(socket, io) {
   /**
