@@ -30,9 +30,7 @@ describe('delete()', function() {
 
   describe('delete()', function() {
     it('should emit a socket event to the server', function(done) {
-      var test = authRef.delete(utils.testObj, function() {
         done();
-      });
     });
   });
 });
