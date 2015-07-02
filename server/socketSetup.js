@@ -27,18 +27,30 @@ exports.setup = function(server) {
 		var token = socket.request._query.token;
 		//decrypt the token
 		jwt.verify(token, config.jwtSecret, function(err, decoded) {
-			//if token decrypts successfully, user is authenticated, otherwise reject connection
-			//temporarily disabled while client authentication methods are built
-			// if (!err) {
+			//if token isn't passed, set property to null
+			if (err && err.message === 'jwt must be provided') {
+				socket.userToken = null;
+				next();
+			}
+			//notify client token is expired
+			else if (err && err.name === 'TokenExpiredError') {
+				next(new Error('TokenExpiredError'));
+			}
+			//if token exists but error in decryption, trigger failure on connect
+			else if (err) {
+				next(new Error('TokenCorruptError'));
+			}
+			//decoded successfuly, store decoded token and pass connection on to handlers
+			else {
 				socket.userToken = decoded;
 				next();
-			// }
+			}
 		});
 	});
 
 	io.on('connection', function(socket) {
 		//notify client of successful connection
-		socket.emit('connectSuccess', "Socket connection established");
+		socket.emit('connectSuccess', {success: true});
 
 		//setup all the individual socket listeners
 		subscribeUrl.setup(socket);

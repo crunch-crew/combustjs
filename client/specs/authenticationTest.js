@@ -70,4 +70,26 @@ describe('authentication', function() {
       });
     });
   });
+
+  //not tested - difficult to test localStorage in mocha
+  describe('authentication local storage', function() {
+    xit('should automatically store the JSON web token in local storage', function(done) {
+    });
+
+    xit('should retrieve a token from local storage (if it exists) upon initialization', function(done) {
+
+    });
+
+    xit('should establish a connection using the token retrieved from local storage', function(done) {
+
+    });
+
+    xit('should delete the token when the unauthenticate method is called', function(done) {
+
+    });
+
+    xit('should gracefully re-authenticate if the server declares the token to be expired', function(done) {
+
+    });
+  });
 });
