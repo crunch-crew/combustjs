@@ -1,6 +1,7 @@
 //required for testing only - remove in production
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var io = require('socket.io-client');
+var localStorage = require('./specs/utils/localStorage')();
 
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
@@ -26,10 +27,9 @@ var Combust = function(options, callback) {
   else {
     this.socket = null;
   }
-  // this.io = options.io || null;
   this.pathArray = ['/'];
-  //could check local storage to see if a token exists there
-  this.token = null;
+  //checks localStorage to see if token is already stored
+  this.token = localStorage.getItem('token') || null;
 };
 
 //create socket connection to server
@@ -48,11 +48,35 @@ Combust.prototype.connectSocket = function(callback) {
     }.bind(this));
   }
   else {
-    this.socket = io.connect(this.serverAddress, {
-      forceNew: true
+    //if user already has a token from local storage, make an authenticated connection
+    if (this.token) {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true,
+        //send the web token with the initial websocket handshake
+        query: 'token=' + this.token
+      });
+    }
+    //else make an unauthenticated connection
+    else {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true
+      });
+    }
+    this.socket.once('connectSuccess', function(response) {
+      if (response.success) {
+        callback();
+      }
+      else {
+        console.log('CombustJS: Connection refused by server');
+      }
     });
-    this.socket.on('connectSuccess', function() {
-      callback();
+    this.socket.once('error', function(err) {
+      if (err === 'TokenExpiredError') {
+        console.log('CombustJS: Token expired. Please reauthenticate.');
+      }
+      if (err === 'TokenCorruptError') {
+        console.log('CombustJS: Token is corrupt');
+      }
     });
   }
 };
@@ -134,12 +158,7 @@ Combust.prototype.push = function(object, callback) {
 
 // Takes in an object to be set at a path and emits an event to the server
 Combust.prototype.delete = function(object, callback) {
-  // var newRef = new Combust({
-  //   dbName: this.dbName,
-  //   tableName: this.tableName,
-  //   socket: this.socket,
-  //   token: this.token
-  // });
+  //should delete switch path to parent or something?
   var path = this.constructPath();
 
   this.socket.once(path + '-deleteSuccess', function(data){
@@ -294,16 +313,6 @@ Combust.prototype.newUser = function(newUser, callback) {
     response = JSON.parse(xhr.responseText);
     response.status = xhr.status;
     callback(response);
-    // if (xhr.status === 201) {
-    //  callback(response);
-    // }
-    // else if (xhr.status === 401) {
-    //  console.log(xhr.responseText);
-
-    // }
-    // else {
-    //  console.log(xhr.responseText);
-    // }
   }.bind(this);
   xhr.send(JSON.stringify(newUser));
 };
@@ -316,20 +325,20 @@ Combust.prototype.authenticate = function(credentials, callback) {
   xhr.onload = function() {
     response = JSON.parse(xhr.responseText);
     response.status = xhr.status;
-    this.token = response.token;
+    if (response.token) {
+      this.token = response.token;
+      //store token in local storage
+      localStorage.setItem('token', response.token);
+    }
     callback(response);
   }.bind(this);
   xhr.send(JSON.stringify(credentials));
 };
 
-// Combust.prototype.connectSocket = function() {
-//  var io = this.io;
-//  var serverAddress = this.serverAddress;
-//  var token = this.token;
-//  this.socket = io.connect(serverAddress, {
-//    //send the web token with the initial websocket handshake
-//    query: 'token=' + token
-//  });
-// }
+Combust.prototype.unauthenticate = function() {
+  this.socket.disconnect();
+  this.token = null;
+  localStorage.removeItem('token');
+};
 
 module.exports = Combust;

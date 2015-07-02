@@ -1,7 +1,3 @@
-//required for testing only - remove in production
-// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-// var io = require('socket.io-client');
-
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
 * as well as listening for changes in data at the specified path.
@@ -11,67 +7,95 @@
 *@constructor
 */
 var Combust = function(options, callback) {
-	this.callback = callback || function() {};
-	this.auth = options.auth || null;
-	this.serverAddress = options.serverAddress || null;
-	this.dbName = options.tableName || 'test';
-	this.tableName = options.tableName || 'test';
-	//manage socket connection
-	if (options.socket) {
-		this.socket = options.socket;
-	}
-	else if (this.serverAddress) {
-		this.connectSocket(this.callback);
-	}
-	else {
-		this.socket = null;
-	}
-	// this.io = options.io || null;
-	this.pathArray = ['/'];
-	//could check local storage to see if a token exists there
-	this.token = null;
+  this.callback = callback || function() {};
+  this.auth = options.auth || null;
+  this.serverAddress = options.serverAddress || null;
+  this.dbName = options.tableName || 'test';
+  this.tableName = options.tableName || 'test';
+  
+  //checks localStorage to see if token is already stored
+  this.token = localStorage.getItem('token') || null;
+  
+  //manage socket connection
+  if (options.socket) {
+    this.socket = options.socket;
+  }
+  else if (this.serverAddress) {
+    this.connectSocket(this.callback);
+  }
+  else {
+    this.socket = null;
+  }
+  this.pathArray = ['/'];
 };
 
 //create socket connection to server
 Combust.prototype.connectSocket = function(callback) {
-	if (this.auth) {
-		this.authenticate(this.auth, function(response) {
-			this.socket = io.connect(this.serverAddress, {
-				forceNew: true,
-	      //send the web token with the initial websocket handshake
-	      query: 'token=' + response.token
-	    });
-	    this.token = response.token;
-			this.socket.on('connectSuccess', function() {
-	    	callback(response);
-			});
-		}.bind(this));
-	}
-	else {
-		this.socket = io.connect(this.serverAddress, {
-			forceNew: true
-		});
-    this.socket.on('connectSuccess', function() {
-    	callback();
-		});
-	}
+  if (this.auth) {
+    this.authenticate(this.auth, function(response) {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true,
+        //send the web token with the initial websocket handshake
+        query: 'token=' + response.token
+      });
+      this.token = response.token;
+      this.socket.on('connectSuccess', function() {
+        callback(response);
+      });
+    }.bind(this));
+  }
+  else {
+    //if user already has a token from local storage, make an authenticated connection
+    if (this.token) {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true,
+        //send the web token with the initial websocket handshake
+        query: 'token=' + this.token
+      });
+    }
+    //else make an unauthenticated connection
+    else {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true
+      });
+    }
+    this.socket.once('connectSuccess', function(response) {
+      if (response.success) {
+        callback(response.success);
+      }
+      else {
+        console.log('CombustJS: Connection refused by server');
+        callback(response.success);
+      }
+    });
+    this.socket.once('error', function(err) {
+      if (err === 'TokenExpiredError') {
+        console.log('CombustJS: Token expired. Please reauthenticate.');
+        callback({success: false, error: err});
+      }
+      if (err === 'TokenCorruptError') {
+        console.log('CombustJS: Token is corrupt');
+        callback({success: false, error: err});
+      }
+    });
+  }
 };
 
 /* this method doesn't have documentation because its an internal method that the user should not use.
-	 Converts the pathArray variable into a string that can be used by other methods to interact with the server
+   Converts the pathArray variable into a string that can be used by other methods to interact with the server
 */
 Combust.prototype.constructPath = function() {
-	var path;
-	if (this.pathArray[0] === '/' && this.pathArray.length === 1) {
-		return '/';
-	}
-	else if (this.pathArray[0] === '/') {
-		path = this.pathArray.slice(1);
-	}
-	else {
-		path = this.pathArray;
-	}
-	return "/" + path.join('/') + '/';
+  var path;
+  if (this.pathArray[0] === '/' && this.pathArray.length === 1) {
+    return '/';
+  }
+  else if (this.pathArray[0] === '/') {
+    path = this.pathArray.slice(1);
+  }
+  else {
+    path = this.pathArray;
+  }
+  return "/" + path.join('/') + '/';
 };
 
 /**
@@ -86,8 +110,8 @@ Combust.prototype.constructPath = function() {
 
 //consider changing this method so that it returns a new Combust object instead of mutating the existing one
 Combust.prototype.child = function(childName) {
-	this.pathArray.push(childName);
-	return this;
+  this.pathArray.push(childName);
+  return this;
 };
 
 /**
@@ -104,22 +128,22 @@ Combust.prototype.child = function(childName) {
 /* returns a new object combust reference immediately, but once it receives the new key from the database
 it updates the returned combust reference with the proper path */
 Combust.prototype.push = function(object, callback) {
-	var newRef = new Combust({
-		dbName: this.dbName,
-		tableName: this.tableName,
-		socket: this.socket
-	});
-	// newRef.token = this.token;
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  // newRef.token = this.token;
 
-	this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
-		newRef.child(data.key);
-		if (callback) {
-			callback(data);
-		}
-	});
-	this.socket.emit('push', {path: this.constructPath(), data: object});
+  this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
+    newRef.child(data.key);
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('push', {path: this.constructPath(), data: object});
 
-	return newRef;
+  return newRef;
 };
 
 /**
@@ -134,19 +158,15 @@ Combust.prototype.push = function(object, callback) {
 
 // Takes in an object to be set at a path and emits an event to the server
 Combust.prototype.delete = function(object, callback) {
-	var newRef = new Combust({
-		dbName: this.dbName,
-		tableName: this.tableName,
-		socket: this.socket
-	});
-	var path = this.constructPath();
+  //should delete switch path to parent or something?
+  var path = this.constructPath();
 
-	this.socket.once(path + '-deleteSuccess', function(data){
-		if (callback) {
-			callback(data);
-		}
-	});
-	this.socket.emit('delete', {path: path, data: object}); 
+  this.socket.once(path + '-deleteSuccess', function(data){
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('delete', {path: path}); 
 };
 
 /**
@@ -161,20 +181,20 @@ Combust.prototype.delete = function(object, callback) {
 
 /* Takes in an object to be set at path. Does not return anything. */
 Combust.prototype.set = function(object, callback) {
-	var newRef = new Combust({
-		dbName: this.dbName,
-		tableName: this.tableName,
-		socket: this.socket
-	});
-	//transfer token
-	newRef.token = this.token;
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  //transfer token
+  newRef.token = this.token;
 
-	this.socket.once(this.constructPath() + '-setSuccess', function(data) {
-		if (callback) {
-			callback(data);
-		}
-	});
-	this.socket.emit('set', {path: this.constructPath(), data: object});
+  this.socket.once(this.constructPath() + '-setSuccess', function(data) {
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('set', {path: this.constructPath(), data: object});
 };
 
 
@@ -190,18 +210,18 @@ Combust.prototype.set = function(object, callback) {
 
 /* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
 Combust.prototype.update = function(object, callback) {
-	var newRef = new Combust({
-		dbName: this.dbName,
-		tableName: this.tableName,
-		socket: this.socket
-	});
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
 
-	this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
-		if (callback) {
-			callback(data);
-		}
-	});
-	this.socket.emit('update', {path: this.constructPath(), data: object});
+  this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('update', {path: this.constructPath(), data: object});
 };
 
 
@@ -214,12 +234,12 @@ Combust.prototype.update = function(object, callback) {
 *@param *callback {Function} callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.
 */
 Combust.prototype.on = function(eventType, callback) {
-	//set it here incase path changes before getSuccess is executed
-	var path = this.constructPath();
-	//this binding is lost in async calls so store it here
-	var socket = this.socket;
-	//this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
-	if (eventType === "child_added") {
+  //set it here incase path changes before getSuccess is executed
+  var path = this.constructPath();
+  //this binding is lost in async calls so store it here
+  var socket = this.socket;
+  //this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
+  if (eventType === "child_added") {
     socket.once(path + '-subscribeUrlChildAddSuccess', function() {
       //need a get children method - not desired functionality as written
       socket.emit('getUrlChildren', {url: path});
@@ -235,10 +255,10 @@ Combust.prototype.on = function(eventType, callback) {
         callback(data);
       });
     });
-		socket.emit("subscribeUrlChildAdd", {url: path});
-	}
-	// the client side method that enables execution of callback with child_changed response
-	if (eventType === "child_changed") {
+    socket.emit("subscribeUrlChildAdd", {url: path});
+  }
+  // the client side method that enables execution of callback with child_changed response
+  if (eventType === "child_changed") {
     socket.once(path + '-subscribeUrlChildChangeSuccess', function() {
       //listens to completion of subscribe event on server
       //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
@@ -256,77 +276,67 @@ Combust.prototype.on = function(eventType, callback) {
         callback(data);
       });
     });
-		socket.emit("subscribeUrlChildChange", {url: path});
-		// emits for registeration of subscribe event at the path on server handler
-	}
-	// the client side method that enables execution of callback with child_changed response
-	if (eventType === "value") {
+    socket.emit("subscribeUrlChildChange", {url: path});
+    // emits for registeration of subscribe event at the path on server handler
+  }
+  // the client side method that enables execution of callback with child_changed response
+  if (eventType === "value") {
     socket.once(path + '-subscribeUrlValueSuccess', function() {
       //listens to completion of subscribe event on server
       //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
-      socket.emit('getUrl', {url: path});
+      socket.emit('getUrlChildren', {url: path});
       //emit for getUrlChildren action on server; for the 'path'
     });
-    socket.once(path + "-getSuccess", function(data) {
+    socket.once(path + "-getUrlChildrenSuccess", function(data) {
       //listens to getChildren Success and executes callback on all current children; does this first time
       //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      callback(data);
+      data.forEach(function(child) {
+        callback(child);
+      });
       // confirm what should this be --- 
       socket.on(path + '-value', function(data) {
         //continues to listen to child change events and executes callback with returned data
         callback(data);
       });
     });
-		socket.emit("subscribeUrlValue", {url: path});
-		// emits for registeration of subscribe event at the path on server handler
-	}
+    socket.emit("subscribeUrlValue", {url: path});
+    // emits for registeration of subscribe event at the path on server handler
+  }
 };
 
 Combust.prototype.newUser = function(newUser, callback) {
-	//raw http requests
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
-	xhr.setRequestHeader('Content-Type', 'application/json');
-	xhr.onload = function() {
-		response = JSON.parse(xhr.responseText);
-		response.status = xhr.status;
-		callback(response);
-		// if (xhr.status === 201) {
-		// 	callback(response);
-		// }
-		// else if (xhr.status === 401) {
-		// 	console.log(xhr.responseText);
-
-		// }
-		// else {
-		// 	console.log(xhr.responseText);
-		// }
-	}.bind(this);
-	xhr.send(JSON.stringify(newUser));
+  //raw http requests
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    response = JSON.parse(xhr.responseText);
+    response.status = xhr.status;
+    callback(response);
+  }.bind(this);
+  xhr.send(JSON.stringify(newUser));
 };
 
 //storing token in instance of object for now, should it be stored in local storage?
 Combust.prototype.authenticate = function(credentials, callback) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
-	xhr.setRequestHeader('Content-Type', 'application/json');
-	xhr.onload = function() {
-		response = JSON.parse(xhr.responseText);
-		response.status = xhr.status;
-		this.token = response.token;
-		callback(response);
-	}.bind(this);
-	xhr.send(JSON.stringify(credentials));
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    response = JSON.parse(xhr.responseText);
+    response.status = xhr.status;
+    if (response.token) {
+      this.token = response.token;
+      //store token in local storage
+      localStorage.setItem('token', response.token);
+    }
+    callback(response);
+  }.bind(this);
+  xhr.send(JSON.stringify(credentials));
 };
 
-// Combust.prototype.connectSocket = function() {
-// 	var io = this.io;
-// 	var serverAddress = this.serverAddress;
-// 	var token = this.token;
-// 	this.socket = io.connect(serverAddress, {
-// 		//send the web token with the initial websocket handshake
-// 		query: 'token=' + token
-// 	});
-// }
-
-// module.exports = Combust;
+Combust.prototype.unauthenticate = function() {
+  this.socket.disconnect();
+  this.token = null;
+  localStorage.removeItem('token');
+};
