@@ -197,6 +197,7 @@ Combust.prototype.set = function(object, callback) {
   //transfer token
   newRef.token = this.token;
 
+    console.log('listening on: ', this.constructPath( + '-setSuccess'));
   this.socket.once(this.constructPath() + '-setSuccess', function(data) {
     if (callback) {
       callback(data);
