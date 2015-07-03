@@ -53,13 +53,19 @@ exports.setup = function(socket, io) {
           neededParents.push('/');
         }
 
+        var dbPointer = rootObject;
+        // console.log('dbPointer before loop: ', dbPointer);
         for(var i = 0; i < urlArray.length; i++) {
           //iterates through urlArray and checks to see if the properties in urlArray exist in our current database.
-          if(!rootObject[urlArray[i]]) {
+          if(!dbPointer[urlArray[i]]) {
             //keeps track of a variable called "incompletePath" that we will use later. Also pushes the props we need to create
             incompletePath = true;
             neededParents.push(urlArray[i]);
           }
+          else {
+            dbPointer = dbPointer[urlArray[i]];   
+          }
+          // console.log('dbPoitner: ', dbPointer);       
         }
         //sets the rootString which is the path we will use in dbqueries
         rootString = (urlArray.slice(0, urlArray.length - 1 - neededParents.length).join("/")) + "/";
@@ -69,16 +75,14 @@ exports.setup = function(socket, io) {
       } 
 
       if(!incompletePath) {
-        // console.log('incomplete path is: ', incompletePath);
-        // console.log(setRequest.path, setRequest.data);
         setDifference(setRequest.path, setRequest.data, function(diff) {
+          // console.log('diff is: ', diff);
           var addRows = [];
           var changeRows = [];
           var id;
           var parentPath;
           var addProps = {};
           var changeProps = {};
-          // console.log("diff is: ", diff);
 
           diff.addProps.forEach(function(prop) {
             if(typeof prop[1] !== 'object') {
@@ -106,7 +110,6 @@ exports.setup = function(socket, io) {
               addProps[parentPath][id] = prop[1];              
             }
           });
-          // console.log('addProps', addProps);
 
           var addPropsKeys = Object.keys(addProps);
           addPropsKeys.forEach(function(key) {
@@ -123,11 +126,10 @@ exports.setup = function(socket, io) {
               });
             }
           });
-          // console.log('addRows are: ', addRows);
+
           insertQuery(addRows, function(result) {
-            // console.log("diff.changeProps is", diff.changeProps);
+            // console.log('diff.changeProps is: ', diff.changeProps);
             diff.changeProps.forEach(function(prop) {
-              // console.log(prop);
               if(typeof prop[1] !== 'object') {
                 var temp = prop[0].split('/');
                 parentPath = setRequest.path + temp.slice(1, temp.length - 2).join('/');
@@ -140,8 +142,6 @@ exports.setup = function(socket, io) {
                 if(!changeProps[parentPath]) {
                   changeProps[parentPath] = {};
                 }  
-                // console.log('parentPath :' , parentPath);
-                // console.log('id :', id);
                 changeProps[parentPath][id] = prop[1];
               }
               else {
@@ -200,8 +200,8 @@ exports.setup = function(socket, io) {
             };
 
             var update = function() {
-
-
+              console.log('called update with path: ', changeRows[counter].path, ' and _id: ', changeRows[counter]._id);
+              console.log('changeRows is: ', changeRows);
               updateByFilterQuery({path: changeRows[counter].path, _id: changeRows[counter]._id}, changeRows[counter], function(result) {
                 counter++;
                 if(counter === changeRows.length) {
@@ -212,10 +212,8 @@ exports.setup = function(socket, io) {
                 }
               });
             }; 
-            // console.log('changeRows :' , changeRows);
             if(changeRows.length === 0) {
               deleteThem();
-              // console.log('yo');
             }
             else {
               update();           
@@ -235,7 +233,7 @@ exports.setup = function(socket, io) {
         // });
       }
       else {
-        console.log("got here");
+        // console.log("got here");
         // console.log('hi');
         //starts by building an empty object
         var buildObj = {};
@@ -261,18 +259,18 @@ exports.setup = function(socket, io) {
           objToParse = setRequest.data;
         }
 
-        console.log('objToParse: ', objToParse);
-        console.log('buildObj: ', buildObj);
-        console.log('rootString: ', rootString);
-        console.log('_idFInd: ', _idFind);
-        console.log('neededParents: ', neededParents);
+        // console.log('objToParse: ', objToParse);
+        // console.log('buildObj: ', buildObj);
+        // console.log('rootString: ', rootString);
+        // console.log('_idFInd: ', _idFind);
+        // console.log('neededParents: ', neededParents);
 
         var rows = parseToRows(objToParse, getParent(neededParents[0]), neededParents[0]);
-        console.log('rows: ', rows);
+        // console.log('rows: ', rows);
         insertQuery(rows, function(result) {
-          console.log('insert completed');
+          // console.log('insert completed');
           socket.emit(setRequest.path+'-setSuccess', {success: true});
-          console.log('emitted to ', setRequest.path + '-setSuccess');
+          // console.log('emitted to ', setRequest.path + '-setSuccess');
           bubbleUp('value', setRequest.path, socket);
         });
       }   
