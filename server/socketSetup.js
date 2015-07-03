@@ -49,7 +49,7 @@ exports.setup = function(server) {
 	});
 
 	io.on('connection', function(socket) {
-		//notify client of successful connection
+		//notify client of successful connection - probably don't need this, socket.io has a .on('connection') event
 		socket.emit('connectSuccess', {success: true});
 
 		//setup all the individual socket listeners

@@ -33,19 +33,27 @@ var Combust = function(options, callback) {
   this.pathArray = ['/'];
 };
 
-//create socket connection to server
+//create socket connection to server - internal method, no API documentation
 Combust.prototype.connectSocket = function(callback) {
+  //if authentication credentials are provided, attempt to get obtain a token from the server and then establish an authenticated websocket connection.
   if (this.auth) {
     this.authenticate(this.auth, function(response) {
-      this.socket = io.connect(this.serverAddress, {
-        forceNew: true,
-        //send the web token with the initial websocket handshake
-        query: 'token=' + response.token
-      });
-      this.token = response.token;
-      this.socket.on('connectSuccess', function() {
+      if (response.success) {
+        this.socket = io.connect(this.serverAddress, {
+          forceNew: true,
+          //send the web token with the initial websocket handshake
+          query: 'token=' + response.token
+        });
+        this.token = response.token;
+        this.socket.on('connectSuccess', function() {
+          callback(response);
+        });
+      }
+      //does not attempt connetion if credentials are invalid.
+      else {
+        console.log('CombustJS: Invalid credentials. Socket connection not established.');
         callback(response);
-      });
+      }
     }.bind(this));
   }
   else {
@@ -72,6 +80,7 @@ Combust.prototype.connectSocket = function(callback) {
         callback(response);
       }
     });
+    //Handling of servers received from server
     this.socket.once('error', function(err) {
       if (err === 'TokenExpiredError') {
         console.log('CombustJS: Token expired. Please reauthenticate.');
@@ -211,7 +220,7 @@ Combust.prototype.set = function(object, callback) {
 *
 *@method update
 *
-*@param object {Object} object The object to update the existing object at the current path.
+*@param object {Object} object The object to update the current path with.
 *@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
 *
 */
@@ -232,7 +241,7 @@ Combust.prototype.update = function(object, callback) {
   this.socket.emit('update', {path: this.constructPath(), data: object});
 };
 
-
+//TODO: Update this documentation and function
 /**
 * Creates an event listener for a specified event at the current path.
 *
@@ -312,6 +321,19 @@ Combust.prototype.on = function(eventType, callback) {
   }
 };
 
+/**
+* Attempts to create a new user
+*
+*@method newUser
+*
+*@param newUser {Object} newUser Object that contains the credentials of the user to be added.
+*@param newUser.username username Username to associate with new user.
+*@param newUser.password password Password to associate with new user.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has two properties: 
+*1) 'success' which indicates whether the new user was successfully created or not.
+*2) 'id' which will contains the new users id if the operation was successful. 
+*/
 Combust.prototype.newUser = function(newUser, callback) {
   //raw http requests
   var xhr = new XMLHttpRequest();
@@ -320,12 +342,27 @@ Combust.prototype.newUser = function(newUser, callback) {
   xhr.onload = function() {
     response = JSON.parse(xhr.responseText);
     response.status = xhr.status;
-    callback(response);
+    if (callback) {
+      callback(response);
+    }
   }.bind(this);
   xhr.send(JSON.stringify(newUser));
 };
 
-//storing token in instance of object for now, should it be stored in local storage?
+/**
+* Attempts to authenticate user credentials. If authentication is successful, the JSON Web Token will be stored in local storage, as well as on the Combust instance.
+*
+*@method authenticate
+*
+*@param crendentials {Object} credentials Object that contains the username and password of the user to authenticate.
+*@param credentials.username username Username of the user authenticate.
+*@param credentials.password password Password of the user to authenticate.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has three properties: 
+*1) 'success' (Boolean) which indicates whether the user was successfully authenticated or not.
+*2) 'id' (String) Contains the authenticated users id - only present if success is true.
+*3) 'token' (String) Contains the authenticated users authentication JSON Web token - only present is success is true.
+*/
 Combust.prototype.authenticate = function(credentials, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
@@ -343,6 +380,11 @@ Combust.prototype.authenticate = function(credentials, callback) {
   xhr.send(JSON.stringify(credentials));
 };
 
+/**
+* Unauthenticates the current user by disconnecting the socket connection, and delete the authenticaton JSON Web Token from the Combust instance, as well as local storage.
+*
+*@method authenticate
+*/
 Combust.prototype.unauthenticate = function() {
   this.socket.disconnect();
   this.token = null;
