@@ -37,7 +37,7 @@ exports.setup = function(socket, io) {
     var parentId;
 
     db.connect(function(conn) {
-      // considers the senario that the delete path specifies the root row to be deleted
+      // considers the scenario that the delete path specifies the root row to be deleted
       if (parent_path === '/' && parent_id === '/') {
         r.db(config.dbName).table(config.tableName).filter({path: '/', _id: deleteObject}).delete().run(conn, function(err, results) {
           if (err) throw err;

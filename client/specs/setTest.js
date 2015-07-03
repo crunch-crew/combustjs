@@ -29,7 +29,7 @@ describe('set()', function() {
   });
 
   it('should set an object into database at the current path', function(done) {
-    var test = authRef.set(utils.testObj, function() {
+    authRef.child('test').set(utils.testObj, function() {
       done();
     });
   });

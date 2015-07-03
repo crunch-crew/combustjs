@@ -1,4 +1,5 @@
 var parseToObj = function(root, children) {
+	// console.log('inside parseToObj, root is: ',root);
 	//copy all properties except path and id
 	var extendObj = function(obj1, obj2) {	
 	// console.log(obj1);	

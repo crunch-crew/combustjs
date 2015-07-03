@@ -1,4 +1,8 @@
 var getQuery = require('../rethinkQuery/getQuery');
+//function that gets a pointer to a location in an object based on a url/path
+var isolateData = require('./isolateData');
+//gets the path/url that is the parent of the passed parameter - string manipulation only
+var getParent = require('./getParent');
 
 //creates the data structure which keeps track of which events need to be emitted at each indivdual path
 var initializeParentPaths = function(emitEvents, path, prop) {
@@ -46,9 +50,12 @@ var setDifference = function(setPath, inputObject, callback) {
   var deleteProps = [];
   //events to emit at each path
   var emitEvents = {};
+  //saves the path we are setting to so we can query the database, then sets it to '/' so we can do the check
+  var originalPath = setPath;
+  setPath = '/';
 
   //get object that represents current state of database
-  getQuery(setPath, function(databaseObj) {
+  getQuery(originalPath, function(databaseObj) {
     /*compare the object that the user is trying to set with the object that already exists in the database
     This function is very similar to a deep equals function, however, in addition to keeping track of adds,
     changes, and delete, it calls the bubbleUp function which will determine which events to trigger on the parents
@@ -106,11 +113,6 @@ var setDifference = function(setPath, inputObject, callback) {
   });
 };
 
-//function that gets a pointer to a location in an object based on a url/path
-var isolateData = require('./isolateData');
-//gets the path/url that is the parent of the passed parameter - string manipulation only
-var getParent = require('./getParent');
-
 //determines which events to trigger on the parents of the passed path based on the event type that is happening at that location
 var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
   var parentPath;
@@ -118,6 +120,8 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
 
   var recurse = function(event, path, inputData) {
     if(event === 'value') {
+        // console.log("path is: ", path);
+        // console.log("rootObject is: ", rootObject);
         data = isolateData(path, rootObject);
         if (data === undefined) {
           data = null;

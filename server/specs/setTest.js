@@ -29,7 +29,7 @@ describe('set', function() {
       done();
     });
   });
-  it('should delete children of the path that is being set and set path to passed data', function(done) {
+  it('should delete children at the path that is being set and set path to passed data', function(done) {
     socket.once('/messages/-setSuccess', function() {
       socket.once('/messages/-getSuccess', function(data) {
         data.data.should.eql({testProperty: false});
@@ -43,6 +43,7 @@ describe('set', function() {
   it('should set to paths in the database', function(done) {
     socket.once('/messages/-setSuccess', function() {
       socket.once('/messages/-getSuccess', function(data) {
+        console.log("data is: ", data.data);
         data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
         done();
       });
@@ -52,13 +53,29 @@ describe('set', function() {
   });
 
   it('should try setting', function(done) {
-    socket.once('/asdf/fddsa/qwer/tqew/-setSuccess', function() {
-      socket.once('/asdf/fddsa/qwer/tqew/-getSuccess', function(data) {
+    socket.once('/one/two/three/four/-setSuccess', function() {
+      console.log('set you');
+      socket.once('/one/two/three/four/-getSuccess', function(data) {
+        console.log('got you');
+        data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}})
         done();
       });
-      socket.emit('getUrl', {url: '/asdf/fddsa/qwer/tqew/'});
+      socket.emit('getUrl', {url: '/one/two/three/four/'});
     });
-    socket.emit('set', {path:'/asdf/fddsa/qwer/tqew/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+    socket.emit('set', {path:'/one/two/three/four/', data: {testProperty: true, testSomething:{testProp: 'hello'}}});
+  });
+
+  it('should try setting', function(done) {
+    socket.once('/one/two/three/four/-setSuccess', function() {
+      console.log('set you');
+      socket.once('/one/two/three/four/-getSuccess', function(data) {
+        console.log('got you');
+        console.log(data);
+        done();
+      });
+      socket.emit('getUrl', {url: '/one/two/three/four/'});
+    });
+    socket.emit('set', {path:'/one/two/three/four/', data: {testProperty: true}});
   });
 
 });

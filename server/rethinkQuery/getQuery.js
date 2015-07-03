@@ -22,8 +22,11 @@ var getQuery = function(input, callback) {
   var childrenRows;
 
   db.connect(function(conn) {
+    // console.log('inside getQuery input is: ', input);
     //query to find root node
     r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run(conn, function(err, cursor) {
+      // console.log('queried for path: ', rootString);
+      // console.log('queried for _id: ', _idFind);
       if (err) throw err;
       cursor.toArray(function(err, result) {
         rootRow = result[0];
@@ -37,7 +40,6 @@ var getQuery = function(input, callback) {
               callback(parseToObj(rootRow, childrenRows));
             }
           });
-
         });
       });
     }); 

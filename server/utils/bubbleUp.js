@@ -24,8 +24,7 @@ var bubbleUp = function(event, path, socket, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         socket.emit(parentPath + '-child_added', inputdata);
-        parentOfParentPath = getParent(parentPath);
-        recurse('child_changed', parentOfParentPath);
+        recurse('child_changed', parentPath);
       }
     }
 
@@ -43,8 +42,7 @@ var bubbleUp = function(event, path, socket, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         socket.emit(parentPath + '-child_removed', inputData);
-        parentOfParentPath = getParent(parentPath);
-        recurse('child_changed', parentOfParentPath);
+        recurse('child_changed', parentPath);
       }
     }
 
