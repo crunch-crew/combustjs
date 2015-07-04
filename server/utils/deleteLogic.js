@@ -21,6 +21,7 @@ var deleteLogic = function(deletePath, callback) {
 
   if (deletePath === '/') {
     // socket.emit(deletePath +'-deleteSuccess', {success: false});
+    callback();
     return;
   } else { 
     urlArray = deletePath.split('/');
@@ -30,6 +31,11 @@ var deleteLogic = function(deletePath, callback) {
     deleteObject = urlArray[urlArray.length - 2];
   }
   // considers the scenario that the delete path specifies the root row to be deleted
+  console.log('deletePath: ', deletePath);
+  console.log('parent_path: ', parent_path);
+  console.log('parent_id: ', parent_id);
+  console.log('deleteObject: ', deleteObject);
+
   if (parent_path === '/' && parent_id === '/') {
     deleteQuery({path:'/', _id: deleteObject}, function(results) {
       // socket.emit(deletePath + '-deleteSuccess', {success: true});
@@ -37,57 +43,56 @@ var deleteLogic = function(deletePath, callback) {
       callback();
     }); 
   } else if (parent_path === '/') {
-    
-    singleQuery({path:'/', _id: parent_id_string}, function(results) {
-      results.toArray(function(err, array) {
-        console.log('array1: ', array);
-        if (err) throw err;
-        var queryResults = array[0];
-        if (queryResults) {
-          if (deleteObject in queryResults) {
-            deleteExcludeQuery(deleteObject, function(results) {
+    console.log('parent_id_string: ', parent_id_string);
+    singleQuery({path:'/', _id: parent_id_string}, function(array) {
+      var queryResults = array[0];
+      if (queryResults) {
+        if (deleteObject in queryResults) {
+          deleteExcludeQuery(deleteObject, function(results) {
+            // socket.emit(deletePath + '-deleteSuccess', {success: true});
+            // bubbleUp('value', deletePath, socket);
+            callback();
+          });  
+        } else {
+          deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
+            deleteAllQuery(rootString + deleteObject + '*', function(results) {
               // socket.emit(deletePath + '-deleteSuccess', {success: true});
               // bubbleUp('value', deletePath, socket);
               callback();
             });  
-          } else {
-            deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
-              deleteAllQuery(rootString + deleteObject + '*', function(results) {
-                // socket.emit(deletePath + '-deleteSuccess', {success: true});
-                // bubbleUp('value', deletePath, socket);
-                callback();
-              });  
-            });
-          }
-        } else{
-          console.log('NO QUERY RESULTS LINE 79');
+          });
         }
-      });
+      } else{
+        console.log('NO QUERY RESULTS LINE 79');
+        deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
+          deleteAllQuery(rootString + deleteObject + '*', function(results) {
+            // socket.emit(deletePath + '-deleteSuccess', {success: true});
+            // bubbleUp('value', deletePath, socket);
+            callback();
+          });  
+        });
+      }
     });
   } else {
-    singleQuery({path: parent_path, _id: parent_id_string}, function(results) {
-      results.toArray(function(err, array) {
-        console.log('array2: ', array);
-        if (err) throw err;
-        var queryResults = array[0];
-        if (queryResults) {
-          if (deleteObject in queryResults) {
-            deleteExcludeQuery(deleteObject, function(results) {
+    singleQuery({path: parent_path, _id: parent_id_string}, function(array) {
+      var queryResults = array[0];
+      if (queryResults) {
+        if (deleteObject in queryResults) {
+          deleteExcludeQuery(deleteObject, function(results) {
+            // socket.emit(deletePath + '-deleteSuccess', {success: true});
+            // bubbleUp('value', deletePath, socket);
+            callback();
+          });  
+        } else {
+          deleteQuery({path: rootString, _id: deleteObject}, function(results) {
+            deleteAllQuery(rootString + deleteObject + '*', function() {
               // socket.emit(deletePath + '-deleteSuccess', {success: true});
               // bubbleUp('value', deletePath, socket);
               callback();
             });  
-          } else {
-            deleteQuery({path: rootString, _id: deleteObject}, function(results) {
-              deleteAllQuery(rootString + deleteObject + '*', function() {
-                // socket.emit(deletePath + '-deleteSuccess', {success: true});
-                // bubbleUp('value', deletePath, socket);
-                callback();
-              });  
-            });  
-          }
+          });  
         }
-      });
+      }
     });  
   }
 };

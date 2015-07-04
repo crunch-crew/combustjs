@@ -48,50 +48,44 @@ socket.on('delete', function(deleteRequest) {
       }); 
     } else if (parent_path === '/') {
       
-      singleQuery({path:'/', _id: parent_id_string}, function(results) {
-        results.toArray(function(err, array) {
-          if (err) throw err;
-          var queryResults = array[0];
-          if (queryResults) {
-            if (deleteObject in queryResults) {
-              deleteExcludeQuery(deleteObject, function(results) {
+      singleQuery({path:'/', _id: parent_id_string}, function(array) {
+        var queryResults = array[0];
+        if (queryResults) {
+          if (deleteObject in queryResults) {
+            deleteExcludeQuery(deleteObject, function(results) {
+              socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
+              bubbleUp('value', deleteRequest.path, socket);
+            });  
+          } else {
+            deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
+              deleteAllQuery(rootString + deleteObject + '*', function(results) {
                 socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
                 bubbleUp('value', deleteRequest.path, socket);
               });  
-            } else {
-              deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
-                deleteAllQuery(rootString + deleteObject + '*', function(results) {
-                  socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-                  bubbleUp('value', deleteRequest.path, socket);
-                });  
-              });
-            }
-          } else{
-            console.log('NO QUERY RESULTS LINE 79');
+            });
           }
-        });
+        } else{
+          console.log('NO QUERY RESULTS LINE 79');
+        }
       });
     } else {
-      singleQuery({path: parent_path, _id: parent_id_string}, function(results) {
-        results.toArray(function(err, array) {
-          if (err) throw err;
-          var queryResults = array[0];
-          if (queryResults) {
-            if (deleteObject in queryResults) {
-              deleteExcludeQuery(deleteObject, function(results) {
+      singleQuery({path: parent_path, _id: parent_id_string}, function(array) {
+        var queryResults = array[0];
+        if (queryResults) {
+          if (deleteObject in queryResults) {
+            deleteExcludeQuery(deleteObject, function(results) {
+              socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
+              bubbleUp('value', deleteRequest.path, socket);
+            });  
+          } else {
+            deleteQuery({path: rootString, _id: deleteObject}, function(results) {
+              deleteAllQuery(rootString + deleteObject + '*', function() {
                 socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
                 bubbleUp('value', deleteRequest.path, socket);
               });  
-            } else {
-              deleteQuery({path: rootString, _id: deleteObject}, function(results) {
-                deleteAllQuery(rootString + deleteObject + '*', function() {
-                  socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-                  bubbleUp('value', deleteRequest.path, socket);
-                });  
-              });  
-            }
+            });  
           }
-        });
+        }
       });  
     }
   });

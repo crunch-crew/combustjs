@@ -56,6 +56,9 @@ var setDifference = function(setPath, inputObject, callback) {
 
   //get object that represents current state of database
   getQuery(originalPath, function(databaseObj) {
+    // console.log('in set difference, databaseObj: ', databaseObj);
+    // console.log(originalPath);
+    
     /*compare the object that the user is trying to set with the object that already exists in the database
     This function is very similar to a deep equals function, however, in addition to keeping track of adds,
     changes, and delete, it calls the bubbleUp function which will determine which events to trigger on the parents

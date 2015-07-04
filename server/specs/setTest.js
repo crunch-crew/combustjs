@@ -23,12 +23,12 @@ describe('set', function() {
     });
   });
 
-  after(function(done) {
-    socket.disconnect();
-    configTest.resetDb(function() {
-      done();
-    });
-  });
+  // after(function(done) {
+  //   socket.disconnect();
+  //   configTest.resetDb(function() {
+  //     done();
+  //   });
+  // });
 
   //TODO: needs a test for setting at paths that only half exist
 
@@ -164,7 +164,6 @@ describe('set', function() {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
         socket.once('/one/two/three/four/-getSuccess', function(data) {
-            console.log("received: ", data);
             data.data.should.eql({testProperty: true, testSomething:{greeting: 'hi'}});
             done();
         });
@@ -189,5 +188,18 @@ describe('set', function() {
     socket.emit('set', {path:'/one/two/three/four/', data: {testProperty: true, activated: false, testSomething:{testProp: 'hello'}}});
   });
 
+  it('should change multiple nested static properties at a root path and emit success', function(done) {
+    socket.once('/-setSuccess', function() {
+      socket.once('/-setSuccess', function() {
+        socket.once('/-getSuccess', function(data) {
+            data.data.should.eql({testProperty: false, activated: true, testSomething:{testProp: 'yo'}});
+          done();
+        });
+        socket.emit('getUrl', {url: '/'});
+      });
+      socket.emit('set', {path:'/', data: {testProperty: false, activated: true, testSomething:{testProp: 'yo'}}});
+    });
+    socket.emit('set', {path:'/', data: {testProperty: true, activated: false, testSomething:{testProp: 'hello'}}});
+  });
 });
 
