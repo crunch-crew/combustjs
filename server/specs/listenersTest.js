@@ -31,23 +31,26 @@ describe('listeners', function() {
   });
 
   it('should notify listeners of parent urls of value changes', function(done) {
-    socket.once('/-value', function(data) {
-      if(data) {
-        done();
-      }
-    });
+    socket.once('/-subscribeUrlValueSuccess', function() {
+      socket.once('/-value', function(data) {
+        if(data) {
+          done();
+        }
+      });
+    })
     socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
+    socket.emit('subscribeUrlValue', {url: '/'});
   }); 
 
   it('should receive updates when a child is added to a url', function(done) {
-    socket.once('/messages/-childaddSuccess', function(data) {
+    socket.once('/messages/-child_added', function(data) {
       data.should.eql(utils.testObj);
       done();
     });
-    socket.on('/messages/-subscribeUrlChildAddSuccess', function(response) {
+    socket.on('/messages/-subscribeUrlChildAddedSuccess', function(response) {
       socket.emit('push', {path:'/messages/', data: utils.dummyObj});
     });
-    socket.emit('subscribeUrlChildAdd', {url: '/messages/'});
+    socket.emit('subscribeUrlChildAdded', {url: '/messages/'});
   });
 });
 

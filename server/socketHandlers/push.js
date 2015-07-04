@@ -5,6 +5,7 @@ var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
 var insertQuery = require('../rethinkQuery/insertQuery');
 var updateByKeyQuery = require('../rethinkQuery/updateByKeyQuery');
+var bubbleUp = require('../utils/bubbleUp');
 
 
 exports.setup = function(socket, io) {
@@ -25,7 +26,7 @@ exports.setup = function(socket, io) {
 	// create a copy of original request if you are RETURNING the original data, parseToRows WILL mutate the original data.
 	socket.on('push', function(pushRequest) {
 		//makes a copy of the original object - there is probably a better way to do this
-		var original = JSON.parse(JSON.stringify(pushRequest));
+		var originalRequest = JSON.parse(JSON.stringify(pushRequest));
 		//insert an empty document into the database so that we can get the key back from the database to use later
 		insertQuery({}, function(result) {
 			var generatedKey = result.generated_keys[0];
@@ -38,9 +39,11 @@ exports.setup = function(socket, io) {
 				//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
 				insertQuery(childRows, function(result) {
 					//return the key of the root node back to the user so the can use it for subsequent requests
-					socket.emit(original.path + '-pushSuccess', {created: true, key: generatedKey});
+					socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
 					//emit to clients listening for child add events at this url
-					io.to(original.path + "-" + "childadd").emit(original.path + "-" + "childaddSuccess", original.data);
+					// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
+					// console.log(originalRequest);
+          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
 				});
 			});
 		});

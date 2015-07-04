@@ -30,9 +30,9 @@ exports.setup = function(socket) {
 	*@apiSuccess ([path]-subscribeUrlChildAddSuccess) {Object} successObject object that indicates the url subscription was made
 	*@apiSuccess ([path]-subscribeUrlChildAddSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 	*/
-	socket.on('subscribeUrlChildAdd', function(childAddRequest) {
-		socket.join(childAddRequest.url + "-" + "childadd");
-		socket.emit(childAddRequest.url + "-subscribeUrlChildAddSuccess", {success: true});
+	socket.on('subscribeUrlChildAdded', function(childAddRequest) {
+		socket.join(childAddRequest.url + "-" + "child_added");
+		socket.emit(childAddRequest.url + "-subscribeUrlChildAddedSuccess", {success: true});
 	});
 
 	/**
@@ -45,9 +45,9 @@ exports.setup = function(socket) {
 	*@apiSuccess ([path]-subscribeUrlChildRemoveSuccess) {Object} successObject object that indicates the url subscription was made
 	*@apiSuccess ([path]-subscribeUrlChildRemoveSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 	*/
-	socket.on('subscribeUrlChildRemove', function(childRemoveRequest) {
-		socket.join(childRemoveRequest.url + "-" + "childremove");
-		socket.emit(childRemoveRequest.url + "-subscribeUrlChildRemoveSuccess", {success: true});
+	socket.on('subscribeUrlChildRemoved', function(childRemoveRequest) {
+		socket.join(childRemoveRequest.url + "-" + "child_removed");
+		socket.emit(childRemoveRequest.url + "-subscribeUrlChildRemovedSuccess", {success: true});
 	});
 
 	/**
@@ -60,8 +60,8 @@ exports.setup = function(socket) {
 	*@apiSuccess ([path]-subscribeUrlChildChangeSuccess) {Object} successObject object that indicates the url subscription was made
 	*@apiSuccess ([path]-subscribeUrlChildChangeSuccess) {boolean} successObject.success A boolean value indicating if the subscription was successful
 	*/
-	socket.on('subscribeUrlChildChange', function(childChangeRequest) {
-		socket.join(childChangeRequest.url + "-" + "childchange");
-		socket.emit(childChangeRequest.url + "-subscribeUrlChildChangeSuccess", {success: true});
+	socket.on('subscribeUrlChildChanged', function(childChangeRequest) {
+		socket.join(childChangeRequest.url + "-" + "child_changed");
+		socket.emit(childChangeRequest.url + "-subscribeUrlChildChangedSuccess", {success: true});
 	});
 };

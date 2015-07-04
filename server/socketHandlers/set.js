@@ -152,6 +152,7 @@ exports.setup = function(socket, io) {
               });
             });
 
+            console.log('addRows: ', addRows);
             insertQuery(addRows, function(result) {
               var updateId;
               diff.changeProps.forEach(function(prop) {
@@ -210,8 +211,8 @@ exports.setup = function(socket, io) {
                   counter++;
                   if (counter === changeRows.length) {
                     socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                    bubbleUp('value', setRequest.path, socket);
-                    setEmitter(diff.emitEvents, socket);
+                    bubbleUp('value', setRequest.path, io);
+                    setEmitter(diff.emitEvents, io);
                   } else {
                     update();
                   }
@@ -219,8 +220,8 @@ exports.setup = function(socket, io) {
               };
               if (changeRows.length === 0) {
                 socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                bubbleUp('value', setRequest.path, socket);
-                setEmitter(diff.emitEvents, socket);
+                bubbleUp('value', setRequest.path, io);
+                setEmitter(diff.emitEvents, io);
               } else {
                 update();
               }
@@ -266,7 +267,7 @@ exports.setup = function(socket, io) {
           socket.emit(setRequest.path + '-setSuccess', {
             success: true
           });
-          bubbleUp('value', setRequest.path, socket);
+          bubbleUp('value', setRequest.path, io);
         });
       }
     });
