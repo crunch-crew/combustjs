@@ -127,8 +127,15 @@ Combust.prototype.constructPath = function() {
 
 //consider changing this method so that it returns a new Combust object instead of mutating the existing one
 Combust.prototype.child = function(childName) {
-  this.pathArray.push(childName);
-  return this;
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
+  newRef.pathArray.push(childName);
+  return newRef;
 };
 
 /**
@@ -150,10 +157,11 @@ Combust.prototype.push = function(object, callback) {
     tableName: this.tableName,
     socket: this.socket
   });
-  // newRef.token = this.token;
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
 
   this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
-    newRef.child(data.key);
+    newRef.pathArray.push(data.key);
     if (callback) {
       callback(data);
     }
@@ -206,7 +214,6 @@ Combust.prototype.set = function(object, callback) {
   //transfer token
   newRef.token = this.token;
 
-    console.log('listening on: ', this.constructPath( + '-setSuccess'));
   this.socket.once(this.constructPath() + '-setSuccess', function(data) {
     if (callback) {
       callback(data);
