@@ -23,12 +23,12 @@ describe('set', function() {
     });
   });
 
-  // after(function(done) {
-  //   socket.disconnect();
-  //   configTest.resetDb(function() {
-  //     done();
-  //   });
-  // });
+  after(function(done) {
+    socket.disconnect();
+    configTest.resetDb(function() {
+      done();
+    });
+  });
 
   //TODO: needs a test for setting at paths that only half exist
 
@@ -44,15 +44,15 @@ describe('set', function() {
   });
 
   it('should set multiple un-nested data to a specified path and emit success', function(done) {
-      socket.once('/messages/-setSuccess', function() {
-        socket.once('/messages/-getSuccess', function(data) {
-          data.data.should.eql({testProperty: false, activated: true});
-          done();
-        });
-        socket.emit('getUrl', {url: '/messages/'});
+    socket.once('/messages/-setSuccess', function() {
+      socket.once('/messages/-getSuccess', function(data) {
+        data.data.should.eql({testProperty: false, activated: true});
+        done();
       });
-      socket.emit('set', {path:'/messages/', data: {testProperty: false, activated: true}});
+      socket.emit('getUrl', {url: '/messages/'});
     });
+    socket.emit('set', {path:'/messages/', data: {testProperty: false, activated: true}});
+  });
 
   it('should set nested data to a specified path and emit success', function(done) {
     socket.once('/messages/-setSuccess', function() {
