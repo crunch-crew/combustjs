@@ -9,7 +9,7 @@ var deleteExcludeQuery = require('../rethinkQuery/deleteExcludeQuery');
 var deleteAllQuery = require('../rethinkQuery/deleteAllQuery');
 
 var deleteLogic = function(deletePath, callback) {
-  console.log('inside deletePath: ', deletePath);
+  // console.log('inside deletePath: ', deletePath);
   var urlArray,
       _idFind,
       parent_id,
@@ -31,10 +31,10 @@ var deleteLogic = function(deletePath, callback) {
     deleteObject = urlArray[urlArray.length - 2];
   }
   // considers the scenario that the delete path specifies the root row to be deleted
-  console.log('deletePath: ', deletePath);
-  console.log('parent_path: ', parent_path);
-  console.log('parent_id: ', parent_id);
-  console.log('deleteObject: ', deleteObject);
+  // console.log('deletePath: ', deletePath);
+  // console.log('parent_path: ', parent_path);
+  // console.log('parent_id: ', parent_id);
+  // console.log('deleteObject: ', deleteObject);
 
   if (parent_path === '/' && parent_id === '/') {
     deleteQuery({path:'/', _id: deleteObject}, function(results) {
@@ -43,7 +43,7 @@ var deleteLogic = function(deletePath, callback) {
       callback();
     }); 
   } else if (parent_path === '/') {
-    console.log('parent_id_string: ', parent_id_string);
+    // console.log('parent_id_string: ', parent_id_string);
     singleQuery({path:'/', _id: parent_id_string}, function(array) {
       var queryResults = array[0];
       if (queryResults) {
@@ -63,7 +63,7 @@ var deleteLogic = function(deletePath, callback) {
           });
         }
       } else{
-        console.log('NO QUERY RESULTS LINE 79');
+        // console.log('NO QUERY RESULTS LINE 79');
         deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
           deleteAllQuery(rootString + deleteObject + '*', function(results) {
             // socket.emit(deletePath + '-deleteSuccess', {success: true});

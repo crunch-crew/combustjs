@@ -263,69 +263,68 @@ Combust.prototype.on = function(eventType, callback) {
   var path = this.constructPath();
   //this binding is lost in async calls so store it here
   var socket = this.socket;
-  //this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
   if (eventType === "child_added") {
-    socket.once(path + '-subscribeUrlChildAddSuccess', function() {
+    socket.once(path + '-subscribeUrlChildAddedSuccess', function() {
       //need a get children method - not desired functionality as written
       socket.emit('getUrlChildren', {url: path});
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //calls callback on all current child
+      //calls callback on all current children
       //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
       data.forEach(function(child) {
         callback(child);
       });
-      socket.on(path + '-childaddSuccess', function(data) {
+      socket.on(path + '-child_added', function(data) {
         //call callback on new child
         callback(data);
       });
     });
-    socket.emit("subscribeUrlChildAdd", {url: path});
+    socket.emit("subscribeUrlChildAdded", {url: path});
   }
-  // the client side method that enables execution of callback with child_changed response
+  //changed this to not retrieve existing children, leave that to child_added
   if (eventType === "child_changed") {
-    socket.once(path + '-subscribeUrlChildChangeSuccess', function() {
-      //listens to completion of subscribe event on server
-      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
-      socket.emit('getUrlChildren', {url: path});
-      //emit for getUrlChildren action on server; for the 'path'
-    });
-    socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //listens to getChildren Success and executes callback on all current children; does this first time
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      data.forEach(function(child) {
-        callback(child);
-      });
-      socket.on(path + '-childchangeSuccess', function(data) {
-        //continues to listen to child change events and executes callback with returned data
+    socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_changed', function(data) {
         callback(data);
       });
     });
-    socket.emit("subscribeUrlChildChange", {url: path});
-    // emits for registeration of subscribe event at the path on server handler
+    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
+    //   data.forEach(function(child) {
+    //     callback(child);
+    //   });
+    // });
+    socket.emit("subscribeUrlChildChanged", {url: path});
   }
-  // the client side method that enables execution of callback with child_changed response
+  if (eventType === "child_removed") {
+    socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_removed', function(data) {
+        callback(data);
+      });
+    });
+    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
+    //   data.forEach(function(child) {
+    //     callback(child);
+    //   });
+    // });
+    socket.emit("subscribeUrlChildRemoved", {url: path});
+  }
+  //changed this to trigger the callback once on whatever value is currently in the db and then listen for changes
   if (eventType === "value") {
     socket.once(path + '-subscribeUrlValueSuccess', function() {
-      //listens to completion of subscribe event on server
-      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
-      socket.emit('getUrlChildren', {url: path});
-      //emit for getUrlChildren action on server; for the 'path'
+      socket.emit('getUrl', {url: path});
     });
-    socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //listens to getChildren Success and executes callback on all current children; does this first time
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      data.forEach(function(child) {
-        callback(child);
-      });
-      // confirm what should this be --- 
+    socket.once(path + "-getUrlSuccess", function(data) {
+      // data.forEach(function(child) {
+      //   callback(child);
+      // });
+      callback(data);
       socket.on(path + '-value', function(data) {
-        //continues to listen to child change events and executes callback with returned data
         callback(data);
       });
     });
     socket.emit("subscribeUrlValue", {url: path});
-    // emits for registeration of subscribe event at the path on server handler
   }
 };
 

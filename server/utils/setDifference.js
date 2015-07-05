@@ -11,7 +11,7 @@ var initializeParentPaths = function(emitEvents, path, prop) {
       child_added: [],
       child_removed: [],
       child_changed: {},
-      value: false
+      value: null
     };
   };
 
@@ -56,6 +56,7 @@ var setDifference = function(setPath, inputObject, callback) {
 
   //get object that represents current state of database
   getQuery(originalPath, function(databaseObj) {
+    // console.log('in setDifference, existing is: ', databaseObj);
     // console.log('in set difference, databaseObj: ', databaseObj);
     // console.log(originalPath);
     

@@ -44,7 +44,7 @@ socket.on('delete', function(deleteRequest) {
     if (parent_path === '/' && parent_id === '/') {
       deleteQuery({path:'/', _id: deleteObject}, function(results) {
         socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-        bubbleUp('value', deleteRequest.path, socket);
+        bubbleUp('value', deleteRequest.path, io);
       }); 
     } else if (parent_path === '/') {
       
@@ -54,18 +54,18 @@ socket.on('delete', function(deleteRequest) {
           if (deleteObject in queryResults) {
             deleteExcludeQuery(deleteObject, function(results) {
               socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-              bubbleUp('value', deleteRequest.path, socket);
+              bubbleUp('value', deleteRequest.path, io);
             });  
           } else {
             deleteQuery({path: parent_path, _id: deleteObject}, function(results) {
               deleteAllQuery(rootString + deleteObject + '*', function(results) {
                 socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-                bubbleUp('value', deleteRequest.path, socket);
+                bubbleUp('value', deleteRequest.path, io);
               });  
             });
           }
         } else{
-          console.log('NO QUERY RESULTS LINE 79');
+          // console.log('NO QUERY RESULTS LINE 79');
         }
       });
     } else {
@@ -75,13 +75,13 @@ socket.on('delete', function(deleteRequest) {
           if (deleteObject in queryResults) {
             deleteExcludeQuery(deleteObject, function(results) {
               socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-              bubbleUp('value', deleteRequest.path, socket);
+              bubbleUp('value', deleteRequest.path, io);
             });  
           } else {
             deleteQuery({path: rootString, _id: deleteObject}, function(results) {
               deleteAllQuery(rootString + deleteObject + '*', function() {
                 socket.emit(deleteRequest.path + '-deleteSuccess', {success: true});
-                bubbleUp('value', deleteRequest.path, socket);
+                bubbleUp('value', deleteRequest.path, io);
               });  
             });  
           }

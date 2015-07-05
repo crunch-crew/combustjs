@@ -31,7 +31,7 @@ module.exports = function(req, res) {
 									r.table(config.tableName).insert(childRows).run(conn, function(err, results) {
 										if (err) throw err;
 										else {
-											console.log("sent success");
+											// console.log("sent success");
 											res.status(201).json({
 												id: generatedKey,
 												success: true

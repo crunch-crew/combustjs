@@ -1,6 +1,6 @@
 var getParent = function(path) {
   var parentPath;
-  if(path === '/') {
+  if(path === '/' || path === null) {
     return null;
   }
   parentPath = path.split('/');
