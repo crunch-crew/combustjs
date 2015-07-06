@@ -34,7 +34,7 @@ describe('set', function() {
 
   it('should set un-nested data to a specified path and emit success', function(done) {
     socket.once('/messages/-setSuccess', function() {
-      socket.once('/messages/-getSuccess', function(data) {
+      socket.once('/messages/-getUrlSuccess', function(data) {
         data.data.should.eql({testProperty: false});
         done();
       });
@@ -45,7 +45,7 @@ describe('set', function() {
 
   it('should set multiple un-nested data to a specified path and emit success', function(done) {
     socket.once('/messages/-setSuccess', function() {
-      socket.once('/messages/-getSuccess', function(data) {
+      socket.once('/messages/-getUrlSuccess', function(data) {
         data.data.should.eql({testProperty: false, activated: true});
         done();
       });
@@ -56,7 +56,7 @@ describe('set', function() {
 
   it('should set nested data to a specified path and emit success', function(done) {
     socket.once('/messages/-setSuccess', function() {
-      socket.once('/messages/-getSuccess', function(data) {
+      socket.once('/messages/-getUrlSuccess', function(data) {
         data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}});
         done();
       });
@@ -67,7 +67,7 @@ describe('set', function() {
 
   it('should set nested data to a nested path that didn\'t exist previously (creates intermediary paths with empty objects) and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
-      socket.once('/one/two/three/four/-getSuccess', function(data) {
+      socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
         data.data.should.eql({testProperty: true, testSomething:{testProp: 'hello'}})
         done();
       });
@@ -79,7 +79,7 @@ describe('set', function() {
   it('should remove static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testSomething:{testProp: 'hello'}})
           done();
         });
@@ -93,7 +93,7 @@ describe('set', function() {
   it('should remove nested static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: true, testSomething:{}});
           done();
         });
@@ -107,7 +107,7 @@ describe('set', function() {
   it('should remove nested properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: true});
           done();
         });
@@ -121,7 +121,7 @@ describe('set', function() {
   it('should remove multiple static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testSomething:{}});
           done();
         });
@@ -135,7 +135,7 @@ describe('set', function() {
   it('should change static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: false, testSomething:{testProp: 'hello'}})
           done();
         });
@@ -149,7 +149,7 @@ describe('set', function() {
   it('should change nested static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: true, testSomething:{testProp: 'yo'}});
           done();
         });
@@ -163,7 +163,7 @@ describe('set', function() {
   it('should change nested properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: true, testSomething:{greeting: 'hi'}});
             done();
         });
@@ -177,7 +177,7 @@ describe('set', function() {
   it('should change multiple nested static properties at a specified path and emit success', function(done) {
     socket.once('/one/two/three/four/-setSuccess', function() {
       socket.once('/one/two/three/four/-setSuccess', function() {
-        socket.once('/one/two/three/four/-getSuccess', function(data) {
+        socket.once('/one/two/three/four/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: false, activated: true, testSomething:{testProp: 'yo'}});
           done();
         });
@@ -191,7 +191,7 @@ describe('set', function() {
   it('should change multiple nested static properties at a root path and emit success', function(done) {
     socket.once('/-setSuccess', function() {
       socket.once('/-setSuccess', function() {
-        socket.once('/-getSuccess', function(data) {
+        socket.once('/-getUrlSuccess', function(data) {
             data.data.should.eql({testProperty: false, activated: true, testSomething:{testProp: 'yo'}});
           done();
         });

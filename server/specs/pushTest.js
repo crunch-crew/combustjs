@@ -40,7 +40,7 @@ describe('push', function() {
   it('should push into the database when parent path doesnt exist', function(done) {
     socket.once('/messages/hello/goodbye/imhere/-pushSuccess', function(data) {
       var key = data.key;
-      socket.once('/messages/hello/goodbye/imhere/-getSuccess', function(data) {
+      socket.once('/messages/hello/goodbye/imhere/-getUrlSuccess', function(data) {
         data.data[key].should.eql(utils.dummyObj);
         done();
       });
@@ -52,7 +52,7 @@ describe('push', function() {
   xit('should push static properties properly', function(done) {
     socket.once('/messages/-pushSuccess', function(data) {
       should.exist(data);
-      socket.once('/messages/' + data.key + '/-getSuccess', function() {
+      socket.once('/messages/' + data.key + '/-getUrlSuccess', function() {
         done();
       });
       socket.emit('getUrl', {url: '/messages/' + data.key + '/'});

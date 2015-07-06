@@ -10,8 +10,7 @@ var parseToObj = function(root, children) {
 
 	var parsedObj = {};
 	extendObj(parsedObj, root);
-
-	for (var i = 0; i < children.length; i++) {
+	for (var i = 0; i < children.length && root; i++) {
 		//create array of nested object properties
 		var childPath = children[i].path;
 		childPath = childPath.replace(root.path, "");
