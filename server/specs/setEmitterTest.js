@@ -10,7 +10,7 @@ var configTest = require('./configTest');
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
 
-describe('setEmitter', function() {
+xdescribe('setEmitter', function() {
   var insertDb = function(path, data, callback) {
     // path = '/tests/one/two/';
     configTest.resetDb(function() {
@@ -47,7 +47,7 @@ describe('setEmitter', function() {
     }
   }
 
-  xdescribe('un-nested objects', function() {
+  describe('un-nested objects', function() {
     it('should find all the added properties between two objects', function(done) {
       var oldObj = {
         name: "Richie"
