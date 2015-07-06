@@ -27,15 +27,15 @@ describe('Non-networking', function() {
   describe('child()', function() {
 
     it('should change the referenced path when called', function(done) {
-      combustRef.child('users');
-      combustRef.pathArray.should.eql(['/','users']);
+      var newRef = combustRef.child('users');
+      newRef.pathArray.should.eql(['/','users']);
       done();
     });
 
     it('should be chainable', function(done) {
       combustRef = new Combust({});
-      combustRef.child('library').child('history').child('japan');
-      combustRef.pathArray.should.eql(['/', 'library', 'history', 'japan']);
+      var newRef = combustRef.child('library').child('history').child('japan');
+      newRef.pathArray.should.eql(['/', 'library', 'history', 'japan']);
       done();
     });
   });
@@ -48,11 +48,11 @@ describe('Non-networking', function() {
 
     it('should construct a proper path', function(done) {
       combustRef.constructPath().should.equal('/');
-      combustRef.child('library');
+      combustRef = combustRef.child('library');
       combustRef.constructPath().should.equal('/library/');
-      combustRef.child('history');
+      combustRef = combustRef.child('history');
       combustRef.constructPath().should.equal('/library/history/');
-      combustRef.child('japan');
+      combustRef = combustRef.child('japan');
       combustRef.constructPath().should.equal('/library/history/japan/');
       done();
     });

@@ -29,7 +29,6 @@ exports.setup = function(socket, io) {
    *
    */
   socket.on('set', function(setRequest) {
-    console.log('new set');
     // preprocessing here
     //handles edge case when accessing root path
     var urlArray;
@@ -38,8 +37,8 @@ exports.setup = function(socket, io) {
     var incompletePath = false;
     var neededParents = [];
 
+    //TODO: Function that queries for paths only, doesn't return entire db
     getQuery('/', function(rootObject) {
-      // console.log("root object at beginnign is: ", rootObject , 'setRequest :', setRequest);
       if (setRequest.path === '/') {
         rootString = null;
         _idFind = "/";
@@ -57,7 +56,6 @@ exports.setup = function(socket, io) {
         }
 
         var dbPointer = rootObject;
-        // console.log('dbPointer before loop: ', dbPointer);
         for (var i = 0; i < urlArray.length; i++) {
           //iterates through urlArray and checks to see if the properties in urlArray exist in our current database.
           if (!dbPointer[urlArray[i]]) {
@@ -67,22 +65,16 @@ exports.setup = function(socket, io) {
           } else {
             dbPointer = dbPointer[urlArray[i]];
           }
-          // console.log('dbPoitner: ', dbPointer);       
         }
-        console.log('incompletePath');
         //sets the rootString which is the path we will use in dbqueries
         rootString = (urlArray.slice(0, urlArray.length - 1 - neededParents.length).join("/")) + "/";
         _idFind = urlArray[urlArray.length - 1];
-        // console.log('at top _idFind is: ', _idFind);
         childrenString = rootString;
         children_idFind = urlArray[urlArray.length - 1];
       }
 
       if (!incompletePath) {
         setDifference(setRequest.path, setRequest.data, function(diff) {
-          // console.log('setRequest.path: ', setRequest.path);
-          // console.log('setRequest.data: ', setRequest.data);
-          // console.log('diff is: ', diff);
           var addRows = [];
           var changeRows = [];
           var id;
@@ -99,8 +91,6 @@ exports.setup = function(socket, io) {
                   parentPath += '/';
                 }
                 id = temp.slice(temp.length - 2, temp.length - 1)[0];
-                // console.log('id is: ', id);
-                // console.log('parentPath is: ', parentPath);
                 //formatting parameters to pass to parseToRows
                 var pathRows;
                 var idRows;
@@ -112,7 +102,6 @@ exports.setup = function(socket, io) {
                   idRows = idRows[idRows.length - 2];
 
 
-                  // newStaticProperty = {};
                   newStaticProperty[id] = prop[1];
                   if (!addProps[pathRows]) {
                     addProps[pathRows] = {};
@@ -123,12 +112,8 @@ exports.setup = function(socket, io) {
                   newStaticProperty[id] = prop[1];
                 }
 
-                // console.log('newStaticProperty: ', newStaticProperty);
-                // console.log('propName is: ', propName);
-
                 var parentPathArray = parentPath.split('/');
                 propName = parentPathArray[parentPathArray.length - 2];
-                // console.log('propName: ', propName);
                 if (parentPath !== '/') {
                   addProps[pathRows][propName] = newStaticProperty;
                 } else {
@@ -155,35 +140,20 @@ exports.setup = function(socket, io) {
               }
             });
 
-            // console.log('addProps is: ', addProps);
             var addPropsKeys = Object.keys(addProps);
             addPropsKeys.forEach(function(key) {
               var row;
-              // if (key === '/') {
-              //   row = parseToRows(addProps[key], null, key);
-              //   addRows = addRows.concat(row);
-              // } else {
-                var rowId = Object.keys(addProps[key]);
-                rowId.forEach(function(rowKey) {
-                  // console.log('key is: ', key);
-                  // console.log('parent of key is: ', getParent(key));
-                  // console.log('parent of parent of key is: ', getParent(getParent(key)));
-                  // console.log('last item in key is: ', key.split('/')
-                  // console.log('object to parse to rows is: ', addProps[key]);
-                  // console.log('path to parse to rows is: ', key);
-                  // console.log('_id to aprse to rows is: ', rowKey);
-                  idRows = key.split('/');
-                  idRows = idRows[idRows.length - 2];
-                  row = parseToRows(addProps[key][rowKey], key, rowKey);
-                  addRows = addRows.concat(row);
-                });
-              // }
+              var rowId = Object.keys(addProps[key]);
+              rowId.forEach(function(rowKey) {
+                idRows = key.split('/');
+                idRows = idRows[idRows.length - 2];
+                row = parseToRows(addProps[key][rowKey], key, rowKey);
+                addRows = addRows.concat(row);
+              });
             });
 
-            console.log('addRows: ', addRows);
+            // console.log('addRows: ', addRows);
             insertQuery(addRows, function(result) {
-              console.log('insert query result: ', result);
-              // console.log('diff.changeProps is: ', diff.changeProps);
               var updateId;
               diff.changeProps.forEach(function(prop) {
                 if (typeof prop[1] !== 'object') {
@@ -194,8 +164,6 @@ exports.setup = function(socket, io) {
                   }
 
                   id = temp.slice(temp.length - 2, temp.length - 1)[0];
-                  // console.log('parent path is: ', parentPath);
-                  // console.log('id is: ', id);
 
                   if (!changeProps[parentPath]) {
                     changeProps[parentPath] = {};
@@ -217,10 +185,7 @@ exports.setup = function(socket, io) {
                 }
               });
 
-              // console.log('changeProps is: ', changeProps);
-
               var changePropsKeys = Object.keys(changeProps);
-              // console.log('changeProps is: ', changeProps);
               changePropsKeys.forEach(function(key) {
                 var row;
                 if (key === '/') {
@@ -229,12 +194,6 @@ exports.setup = function(socket, io) {
                 } else {
                   var rowId = Object.keys(changeProps[key]);
                   rowId.forEach(function(rowKey) {
-                    // console.log('calling parse to rows with changeProps[key]: ', changeProps[key]);
-                    // console.log('calling parse to rows with key: ', key);
-                    // console.log('calling parse to rows with rowKey: ', rowKey);
-                    // console.log('calling parse to rows with _ifFind: ', _idFind);
-
-
                     var rowPath = getParent(key);
                     var rowId = key.split('/');
                     rowId = rowId[rowId.length - 2];
@@ -242,14 +201,9 @@ exports.setup = function(socket, io) {
                     changeRows = changeRows.concat(row);
                   });
                 }
-                console.log("changeRows: ", changeRows);
               });
               var counter = 0;
-              // console.log('got here :', counter, 'changeRows :', changeRows, 'changeprops :',changeProps);
-
               var update = function() {
-                // console.log('called update with path: ', changeRows[counter].path, ' and _id: ', changeRows[counter]._id);
-                // console.log('changeRows is: ', changeRows);
                 updateByFilterQuery({
                   path: changeRows[counter].path,
                   _id: changeRows[counter]._id
@@ -257,8 +211,8 @@ exports.setup = function(socket, io) {
                   counter++;
                   if (counter === changeRows.length) {
                     socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                    bubbleUp('value', setRequest.path, socket);
-                    setEmitter(diff.emitEvents, socket);
+                    bubbleUp('value', setRequest.path, io);
+                    setEmitter(diff.emitEvents, io);
                   } else {
                     update();
                   }
@@ -266,51 +220,27 @@ exports.setup = function(socket, io) {
               };
               if (changeRows.length === 0) {
                 socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                bubbleUp('value', setRequest.path, socket);
-                setEmitter(diff.emitEvents, socket);
+                bubbleUp('value', setRequest.path, io);
+                setEmitter(diff.emitEvents, io);
               } else {
                 update();
               }
             });
           };
-          // console.log('delete them called');
           if (diff.deleteProps.length > 0) {
             diff.deleteProps.forEach(function(deleteProp) {
               pathToDelete = setRequest.path.slice(0, setRequest.path.length - 1) + deleteProp;
-              // console.log('attempting to delete: ', setRequest.path.slice(0, setRequest.path.length - 1) + deleteProp);
               deleteQuery(pathToDelete, function() {
-                // socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-                // console.log(setRequest.path);
-                // bubbleUp('value', setRequest.path, socket);
-                // console.log(deleteProp ,' deleted');
                 addAllProps();
               });
             });
           } else {
             addAllProps();
-            // socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-            // console.log(setRequest.path);
-            // bubbleUp('value', setRequest.path, socket);
           }
 
 
         });
-
-        // if in here, it means that the database contains all parent paths leading up to our target path
-        // deleteQuery({path: rootString, _id: _idFind}, function(result) {
-        //   bulkDeleteQuery('path', childrenString + children_idFind + "*", function(result) {
-        //     var rows = parseToRows(setRequest.data, rootString, _idFind);
-        //     insertQuery(rows, function(result) {
-        //       //emits setSuccess so client to notify client of success
-        //       socket.emit(setRequest.path + '-setSuccess', 'Successfully set data!');
-        //       bubbleUp('value', setRequest.path, socket);
-        //     });
-        //   });
-        // });
       } else {
-        // console.log("got here");
-        // console.log('hi');
-        //starts by building an empty object
         var buildObj = {};
         //currentPoint will deeper and deeper into our buildObj as we start building all the missing path to our target path
         var currentPointer = buildObj;
@@ -332,22 +262,12 @@ exports.setup = function(socket, io) {
         } else {
           objToParse = setRequest.data;
         }
-
-        // console.log('objToParse: ', objToParse);
-        // console.log('buildObj: ', buildObj);
-        // console.log('rootString: ', rootString);
-        // console.log('_idFInd: ', _idFind);
-        // console.log('neededParents: ', neededParents);
-
         var rows = parseToRows(objToParse, getParent(neededParents[0]), neededParents[0]);
-        // console.log('rows: ', rows);
         insertQuery(rows, function(result) {
-          // console.log('insert completed');
           socket.emit(setRequest.path + '-setSuccess', {
             success: true
           });
-          // console.log('emitted to ', setRequest.path + '-setSuccess');
-          bubbleUp('value', setRequest.path, socket);
+          bubbleUp('value', setRequest.path, io);
         });
       }
     });

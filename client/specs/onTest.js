@@ -30,10 +30,11 @@ describe('on', function() {
 
   it('should receive updates when children are added', function(done) {
     var timesCalled = 0;
+    authRef = authRef.child('users');
     setTimeout(function() {
       authRef.push({username: 'otherUser'});
     },50);
-    authRef.child('users').on('child_added', function(data) {
+    authRef.on('child_added', function(data) {
       timesCalled++;
       if(timesCalled === 1) {
         data.username.should.equal('authUser');
