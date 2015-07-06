@@ -10,7 +10,17 @@ var configTest = require('./configTest');
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
 
-xdescribe('setEmitter', function() {
+describe('setEmitter', function() {
+  var insertDb = function(path, data, callback) {
+    // path = '/tests/one/two/';
+    configTest.resetDb(function() {
+      db.connect(function(conn) {
+        configTest.bulkInsert(path, data, function() {
+          callback();
+        });
+      })
+    });
+  }
   var socket;
   var agent;
   beforeEach(function(done) {
@@ -37,7 +47,44 @@ xdescribe('setEmitter', function() {
     }
   }
 
-  it('', function(done) {
+  xdescribe('un-nested objects', function() {
+    it('should find all the added properties between two objects', function(done) {
+      var oldObj = {
+        name: "Richie"
+      }
+      var newObj = {
+        name: "Richie",
+        school: "MKS"
+      }
+      // insertDb('/tests/one/two/', oldObj, function() {
+      // socket.once('/tests/one/two/-setSuccess', function() {
+      //   // setDifference('/tests/one/two/', newObj, function(results) {
+      //     // results.addProps.should.eql([['/school/', 'MKS']]);
+      //     // results.changeProps.should.eql([]);
+      //     // results.deleteProps.should.eql([]);
+      //     // results.emitEvents['/'].child_added.should.eql([{school: 'MKS'}]);
+      //     // done();
+      //   // socket.once('/test/-setSuccess', function() {
+      //   //   socket.once('/messages/-getSuccess', function(data) {
+      //   //     data.data.should.eql({testProperty: false});
+      //   //     done();
+      //   //   });
+      // });
+      socket.once('/tests/one/two/-setSuccess', function() {
+        socket.once('/tests/one/two/-subscribeUrlValueSuccess', function() {
+          socket.on('/tests/one/two/-value', function(newValue) {
+            console.log(newValue);
+            // done();
+          });
+          socket.emit('set', {path: '/tests/one/two/', data: newObj});
+        });
+        socket.emit('subscribeUrlValue', {url: '/tests/one/two/'});
+      });
+      socket.emit('set', {path: '/tests/one/two/', data: oldObj});
+    });
+  });
+
+  xit('', function(done) {
     var events = {
       counter: 0,
       limit: 2
@@ -54,7 +101,7 @@ xdescribe('setEmitter', function() {
     socket.emit('set', {path:'/messages/', data: {testProperty: false}});
   });
 
-  it('', function(done) {
+  xit('', function(done) {
     var events = {
       counter: 0,
       limit: 2
@@ -69,7 +116,7 @@ xdescribe('setEmitter', function() {
     socket.emit('set', {path:'/messages/', data: {testProperty: false, activated: true}});
   });
 
-  it('', function(done) {
+  xit('', function(done) {
     var events = {
       counter: 0,
       limit: 5
