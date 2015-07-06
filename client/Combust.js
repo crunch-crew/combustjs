@@ -268,7 +268,7 @@ Combust.prototype.on = function(eventType, callback) {
       data.forEach(function(child) {
         callback(child);
       });
-      socket.on(path + '-childaddSuccess', function(data) {
+      socket.on(path + '-childadd', function(data) {
         //call callback on new child
         callback(data);
       });
