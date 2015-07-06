@@ -55,7 +55,6 @@ var bubbleUp = function(event, path, io, inputData) {
 
     // }
   };
-
   getQuery('/', function(parsedObj) {
     rootObject = parsedObj;
     parentPath = getParent(path);

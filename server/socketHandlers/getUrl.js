@@ -21,7 +21,6 @@ exports.setup = function(socket) {
     permitRequest("read", getRequest.url, socket.userToken, function(permission) {
       if (permission) {
         getQuery(getRequest.url, function(parsedObj) {
-          // console.log('getUrl parsedObj: ', parsedObj);
           socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
         });
       }

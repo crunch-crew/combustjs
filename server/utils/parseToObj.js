@@ -1,12 +1,8 @@
 var parseToObj = function(root, children) {
-	// console.log('inside parseToObj, root is: ',root);
 	//copy all properties except path and id
 	var extendObj = function(obj1, obj2) {	
-	// console.log(obj1);	
 		for (var key in obj2) {
-			// console.log('outside', key);
 			if(key !== "path" && key !== "_id" && key !== "id" && key !== "_length" && key !== "_isArray" && key !== "_partArray") {
-				// console.log('inside', key);
 				obj1[key] = obj2[key];
 			}
 		}
@@ -32,7 +28,6 @@ var parseToObj = function(root, children) {
 					currentPath[pathArray[j]] = [];
 				}	
 				else if(j === pathArray.length - 1 && children[i]._isArray) {
-					// console.log('in here');
 					currentPath[pathArray[j]] = [];
 				}
 				else {

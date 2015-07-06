@@ -5,6 +5,7 @@ var parseToObj = require('../utils/parseToObj');
 var config = require('../config');
 var insertQuery = require('../rethinkQuery/insertQuery');
 var updateByKeyQuery = require('../rethinkQuery/updateByKeyQuery');
+var getQuery = require('../rethinkQuery/getQuery');
 var bubbleUp = require('../utils/bubbleUp');
 
 
@@ -28,24 +29,93 @@ exports.setup = function(socket, io) {
 		//makes a copy of the original object - there is probably a better way to do this
 		var originalRequest = JSON.parse(JSON.stringify(pushRequest));
 		//insert an empty document into the database so that we can get the key back from the database to use later
-		insertQuery({}, function(result) {
-			var generatedKey = result.generated_keys[0];
-			//convert object to be pushed into rows to store in the db
-			var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
-			var rootRow = rows.slice(rows.length-1)[0];
-			var childRows = rows.slice(0,rows.length-1);
-			//update the empty document we inserted to contain the properties of the root node/row
-			updateByKeyQuery(generatedKey, rootRow, function(result) {
-				//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
-				insertQuery(childRows, function(result) {
-					//return the key of the root node back to the user so the can use it for subsequent requests
-					socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
-					//emit to clients listening for child add events at this url
-					// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
-					// console.log(originalRequest);
-          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
+		getQuery('/', function(rootObject) {
+			var pointer;
+			var pathArray = pushRequest.path.split('/');
+			var neededPath = [];
+			var newObj = {};
+			var rootPath;
+			var parentRows;
+
+			pathArray = pathArray.slice(1, pathArray.length-1);
+			//checks to see if root exists, if so , checks to see if all paths from root to current exist
+			//if not, adds root to the neededPath array as well
+			if(rootObject) {
+				for(var i = 0; i < pathArray.length; i++) {
+					pointer = rootObject[pathArray[i]]; 
+					if(!pointer) {
+						neededPath.push(pathArray[i]);
+					} 
+				}
+			}
+			else {
+				neededPath.push('/');
+				neededPath.concat(pathArray);
+			}
+			pointer = newObj;
+			for(var j = 0; j < neededPath.length; j++) {
+				pointer = pointer[neededPath[j]] = {};
+			}
+			if(neededPath.length > 0) {
+				if(neededPath[0] === '/') {
+					parentRows = parseToRows(newObj[neededPath[0]], null, '/');
+				}
+				else {
+					rootPath = pathArray.slice(0, pathArray.length - neededPath.length);
+					if(rootPath.length === 0) {
+						rootPath = '/';
+					}
+					else {
+						rootPath = '/' + rootPath.join('/') + '/';
+					}
+					parentRows = parseToRows(newObj[neededPath[0]], rootPath, neededPath[0]);
+				}
+				console.log('im here ', neededPath);
+				console.log(parentRows);
+				console.log(newObj);
+				insertQuery(parentRows, function(result) {
+					insertQuery({}, function(result) {
+						var generatedKey = result.generated_keys[0];
+						//convert object to be pushed into rows to store in the db
+						var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
+						var rootRow = rows.slice(rows.length-1)[0];
+						var childRows = rows.slice(0,rows.length-1);
+						//update the empty document we inserted to contain the properties of the root node/row
+						updateByKeyQuery(generatedKey, rootRow, function(result) {
+							//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
+							insertQuery(childRows, function(result) {
+								//return the key of the root node back to the user so the can use it for subsequent requests
+								socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
+								//emit to clients listening for child add events at this url
+								// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
+								// console.log(originalRequest);
+			          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
+							});
+						});
+					});
 				});
-			});
+			}
+			else {
+				insertQuery({}, function(result) {
+					var generatedKey = result.generated_keys[0];
+					//convert object to be pushed into rows to store in the db
+					var rows = parseToRows(pushRequest.data, pushRequest.path, generatedKey);
+					var rootRow = rows.slice(rows.length-1)[0];
+					var childRows = rows.slice(0,rows.length-1);
+					//update the empty document we inserted to contain the properties of the root node/row
+					updateByKeyQuery(generatedKey, rootRow, function(result) {
+						//insert all the child rows - do these two queries simultaneously because they're not dependent on each other
+						insertQuery(childRows, function(result) {
+							//return the key of the root node back to the user so the can use it for subsequent requests
+							socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
+							//emit to clients listening for child add events at this url
+							// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
+							// console.log(originalRequest);
+		          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
+						});
+					});
+				});
+			}
 		});
 	});
 };
