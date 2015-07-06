@@ -21,11 +21,11 @@ exports.setup = function(socket) {
     permitRequest("read", getRequest.url, socket.userToken, function(permission) {
       if (permission) {
         getQuery(getRequest.url, function(parsedObj) {
-          socket.emit(getRequest.url + '-getSuccess', {success: true, data: parsedObj});
+          socket.emit(getRequest.url + '-getUrlSuccess', {success: true, data: parsedObj});
         });
       }
       else {
-        socket.emit(getRequest.url + '-getSuccess', {success: false});
+        socket.emit(getRequest.url + '-getUrlSuccess', {success: false});
       }
     });
   });
