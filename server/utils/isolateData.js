@@ -14,7 +14,7 @@ var isolateData = function(path, rootObject) {
   for(var i = 0; i < pathArray.length; i++) {
     // console.log('pathArray:', pathArray);
     // console.log('currentPointer:', currentPointer);
-    currentPointer = currentPointer[pathArray[i]];
+    if(currentPointer) currentPointer = currentPointer[pathArray[i]];
   }
   return currentPointer;
 };
