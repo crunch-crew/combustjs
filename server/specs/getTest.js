@@ -35,7 +35,7 @@ describe('get', function() {
     socket.once('/-pushSuccess', function(data) {
       var path = '/' + data.key + '/';
       socket.emit('getUrl', {url: path});
-      socket.once(path + '-getSuccess', function(data) {
+      socket.once(path + '-getUrlSuccess', function(data) {
           data.data.should.eql(utils.testObj);
           done();
       });
