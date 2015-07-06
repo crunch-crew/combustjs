@@ -201,5 +201,10 @@ describe('set', function() {
     });
     socket.emit('set', {path:'/', data: {testProperty: true, activated: false, testSomething:{testProp: 'hello'}}});
   });
+
+  it('should insert the correct amount of rows to the database', function(done) {
+    //TODO
+    done();
+  });
 });
 
