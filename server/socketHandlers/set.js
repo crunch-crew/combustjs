@@ -152,7 +152,9 @@ exports.setup = function(socket, io) {
               });
             });
 
+            console.log('addRows: ', addRows);
             insertQuery(addRows, function(result) {
+              // console.log('insertquery result: ', result);
               var updateId;
               diff.changeProps.forEach(function(prop) {
                 if (typeof prop[1] !== 'object') {

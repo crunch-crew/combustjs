@@ -26,6 +26,7 @@ var insertQuery = function(input, callback) {
       var counter = 0;
       var limit = input.length;
       input.forEach(function(row) {
+        // console.log('inside insertQuery, row is: ', row);
         var rowFilter;
         if (row.path) {
           rowFilter = {path: row.path, _id: row._id};
@@ -38,7 +39,8 @@ var insertQuery = function(input, callback) {
           result.toArray(function(err, array) {
             if (err) throw err;
             if (array.length === 0) {
-              r.db(config.dbName).table(config.tableName).insert(input).run(conn, function(err, result) {
+              r.db(config.dbName).table(config.tableName).insert(row).run(conn, function(err, result) {
+                // console.log('inserted: ', row);
                 if(err) throw err;
                 counter++;
                 if(callback && counter === limit) {
