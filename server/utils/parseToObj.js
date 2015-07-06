@@ -40,7 +40,7 @@ var parseToObj = function(root, children) {
 	}
 
 	//if object is empty return null, otherwise returned parsedObj
-	return Object.key(parsedObj).length === 0 ? null : parsedObj;
+	return Object.keys(parsedObj).length === 0 ? null : parsedObj;
 };
 
 module.exports = parseToObj;

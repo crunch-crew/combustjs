@@ -3,11 +3,11 @@ var getParent = require('./getParent');
 var isolateData = require('./isolateData');
 //emits to all parents of current path AND current path. 
 var bubbleUp = function(event, path, io, inputData) {
-  var parentPath;
   var rootObject;
   var data;
 
   var recurse = function(event, path) {
+    var parentPath;
     //if the event is 'value', will query the db for the new data for every parent path.
     if(event === 'value') {
         //gets the parent path of the current path
@@ -27,7 +27,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
-        recurse('value', parentPath);
+        // io.to(parentPath + '-value').emit(parentPath + -'value', isolateData(parentPath, rootObject));
       }
     }
 
@@ -38,7 +38,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
-        recurse('value', parentPath);
+        // recurse('value', parentPath);
       }
     }
 
@@ -49,7 +49,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
-        recurse('value', parentPath);
+        // recurse('value', parentPath);
       }
     }
 
@@ -60,15 +60,16 @@ var bubbleUp = function(event, path, io, inputData) {
   };
   getQuery('/', function(parsedObj) {
     rootObject = parsedObj;
-    parentPath = getParent(path);
+    var parentPath = getParent(path);
     //if event is value or child_added, emit event at current path, otherwise start at parent
-    if (event !== 'value' & event !== 'child_added' && parentPath) {
+    if ((event === 'child_removed' || event === 'child_changed') && parentPath) {
       recurse(event, parentPath);
     }
     //if even is child-related, emit event at parent path
-    else {
+    else if (event === 'child_added' && path) {
       recurse(event, path);
     }
+    recurse('value', path);
   });
 };
 
