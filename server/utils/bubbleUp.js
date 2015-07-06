@@ -27,6 +27,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
+        recurse('value', parentPath);
       }
     }
 
@@ -37,6 +38,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
+        recurse('value', parentPath);
       }
     }
 
@@ -47,6 +49,7 @@ var bubbleUp = function(event, path, io, inputData) {
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
+        recurse('value', parentPath);
       }
     }
 

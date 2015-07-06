@@ -39,7 +39,8 @@ var parseToObj = function(root, children) {
 		extendObj(currentPath, children[i]);
 	}
 
-	return parsedObj;
+	//if object is empty return null, otherwise returned parsedObj
+	return Object.key(parsedObj).length === 0 ? null : parsedObj;
 };
 
 module.exports = parseToObj;
