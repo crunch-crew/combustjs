@@ -36,5 +36,29 @@ describe('push', function() {
     });
     socket.emit('push', {path:'/messages/', data: utils.dummyObj});
   });
+
+  it('should push into the database when parent path doesnt exist', function(done) {
+    socket.once('/messages/hello/goodbye/imhere/-pushSuccess', function(data) {
+      var key = data.key;
+      socket.once('/messages/hello/goodbye/imhere/-getSuccess', function(data) {
+        data.data[key].should.eql(utils.dummyObj);
+        done();
+      });
+      socket.emit('getUrl', {url: '/messages/hello/goodbye/imhere/'});
+    });
+    socket.emit('push', {path:'/messages/hello/goodbye/imhere/', data: utils.dummyObj});
+  });
+
+  xit('should push static properties properly', function(done) {
+    socket.once('/messages/-pushSuccess', function(data) {
+      should.exist(data);
+      socket.once('/messages/' + data.key + '/-getSuccess', function() {
+        done();
+      });
+      socket.emit('getUrl', {url: '/messages/' + data.key + '/'});
+    });
+    socket.emit('push', {path:'/messages/', data: 'dummy-data'});
+  });
+
 });
 

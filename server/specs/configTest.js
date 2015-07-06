@@ -71,7 +71,7 @@ module.exports = {
       email: "authEmail"
     },
     createAgent: function(server) {
-      var server = server || this.serverAddress;
+      server = server || this.serverAddress;
       return supertest.agent(server);
     },
   },
@@ -138,7 +138,7 @@ module.exports = {
     }
     var rows = parseToRows(data, rootString, _idFind);
     insertQuery(rows, function(result) {
-      callback()
+      callback();
     });
   }
-}
+};

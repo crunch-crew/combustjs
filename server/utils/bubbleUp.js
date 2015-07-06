@@ -57,16 +57,12 @@ var bubbleUp = function(event, path, io, inputData) {
 
     // }
   };
-
   getQuery('/', function(parsedObj) {
-    // console.log('bubbleUp at: ', path);
-    // console.log('bubbleUp event: ', event);
     rootObject = parsedObj;
     parentPath = getParent(path);
     //if event is value or child_added, emit event at current path, otherwise start at parent
     if (event !== 'value' & event !== 'child_added' && parentPath) {
       recurse(event, parentPath);
-      // console.log('recursed at: ', path);
     }
     //if even is child-related, emit event at parent path
     else {
