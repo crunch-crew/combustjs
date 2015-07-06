@@ -1,0 +1,448 @@
+
+<html>
+  <head>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
+    <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+    <script src="Combust.js"></script>
+  </head>
+  <body>
+    <h1>Combust Demo</h1> 
+
+    <div id='messagesDiv'></div>
+    <input type='text' id='nameInput' placeholder='Name'>
+    <input type='text' id='messageInput' placeholder='Message'>
+    <br/>
+    <br/>
+    <hr/>
+    <button id ='setAction'>SET Action</button> <br/><hr/>
+    <button id ='pushAction'>PUSH Action</button> <br/><hr/>
+    <button id ='updateAction'>UPDATE Action</button> <br/> <hr/>
+    <button id ='removeAction'>REMOVE Action</button> <br/> <hr/>
+    <br/>
+
+    <script>
+
+      var serverAddress = 'http://0.0.0.0:3000';
+      // var socket = io.connect(serverAddress, {'forceNew': true});
+      
+      var rootRef = new Combust({
+        serverAddress: serverAddress
+      }, function() {
+        // console.log(" Socket", rootRef.socket);
+      });
+
+
+      var child_1_Ref = rootRef.child('child1');
+      var child_11_K_Ref = child_1_Ref.child('child11');
+      var child_12_Ref = child_1_Ref.child('child12');
+      var child_121_Ref = child_12_Ref.child('child121');
+      var child_1211_K_Ref = child_121_Ref.child('child1211');
+      var child_13_Ref = child_1_Ref.child('child13');
+      var child_131_K_Ref = child_13_Ref.child('child131');
+      var child_14_K_Ref = rootRef.child('child1');
+
+      var child_2_Ref = rootRef.child('child2');
+      var child_21_K_Ref = child_2_Ref.child('child21');
+
+      var child_3_K_Ref = rootRef.child('child3');
+
+      
+
+      var startApp = function() {
+
+      var testObj = {
+            child1: {
+              child11: "child 11 Initial",
+              child12: {
+                child121: {child1211: "child 1211 Initial"}
+              },
+              child13: {
+                child131: "Child 131 Initial"
+              }
+            },
+            child2: {
+              child21: "child 21 Initial"
+            },
+            child3: 'child3 Intial'
+          };
+
+      var testUpdateObj = {
+            child1: {
+              child11: "child 11 Initial",
+              // child12: {
+              //   child121: {child1211: "child 1211 Initial"}
+              // },
+              child13: {
+                child131: "Child 131 CHANGED in SET"
+              },
+              child14: "Child 14 ADDED in SET"
+            },
+            child2: {
+              child21: "child 21 Initial"
+            },
+            child3: 'child3 Intial'
+          };
+
+          console.log(rootRef.pathArray);
+
+      $('#setAction').on('click', function(){
+        rootRef.set(testObj);
+      });
+
+      $('#pushAction').on('click', function(){
+          rootRef.push({name: {id:'123', another: 'Alex'}});
+      });
+
+      $('#updateAction').on('click', function(){
+        rootRef.set(testUpdateObj);
+      });
+
+      $('#removeAction').on('click', function(){
+        child_12_Ref.remove();
+      });
+
+        // myRootRef.set(testObj);
+        // 
+      
+        $('#messageInput').keypress(function (e) {
+          if (e.keyCode == 13) {
+            var name = $('#nameInput').val();
+            var text = $('#messageInput').val();
+            // myUserOtherRef.set({metadata: {creater: 'xys'}});
+            // myUserOtherRef.set({metadata: [{n1:'v1'}, {n2:'v2'}, {n3:{n33:'v33'}}],  });
+            // 
+            // for (var i = 0; i < 6 ; i++) {
+            //   myUserOtherRef.push({name: {id:'id__'+i, data: 'efeff__'+i}});
+            // }
+          
+            // myDataRef.set({name: {id:'123', another: 'Alex'}});
+            // myDataRef.set(testObj);
+            // myDataRef.push({name: {id:'123', another: 'Alex'}});
+
+            // myUserOtherRef.set({name: name, text: text});
+            // deal with lists: with push
+            // myUserOtherRef.push({name: {firstname: name, lastname: 'fixedlastName'}, text: text});
+            $('#messageInput').val('');
+          }
+        });
+        // receive DB notifications back when something happens
+        // add callback here to get notified -- takes in EVENT_TYPE and function to execute when that happens
+
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for rootRef
+    // -------------------------------------------------------------------------------------------
+      rootRef.on('value', function(snapshot){
+        console.log('in rootRef - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      rootRef.on('child_added', function(snapshot){
+        console.log('in rootRef.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      rootRef.on('child_removed', function(snapshot){
+        console.log('in rootRef.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      rootRef.on('child_changed', function(snapshot){
+        console.log('in rootRef.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_1_Ref
+    // -------------------------------------------------------------------------------------------
+      child_1_Ref.on('value', function(snapshot){
+        console.log('in child_1_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_1_Ref.on('child_added', function(snapshot){
+        console.log('in child_1_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_1_Ref.on('child_removed', function(snapshot){
+        console.log('in child_1_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_1_Ref.on('child_changed', function(snapshot){
+        console.log('in child_1_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_11_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_11_K_Ref.on('value', function(snapshot){
+        console.log('in child_11_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_11_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_11_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_11_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_11_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_11_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_11_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_12_Ref
+    // -------------------------------------------------------------------------------------------
+      child_12_Ref.on('value', function(snapshot){
+        console.log('in child_12_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_12_Ref.on('child_added', function(snapshot){
+        console.log('in child_12_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_12_Ref.on('child_removed', function(snapshot){
+        console.log('in child_12_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_12_Ref.on('child_changed', function(snapshot){
+        console.log('in child_12_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_121_Ref
+    // -------------------------------------------------------------------------------------------
+      child_121_Ref.on('value', function(snapshot){
+        console.log('in child_121_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_121_Ref.on('child_added', function(snapshot){
+        console.log('in child_121_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_121_Ref.on('child_removed', function(snapshot){
+        console.log('in child_121_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_121_Ref.on('child_changed', function(snapshot){
+        console.log('in child_121_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_1211_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_1211_K_Ref.on('value', function(snapshot){
+        console.log('in child_1211_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_1211_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_1211_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_1211_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_1211_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_1211_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_1211_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_13_Ref
+    // -------------------------------------------------------------------------------------------
+      child_13_Ref.on('value', function(snapshot){
+        console.log('in child_13_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_13_Ref.on('child_added', function(snapshot){
+        console.log('in child_13_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_13_Ref.on('child_removed', function(snapshot){
+        console.log('in child_13_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_13_Ref.on('child_changed', function(snapshot){
+        console.log('in child_13_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_131_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_131_K_Ref.on('value', function(snapshot){
+        console.log('in child_131_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_131_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_131_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_131_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_131_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_131_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_131_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_14_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_14_K_Ref.on('value', function(snapshot){
+        console.log('in child_14_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_14_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_14_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_14_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_14_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_14_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_14_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_2_Ref
+    // -------------------------------------------------------------------------------------------
+      child_2_Ref.on('value', function(snapshot){
+        console.log('in child_2_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_2_Ref.on('child_added', function(snapshot){
+        console.log('in child_2_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_2_Ref.on('child_removed', function(snapshot){
+        console.log('in child_2_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_2_Ref.on('child_changed', function(snapshot){
+        console.log('in child_2_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_21_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_21_K_Ref.on('value', function(snapshot){
+        console.log('in child_21_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_21_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_21_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_21_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_21_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_21_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_21_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+    // -------------------------------------------------------------------------------------------
+    //  ON methods for child_3_K_Ref
+    // -------------------------------------------------------------------------------------------
+      child_3_K_Ref.on('value', function(snapshot){
+        console.log('in child_3_K_Ref - VALUE -- , snap shot is: ', snapshot);
+        console.log('--------------------------------------------------');
+      })
+
+      child_3_K_Ref.on('child_added', function(snapshot){
+        console.log('in child_3_K_Ref.on-CHILD_ADDED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_3_K_Ref.on('child_removed', function(snapshot){
+        console.log('in child_3_K_Ref.on-CHILD_REMOVED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+        // displayMsg(msg.name, msg.text);
+      })
+
+      child_3_K_Ref.on('child_changed', function(snapshot){
+        console.log('in child_3_K_Ref.on-CHILD_CHANGED, snap shot is: ', snapshot);
+        console.log('-------------------------------------------------------');
+      })
+
+
+
+
+
+
+        function displayMsg(name, msgbody){
+          console.log(name);
+        }
+        
+      };
+      
+      startApp();
+
+    </script>
+  </body>
+</html>
