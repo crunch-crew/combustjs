@@ -30,14 +30,20 @@ describe('listeners', function() {
     });
   });
 
-  it('should notify listeners of parent urls of value changes', function(done) {
+  it('should notify listeners of parent urls of value changes once', function(done) {
+    var counter = 0;
     socket.once('/-subscribeUrlValueSuccess', function() {
-      socket.once('/-value', function(data) {
-        if(data) {
-          done();
-        }
+      socket.on('/-value', function(data) {
+        counter++;
+        setTimeout(function(){
+          if(counter === 1) {
+            if(data) {
+              done();
+            }
+          }
+        }, 200);
       });
-    })
+    });    
     socket.emit('set', {path:'/users/', data: {testProperty: true, testSomething:{testProp: 'hallo'}}})
     socket.emit('subscribeUrlValue', {url: '/'});
   }); 

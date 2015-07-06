@@ -1,6 +1,7 @@
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var bubbleUp = require('../utils/bubbleUp');
+var getParent = require('../utils/getParent');
 var setDifference = require('../utils/setDifference');
 var getQuery = require('../rethinkQuery/getQuery');
 var bulkDeleteQuery = require('../rethinkQuery/bulkDeleteQuery');
@@ -212,7 +213,10 @@ exports.setup = function(socket, io) {
                   counter++;
                   if (counter === changeRows.length) {
                     socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                    bubbleUp('value', setRequest.path, io);
+                    var parentPath = getParent(setRequest.path);
+                    if(parentPath) {
+                      bubbleUp('value', parentPath, io);
+                    }
                     setEmitter(diff.emitEvents, io);
                   } else {
                     update();
@@ -221,7 +225,10 @@ exports.setup = function(socket, io) {
               };
               if (changeRows.length === 0) {
                 socket.emit(setRequest.path + '-setSuccess', 'Successfullyl set data');
-                bubbleUp('value', setRequest.path, io);
+                var parentPath = getParent(setRequest.path);
+                if(parentPath) {
+                  bubbleUp('value', parentPath, io);
+                }
                 setEmitter(diff.emitEvents, io);
               } else {
                 update();
