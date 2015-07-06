@@ -6,13 +6,11 @@ var config = require('../config');
 var updateByFilter = require('./updateByFilterQuery');
 
 var insertQuery = function(input, callback) {
-  // console.log('insert input: ', input);
   //handles empty object case
   if (Object.keys(input).length === 0) {
     db.connect(function(conn) {
       r.db(config.dbName).table(config.tableName).insert(input).run(conn, function(err, result) {
         if(err) throw err;
-        // console.log('results of insert:', result);
         if(callback) {
           callback(result);
         }
@@ -42,7 +40,6 @@ var insertQuery = function(input, callback) {
             if (array.length === 0) {
               r.db(config.dbName).table(config.tableName).insert(input).run(conn, function(err, result) {
                 if(err) throw err;
-                // console.log('results of insert:', result);
                 counter++;
                 if(callback && counter === limit) {
                   callback(result);
