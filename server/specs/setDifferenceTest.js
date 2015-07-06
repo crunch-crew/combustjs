@@ -21,7 +21,6 @@ describe('setDifference', function() {
     });
   }
 
-
   before(function(done) {
     configTest.resetDb(function() {
       configTest.authenticateSocket(function(newSocket, newAgent) {
@@ -51,7 +50,7 @@ describe('setDifference', function() {
           results.addProps.should.eql([['/school/', 'MKS']]);
           results.changeProps.should.eql([]);
           results.deleteProps.should.eql([]);
-          results.emitEvents['/'].child_added.should.eql([{school: 'MKS'}]);
+          results.emitEvents['/tests/'].child_added.should.eql([{school: 'MKS'}]);
           done();
         });
       });
@@ -68,7 +67,7 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
+          results.emitEvents['/tests/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
           results.changeProps.should.eql([['/name/', 'Kuldeep'], ['/age/', 23]]);
           done();
         });
@@ -101,7 +100,7 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/'].child_added.should.eql([{school: 'MKS'}]);
+          results.emitEvents['/tests/'].child_added.should.eql([{school: 'MKS'}]);
           done();
         });
       });
@@ -118,7 +117,7 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
+          results.emitEvents['/tests/'].child_changed.should.eql({name: 'Kuldeep', age: 23});
           done();
         });
       });
@@ -135,9 +134,9 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/'].value.should.eql(newObj);
-          results.emitEvents['/name/'].value.should.equal('Kuldeep');
-          results.emitEvents['/age/'].value.should.equal(23);
+          results.emitEvents['/tests/'].value.should.eql(newObj);
+          results.emitEvents['/tests/name/'].value.should.equal('Kuldeep');
+          results.emitEvents['/tests/age/'].value.should.equal(23);
           done();
         });
       });
@@ -151,7 +150,7 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/'].child_removed[0].should.eql({name: "Richie"});
+          results.emitEvents['/tests/'].child_removed[0].should.eql({name: "Richie"});
           done();
         });
       });
@@ -203,9 +202,9 @@ describe('setDifference', function() {
             ]);
           results.changeProps.should.eql([]);
           results.deleteProps.should.eql([]);
-          results.emitEvents['/userList/user1/messages/list/'].child_added.should.eql([{'1': 'richie'}]);
-          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
-          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          results.emitEvents['/tests/userList/user1/messages/list/'].child_added.should.eql([{'1': 'richie'}]);
+          results.emitEvents['/tests/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/tests/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
           done();
         });
       });
@@ -331,9 +330,9 @@ describe('setDifference', function() {
       };
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/userList/user1/messages/list/'].child_added.should.eql([{'1': 'richie'}]);
-          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
-          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          results.emitEvents['/tests/userList/user1/messages/list/'].child_added.should.eql([{'1': 'richie'}]);
+          results.emitEvents['/tests/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/tests/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
           done();
         });
       });
@@ -384,11 +383,11 @@ describe('setDifference', function() {
       };
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
-          results.emitEvents['/userList/user1/messages/'].child_changed.should.eql({list: ['yo', 'richie']});
-          results.emitEvents['/userList/user1/'].child_changed.should.eql({messages: {list: ['yo', 'richie']}, name: 'Jack'});
-          results.emitEvents['/userList/'].child_changed.should.eql({user1: {name: 'Jack', messages: {list: ['yo', 'richie']}}});
-          results.emitEvents['/'].child_changed.should.eql(newObj);
+          results.emitEvents['/tests/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
+          results.emitEvents['/tests/userList/user1/messages/'].child_changed.should.eql({list: ['yo', 'richie']});
+          results.emitEvents['/tests/userList/user1/'].child_changed.should.eql({messages: {list: ['yo', 'richie']}, name: 'Jack'});
+          results.emitEvents['/tests/userList/'].child_changed.should.eql({user1: {name: 'Jack', messages: {list: ['yo', 'richie']}}});
+          results.emitEvents['/tests/'].child_changed.should.eql(newObj);
           done();
         });
       });
@@ -439,12 +438,12 @@ describe('setDifference', function() {
       };
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/userList/user1/messages/list/0/'].value.should.eql('yo');
-          results.emitEvents['/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
-          results.emitEvents['/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
-          results.emitEvents['/userList/user1/'].value.should.eql(newObj.userList.user1);
-          results.emitEvents['/userList/'].value.should.eql(newObj.userList);
-          results.emitEvents['/'].value.should.eql(newObj);
+          results.emitEvents['/tests/userList/user1/messages/list/0/'].value.should.eql('yo');
+          results.emitEvents['/tests/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
+          results.emitEvents['/tests/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
+          results.emitEvents['/tests/userList/user1/'].value.should.eql(newObj.userList.user1);
+          results.emitEvents['/tests/userList/'].value.should.eql(newObj.userList);
+          results.emitEvents['/tests/'].value.should.eql(newObj);
           var user2Path = '/user2/' in results.emitEvents;
           var user3Path = '/user3/' in results.emitEvents;
           user2Path.should.equal(false);
@@ -473,13 +472,13 @@ describe('setDifference', function() {
       }
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
-          results.emitEvents['/userList/user1/'].child_removed.should.eql([{name: 'Richie'}]);
-          results.emitEvents['/userList/'].child_removed.should.eql([{user2: {name: 'Kuldeep'}}]);
-          should(results.emitEvents['/userList/user1/name/'].value).equal(null);
-          results.emitEvents['/userList/user1/'].value.should.eql({});
-          results.emitEvents['/userList/'].value.should.eql(newObj.userList);
-          should(results.emitEvents['/userList/user2/'].value).equal(null);
-          results.emitEvents['/'].value.should.eql(newObj);
+          results.emitEvents['/tests/userList/user1/'].child_removed.should.eql([{name: 'Richie'}]);
+          results.emitEvents['/tests/userList/'].child_removed.should.eql([{user2: {name: 'Kuldeep'}}]);
+          should(results.emitEvents['/tests/userList/user1/name/'].value).equal(null);
+          results.emitEvents['/tests/userList/user1/'].value.should.eql({});
+          results.emitEvents['/tests/userList/'].value.should.eql(newObj.userList);
+          should(results.emitEvents['/tests/userList/user2/'].value).equal(null);
+          results.emitEvents['/tests/'].value.should.eql(newObj);
           done();
         });
       });
@@ -576,29 +575,29 @@ describe('setDifference', function() {
       insertDb('/tests/', oldObj, function() {
         setDifference('/tests/', newObj, function(results) {
           //child_changed events
-          results.emitEvents['/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
-          results.emitEvents['/userList/user1/messages/'].child_changed.should.eql({list: ['yo']});
-          results.emitEvents['/userList/user1/'].child_changed.should.eql({messages: {list: ['yo']}, name: 'Jack'});
-          results.emitEvents['/userList/'].child_changed.should.eql({user1: newObj.userList.user1, user2: newObj.userList.user2});
-          results.emitEvents['/'].child_changed.should.eql(newObj);
-          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
-          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          results.emitEvents['/tests/userList/user1/messages/list/'].child_changed.should.eql({0: 'yo'});
+          results.emitEvents['/tests/userList/user1/messages/'].child_changed.should.eql({list: ['yo']});
+          results.emitEvents['/tests/userList/user1/'].child_changed.should.eql({messages: {list: ['yo']}, name: 'Jack'});
+          results.emitEvents['/tests/userList/'].child_changed.should.eql({user1: newObj.userList.user1, user2: newObj.userList.user2});
+          results.emitEvents['/tests/'].child_changed.should.eql(newObj);
+          results.emitEvents['/tests/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/tests/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
           //value_events
-          results.emitEvents['/userList/user1/messages/list/0/'].value.should.eql('yo');
-          results.emitEvents['/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
-          results.emitEvents['/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
-          results.emitEvents['/userList/user1/'].value.should.eql(newObj.userList.user1);
-          results.emitEvents['/userList/'].value.should.eql(newObj.userList);
-          results.emitEvents['/'].value.should.eql(newObj);
-          results.emitEvents['/userList/user2/profile/'].value.should.eql(newObj.userList.user2.profile);
-          results.emitEvents['/userList/user3/'].value.should.eql(newObj.userList.user3);
-          should(results.emitEvents['/userList/user2/name/']).equal(undefined);
+          results.emitEvents['/tests/userList/user1/messages/list/0/'].value.should.eql('yo');
+          results.emitEvents['/tests/userList/user1/messages/list/'].value.should.eql(newObj.userList.user1.messages.list);
+          results.emitEvents['/tests/userList/user1/messages/'].value.should.eql(newObj.userList.user1.messages);
+          results.emitEvents['/tests/userList/user1/'].value.should.eql(newObj.userList.user1);
+          results.emitEvents['/tests/userList/'].value.should.eql(newObj.userList);
+          results.emitEvents['/tests/'].value.should.eql(newObj);
+          results.emitEvents['/tests/userList/user2/profile/'].value.should.eql(newObj.userList.user2.profile);
+          results.emitEvents['/tests/userList/user3/'].value.should.eql(newObj.userList.user3);
+          should(results.emitEvents['/tests/userList/user2/name/']).equal(undefined);
           //child_added events
-          results.emitEvents['/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
-          results.emitEvents['/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
-          results.emitEvents['/userList/user1/'].child_added.should.eql([]);
+          results.emitEvents['/tests/userList/user2/'].child_added.should.eql([{profile: {names: {first: 'Kuldeep'}}}]);
+          results.emitEvents['/tests/userList/'].child_added.should.eql([{user3: {name: 'Alex'}}]);
+          results.emitEvents['/tests/userList/user1/'].child_added.should.eql([]);
           //child_removed events
-          results.emitEvents['/userList/user1/messages/list/'].child_removed[0].should.eql({'1': 'richie'});
+          results.emitEvents['/tests/userList/user1/messages/list/'].child_removed[0].should.eql({'1': 'richie'});
 
           //propArrays
           results.changeProps.should.eql([

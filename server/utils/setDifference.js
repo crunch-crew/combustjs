@@ -56,10 +56,6 @@ var setDifference = function(setPath, inputObject, callback) {
 
   //get object that represents current state of database
   getQuery(originalPath, function(databaseObj) {
-    // console.log('in setDifference, existing is: ', databaseObj);
-    // console.log('in set difference, databaseObj: ', databaseObj);
-    // console.log(originalPath);
-    
     /*compare the object that the user is trying to set with the object that already exists in the database
     This function is very similar to a deep equals function, however, in addition to keeping track of adds,
     changes, and delete, it calls the bubbleUp function which will determine which events to trigger on the parents
@@ -108,11 +104,18 @@ var setDifference = function(setPath, inputObject, callback) {
     //call the compare function
     compareObjects(setPath, inputObject, databaseObj);
     //execute the callback with all the differences and events to emit in an object
+
+    //prepend the path that is being set to all the internal paths since all the internal paths are relative
+    var emitEventsRoot = {};
+    originalPathNoSlash = originalPath.substring(0, originalPath.length-1);
+    for (var path in emitEvents) {
+      emitEventsRoot[originalPathNoSlash + path] = emitEvents[path];
+    }
     callback({
       addProps: addProps,
       changeProps: changeProps,
       deleteProps: deleteProps,
-      emitEvents: emitEvents
+      emitEvents: emitEventsRoot
     });
   });
 };
@@ -124,8 +127,6 @@ var bubbleUp = function(emitEvents, event, path, rootObject , inputData) {
 
   var recurse = function(event, path, inputData) {
     if(event === 'value') {
-        // console.log("path is: ", path);
-        // console.log("rootObject is: ", rootObject);
         data = isolateData(path, rootObject);
         if (data === undefined) {
           data = null;

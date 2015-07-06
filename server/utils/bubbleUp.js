@@ -3,7 +3,6 @@ var getParent = require('./getParent');
 var isolateData = require('./isolateData');
 //emits to all parents of current path AND current path. 
 var bubbleUp = function(event, path, io, inputData) {
-  // console.log('inputData is: ', inputData);
   var parentPath;
   var rootObject;
   var data;
@@ -25,7 +24,6 @@ var bubbleUp = function(event, path, io, inputData) {
     if(event === 'child_added') {
       // socket.emit(path + '-child_added', inputData);
       io.to(path + '-child_added').emit(path + '-child_added', inputData);
-      // console.log('emitted to room: ', path + '-child_added', ' event: ', path + '-child_added');
       parentPath = getParent(path);
       if(parentPath) {
         recurse('child_changed', parentPath);
@@ -59,19 +57,15 @@ var bubbleUp = function(event, path, io, inputData) {
   };
 
   getQuery('/', function(parsedObj) {
-    // console.log('bubbleUp at: ', path);
-    // console.log('bubbleUp event: ', event);
     rootObject = parsedObj;
     parentPath = getParent(path);
     //if event is value or child_added, emit event at current path, otherwise start at parent
     if (event !== 'value' & event !== 'child_added' && parentPath) {
       recurse(event, parentPath);
-      // console.log('recursed at: ', path);
     }
     //if even is child-related, emit event at parent path
     else {
       recurse(event, path);
-      // console.log('recursed at: ', path);
     }
   });
 };

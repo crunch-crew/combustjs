@@ -1,5 +1,4 @@
 var setEmitter = function(emitEvents, io) {
-  console.log('emitEvents is: ', emitEvents);
   var childAdded = function(newChild) {
     io.to(path + '-child_added').emit(path + '-child_added' , newChild);
     console.log('emitted child_added event: ', path + '-child_added', ' to room: ', path + '-child_added', ' with data: ', newChild);
