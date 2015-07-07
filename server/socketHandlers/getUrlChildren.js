@@ -17,15 +17,20 @@ exports.setup = function(socket) {
 	*@apiSuccess (getUrlChildrenSuccess) {Array} getUrlChildrenSuccessObject.children Array of javascript objects that represent the children of the specified url
 	*/
 	socket.on('getUrlChildren', function(getRequest) {
-    var childrens = [];
+    var children = [];
     getQuery(getRequest.url, function(result) {
-      for(var key in result) {
-        result.id = key; 
-        // var obj = {};
-        // obj[key] = result[key];
-        childrens.push(result[key]);
+      //static property case - result is just a value
+      if (!(result instanceof Object)) {
+        socket.emit(getRequest.url + '-getUrlChildrenSuccess', null);
       }
-      socket.emit(getRequest.url + '-getUrlChildrenSuccess', childrens);
+      //non-static property case, result will be an object
+      else {
+        for(var key in result) {
+          result.id = key; 
+          children.push(result[key]);
+        }
+        socket.emit(getRequest.url + '-getUrlChildrenSuccess', children);
+      }
     });
 	});
 };

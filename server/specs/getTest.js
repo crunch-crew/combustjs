@@ -23,12 +23,12 @@ describe('get', function() {
     });
   });
 
-  after(function(done) {
-    socket.disconnect();
-    configTest.resetDb(function() {
-      done();
-    });
-  });
+  // after(function(done) {
+  //   socket.disconnect();
+  //   configTest.resetDb(function() {
+  //     done();
+  //   });
+  // });
 
   it('should successfully get a url', function(done) {
     socket.emit('push', {path:'/', data: utils.testObj});
@@ -42,12 +42,23 @@ describe('get', function() {
     });
   });
 
-  it('should successfuly get a static property', function(done) {
+  it('should successfuly get a static property at root', function(done) {
     configTest.bulkInsert('/', {activated: true}, function() {
       socket.once('/activated/-getUrlSuccess', function(data) {
+        data.data.should.equal(true);
         done();
       });
       socket.emit('getUrl', {url: '/activated/'});
+    });
+  });
+
+  it('should successfuly get a nested static property', function(done) {
+    configTest.bulkInsert('/', {activated: {nested: {nestedActivated: false}}}, function() {
+      socket.once('/activated/nested/nestedActivated/-getUrlSuccess', function(data) {
+        data.data.should.equal(false);
+        done();
+      });
+      socket.emit('getUrl', {url: '/activated/nested/nestedActivated/'});
     });
   });
 });
