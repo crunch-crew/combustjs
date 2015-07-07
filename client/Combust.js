@@ -269,11 +269,14 @@ Combust.prototype.on = function(eventType, callback) {
       socket.emit('getUrlChildren', {url: path});
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //calls callback on all current children
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      data.forEach(function(child) {
-        callback(child);
-      });
+      //getUrlChildren returns null if path points to a static property
+      if (data !== null) {
+        //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+        data.forEach(function(child) {
+          //calls callback on all current children
+          callback(child);
+        });
+      }
       socket.on(path + '-child_added', function(data) {
         //call callback on new child
         callback(data);

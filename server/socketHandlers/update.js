@@ -6,7 +6,8 @@ var parseToObj = require('../utils/parseToObj');
 var bubbleUp = require('../utils/bubbleUp');
 var updateByFilterQuery = require('../rethinkQuery/updateByFilterQuery');
 var insertQuery = require('../rethinkQuery/insertQuery');
-
+var setDifference = require('../utils/setDifference');
+var setEmitter = require('../utils/setEmitter');
 
 exports.setup = function(socket, io) {
   /**
@@ -49,12 +50,12 @@ exports.setup = function(socket, io) {
         // Insert those rows for which were not replaced AND were not changed during the update attempt
         if (!result.replaced && !result.unchanged){
           insertQuery(rows[counter], function(result) {
-            bubbleUp('child_added', updateRequest.path, socket, rows[counter]);
+          // bubbleUp('child_added', updateRequest.path, io, rows[counter]);
           });
         } else {
           //this was an update; refine it further based on the attributes in results
           // for now simply emit child changed
-          bubbleUp('child_changed', updateRequest.path, socket, rows[counter]);
+          // bubbleUp('child_changed', updateRequest.path, io, rows[counter]);
         }
         counter++;
         if (counter < rows.length) {
@@ -64,6 +65,13 @@ exports.setup = function(socket, io) {
         if (counter === rows.length -1) {
           //emit the success event back to the user and any response here for use for subsequent requests by client
           socket.emit(updateRequest.path + '-updateSuccess', {updated: true});
+          setDifference(updateRequest.path, updateRequest.data, function(diff) {
+            //update method should not emit child_removed events because it doesn't delete anything
+            for (var key in diff.emitEvents) {
+              diff.emitEvents[key].child_removed = [];
+            }
+            setEmitter(diff.emitEvents, io);
+          });
           //emit to clients listening for value event at this url
           // bubbleUp('child_changed', updateRequest.path, socket);
         }

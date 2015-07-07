@@ -62,6 +62,10 @@ var setDifference = function(setPath, inputObject, callback) {
     of the current path based on the change that is happening at that path*/
     var compareObjects = function(path, newObject, oldObject) {
       var inputData;
+      //added to prevent server crash
+      if (oldObject === null) {
+        oldObject = {};
+      }
       for(var prop in newObject) {
         if(newObject[prop] === null || newObject[prop] === undefined) {
           initializeParentPaths(emitEvents, path, prop);
@@ -71,7 +75,7 @@ var setDifference = function(setPath, inputObject, callback) {
           bubbleUp(emitEvents, 'child_removed', path + prop + '/', inputObject, inputData);
           deleteProps.push(path + prop + '/');
         }
-        else if(oldObject[prop] === undefined) {
+        else if (oldObject[prop] === undefined) {
           inputData = {};
           inputData[prop] = newObject[prop];
           initializeParentPaths(emitEvents, path, prop);

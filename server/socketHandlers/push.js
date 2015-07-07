@@ -70,9 +70,6 @@ exports.setup = function(socket, io) {
 					}
 					parentRows = parseToRows(newObj[neededPath[0]], rootPath, neededPath[0]);
 				}
-				console.log('im here ', neededPath);
-				console.log(parentRows);
-				console.log(newObj);
 				insertQuery(parentRows, function(result) {
 					insertQuery({}, function(result) {
 						var generatedKey = result.generated_keys[0];
@@ -88,7 +85,6 @@ exports.setup = function(socket, io) {
 								socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
 								//emit to clients listening for child add events at this url
 								// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
-								// console.log(originalRequest);
 			          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
 							});
 						});
@@ -110,7 +106,6 @@ exports.setup = function(socket, io) {
 							socket.emit(originalRequest.path + '-pushSuccess', {created: true, key: generatedKey});
 							//emit to clients listening for child add events at this url
 							// io.to(original.path + "-" + "child_added").emit(original.path + "-" + "child_added", original.data);
-							// console.log(originalRequest);
 		          bubbleUp('child_added', originalRequest.path, io, originalRequest.data);
 						});
 					});

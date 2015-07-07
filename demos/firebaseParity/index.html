@@ -101,6 +101,24 @@
             child3: 'child3 Intial'
           };
 
+          var testUpdateObj2 = {
+            child1: {
+              child11: "child 11 Initial",
+              // child12: {
+              //   child121: {child1211: "child 1211 Initial"}
+              // },
+              child13: {
+                child131: "Child 131 CHANGED in SET"
+              },
+              child14: "Child 14 ADDED in SET"
+            },
+            child2: {
+              child21: "child 21 Initial"
+            },
+            child3: 'child3 Intial',
+            child4: 'hi'
+          };
+
       $('#setAction').on('click', function(){
         rootRef.set(testObj);
       });
@@ -110,7 +128,7 @@
       });
 
       $('#updateAction').on('click', function(){
-        rootRef.set(testUpdateObj);
+        rootRef.update(testUpdateObj2);
       });
 
       $('#removeAction').on('click', function(){

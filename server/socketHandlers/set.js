@@ -13,6 +13,7 @@ var config = require('../config');
 var getParent = require('../utils/getParent');
 var deleteQuery = require('../utils/deleteLogic');
 var setEmitter = require('../utils/setEmitter');
+var deleteLogic = require('../utils/deleteLogic');
 
 exports.setup = function(socket, io) {
   /**
@@ -153,9 +154,7 @@ exports.setup = function(socket, io) {
               });
             });
 
-            console.log('addRows: ', addRows);
             insertQuery(addRows, function(result) {
-              // console.log('insertquery result: ', result);
               var updateId;
               diff.changeProps.forEach(function(prop) {
                 if (typeof prop[1] !== 'object') {
@@ -238,7 +237,7 @@ exports.setup = function(socket, io) {
           if (diff.deleteProps.length > 0) {
             diff.deleteProps.forEach(function(deleteProp) {
               pathToDelete = setRequest.path.slice(0, setRequest.path.length - 1) + deleteProp;
-              deleteQuery(pathToDelete, function() {
+              deleteLogic(pathToDelete, function() {
                 addAllProps();
               });
             });
