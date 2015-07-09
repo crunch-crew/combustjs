@@ -8,6 +8,8 @@ var parser = require('body-parser');
 var config = require('./config');
 var r = require('rethinkdb');
 var bcrypt = require('bcrypt');
+var apiRouteHandlers = require('./api/apiRouteHandlers');
+
 app.use(parser.json());
 
 //cors
@@ -21,6 +23,9 @@ var signup = require('./authentication/signup');
 var authenticate = require('./authentication/authenticate');
 app.post('/signup', signup);
 app.post('/authenticate', authenticate);
+
+//api
+app.get('/api*', apiRouteHandlers.getRoute); 
 
 //if deployed to heroku will use heroku port, otherwise on local machine will use port 3000
 var port = process.env.port || 3000;

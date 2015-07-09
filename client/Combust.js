@@ -2,6 +2,7 @@
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var io = require('socket.io-client');
 var localStorage = require('./specs/utils/localStorage')();
+var Payload = require('./Payload');
 
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
@@ -269,17 +270,21 @@ Combust.prototype.on = function(eventType, callback) {
       socket.emit('getUrlChildren', {url: path});
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      //wrap data in payload
+      var childrenPayload = new Payload(data);
       //getUrlChildren returns null if path points to a static property
       if (data !== null) {
         //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-        data.forEach(function(child) {
+        childrenPayload.forEach(function(child) {
           //calls callback on all current children
           callback(child);
         });
       }
       socket.on(path + '-child_added', function(data) {
+        //wrap data in payload
+        var payload = new Payload(data);
         //call callback on new child
-        callback(data);
+        callback(payload);
       });
     });
     socket.emit("subscribeUrlChildAdded", {url: path});
@@ -289,28 +294,20 @@ Combust.prototype.on = function(eventType, callback) {
     socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
       // socket.emit('getUrlChildren', {url: path});
       socket.on(path + '-child_changed', function(data) {
-        callback(data);
+        var payload = new Payload(data);
+        callback(payload);
       });
     });
-    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
-    //   data.forEach(function(child) {
-    //     callback(child);
-    //   });
-    // });
     socket.emit("subscribeUrlChildChanged", {url: path});
   }
   if (eventType === "child_removed") {
     socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
       // socket.emit('getUrlChildren', {url: path});
       socket.on(path + '-child_removed', function(data) {
-        callback(data);
+        var payload = new Payload(data);
+        callback(payload);
       });
     });
-    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
-    //   data.forEach(function(child) {
-    //     callback(child);
-    //   });
-    // });
     socket.emit("subscribeUrlChildRemoved", {url: path});
   }
   //changed this to trigger the callback once on whatever value is currently in the db and then listen for changes
@@ -319,12 +316,11 @@ Combust.prototype.on = function(eventType, callback) {
       socket.emit('getUrl', {url: path});
     });
     socket.once(path + "-getUrlSuccess", function(data) {
-      // data.forEach(function(child) {
-      //   callback(child);
-      // });
-      callback(data);
+      var urlPayload = new Payload(data);
+      callback(urlPayload.val());
       socket.on(path + '-value', function(data) {
-        callback(data);
+        var payload = new Payload(data);
+        callback(payload);
       });
     });
     socket.emit("subscribeUrlValue", {url: path});
