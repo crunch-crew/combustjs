@@ -34,13 +34,13 @@ describe('on', function() {
     setTimeout(function() {
       authRef.push({username: 'otherUser'});
     },50);
-    authRef.on('child_added', function(data) {
+    authRef.on('child_added', function(payload) {
       timesCalled++;
       if(timesCalled === 1) {
-        data.username.should.equal('authUser');
+        payload.val().username.should.equal('authUser');
       }
       if(timesCalled === 2) {
-        data.username.should.equal('otherUser');
+        payload.val().username.should.equal('otherUser');
         done();
       }
     });
