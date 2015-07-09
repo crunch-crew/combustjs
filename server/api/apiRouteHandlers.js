@@ -4,8 +4,7 @@ var apiToPath = require('./apiToPath');
 /**
 *@apiGroup REST API
 *@apiName GET
-*@api {GET} /api/* Request JSON data for a specified path. Anything after '/api/' will be interpreted as the path. For example, '/api/users/' will return
-*all the users in the database. Requesting '/api/' by itself will return root.
+*@api {GET} /api/* Request JSON data for a specified path.
 *
 *@apiSuccess {JSON} pathData JSON data that represents the data at the requested path.
 */
