@@ -3,7 +3,7 @@ var apiToPath = require('./apiToPath');
 
 var getRoute = function(req, res) {
   getQuery(apiToPath(req.url), function(getQueryResult) {
-    res.json(getQueryResult);
+    res.status(200).json(getQueryResult);
   });
 };
 
