@@ -2,6 +2,9 @@ var should = require('should');
 var r = require('rethinkdb');
 var db = require('../db');
 var configTest = require('./configTest');
+var resetDb = require('./utils/resetDb');
+var authenticateSocket = require('./utils/authenticateSocket');
+var bulkInsert = require('./utils/bulkInsert');
 
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
@@ -11,10 +14,9 @@ var setDifference = require('../utils/setDifference');
 describe('setDifference', function() {
   var socket;
   var insertDb = function(path, data, callback) {
-    // path = '/tests/';
-    configTest.resetDb(function() {
+    resetDb(function() {
       db.connect(function(conn) {
-        configTest.bulkInsert(path, data, function() {
+        bulkInsert(path, data, function() {
           callback();
         });
       })
@@ -22,8 +24,8 @@ describe('setDifference', function() {
   }
 
   before(function(done) {
-    configTest.resetDb(function() {
-      configTest.authenticateSocket(function(newSocket, newAgent) {
+    resetDb(function() {
+      authenticateSocket(function(newSocket, newAgent) {
         socket = newSocket;
         done();
       });
@@ -31,7 +33,7 @@ describe('setDifference', function() {
   });
 
   after(function(done) {
-    configTest.resetDb(function() {
+    resetDb(function() {
       done();
     });
   });
