@@ -15,4 +15,3 @@ var getRoute = function(req, res) {
 };
 
 exports.getRoute = getRoute;
-
