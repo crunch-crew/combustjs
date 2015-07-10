@@ -1,10 +1,16 @@
+var bubbleDown = require('./bubbleDown');
+
 var setEmitter = function(emitEvents, io) {
   var childAdded = function(newChild) {
     io.to(path + '-child_added').emit(path + '-child_added' , newChild);
-    // console.log('emitted child_added event: ', path + '-child_added', ' to room: ', path + '-child_added', ' with data: ', newChild);
+    bubbleDown(newChild, path, 'child_added', io);
+    bubbleDown(newChild, path, 'value', io);
   };
   var childRemoved = function(removedChild) {
-      io.to(path + '-child_removed').emit(path + '-child_removed' , removedChild);
+    // console.log('inside setEmitter: Path :', path, 'childremoved : ', removedChild);
+    io.to(path + '-child_removed').emit(path + '-child_removed' , removedChild);
+    bubbleDown(removedChild, path, 'child_removed', io);
+    bubbleDown(removedChild, path, 'value', io);
       // console.log('emitted child_removed event: ', path + '-child_removed', ' to room: ', path + '-child_removed', ' with data: ', removedChild);
   };
   for (var path in emitEvents) {

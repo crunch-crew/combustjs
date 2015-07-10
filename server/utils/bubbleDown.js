@@ -1,46 +1,51 @@
-var bubbleDown = function(obj, path) {
-  var rows = [];
+var appendProp = require('./appendProp');
+var getParent = require('./getParent');
+var emitEvent = require('./emitEvent');
 
-  var recurse = function(obj, path) {
-    // var path = path || '/';
-    var nonObjs = {};
-    nonObjs.path = path;
-    nonObjs._id = _id;
-    // checks if obj is an array, if true sets attribute array
-    if(_isArray) {
-      nonObjs._isArray = true;
-      nonObjs._length = 0;
-    }
-    path = (path === null) ? _id : path + _id + "/";
+var bubbleDown = function(obj, path, event, io) {
+  var recurse = function(obj, path, depth) {
+    var currentPath;
+    depth = depth ? depth : 0;
     for (var key in obj) {
-      if (Array.isArray(obj[key])) {
-        if(_isArray) {
-          nonObjs._length++;
-          obj[key]._partArray = true;
+      // test case for arrays no idea if it works yet
+      // if (Array.isArray(obj[key])) {
+      //   currentPath = appendProp(path, key);
+      //   emitEvent(currentPath, event, obj[key], io, depth);
+      //   for(var i = 0; i < obj[key].length; i++) {
+      //     currentPath = appendProp(currentPath, i);
+      //     emitEvent(currentPath, event, obj[key][i], io, depth);
+      //     if(obj[key][i] === 'object') {
+      //       recurse(obj[key[i]], currentPath, depth + 1);
+      //     }
+      //     currentPath = getParent(currentPath);
+      //   }
+      // }
+      //checks if the value at the property is a object, calls emitEvent on the event type and path then recurses deeper
+      if(typeof obj[key] === "object") {
+        currentPath = appendProp(path, key);
+        if(event === 'value') {
+          emitEvent(currentPath, event, obj[key], io, depth);
         }
-        recurse(obj[key], path, key, true);
-      }
-      else if(typeof obj[key] === "object") {
-        if(_isArray) {
-          nonObjs._length++;
-          obj[key]._partArray = true;
+        else {
+          emitEvent(currentPath, event, obj, io, depth);
         }
-        recurse(obj[key], path, key);
+        recurse(obj[key], currentPath, depth + 1);
       }
-      else if (typeof obj[key] === "function") {
-        if(_isArray) nonObjs._length++;
-        nonObjs[key] = JSON.stringify(obj[key]);
-      }
+      //else, it is a static property and it will call emitEvent on the path
       else {
-        if(_isArray) nonObjs._length++;
-        nonObjs[key] = obj[key];
+        if(event === 'value') {
+          currentPath = appendProp(path, key);
+          emitEvent(currentPath, event, obj[key], io, depth);
+        }
+        else {
+          currentPath = appendProp(path, key);
+          emitEvent(currentPath, event, obj, io, depth);
+        }
       }
     }
-    rows.push(nonObjs);
   };
 
-  recurse(obj,path, _id);
-  return rows;
+  recurse(obj ,path);
 };
 
 module.exports = bubbleDown;
