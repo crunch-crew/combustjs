@@ -35,17 +35,5 @@ var io = socketSetup.setup(server);
 db.connect(dbListeners.setup, io);
 console.log("Express server listening on %d in %s mode", port, app.settings.env);
 
-
 exports.app = app;
 exports.io =  io;
-
-
-//contains a setup function that adds web sockets to the server
-
-// app.use(parser.urlencoded({extended: true}));
-
-// app.use(session({
-//  secret: 'chillestWhales',
-//  resave: false,
-//  saveUninitialized: false
-// }));

@@ -6,6 +6,9 @@ var parseToObj = require('../utils/parseToObj');
 var should = require('should');
 var supertest = require('supertest');
 var configTest = require('./configTest');
+var resetDb = require('./utils/resetDb');
+var authenticateSocket = require('./utils/authenticateSocket');
+var bulkInsert = require('./utils/bulkInsert');
 
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
@@ -14,8 +17,8 @@ describe('get', function() {
   var socket;
   var agent;
   before(function(done) {
-    configTest.resetDb(function() {
-      configTest.authenticateSocket(function(newSocket, newAgent) {
+    resetDb(function() {
+      authenticateSocket(function(newSocket, newAgent) {
         socket = newSocket;
         agent = newAgent;
         done();
@@ -23,12 +26,12 @@ describe('get', function() {
     });
   });
 
-  // after(function(done) {
-  //   socket.disconnect();
-  //   configTest.resetDb(function() {
-  //     done();
-  //   });
-  // });
+  after(function(done) {
+    socket.disconnect();
+    resetDb(function() {
+      done();
+    });
+  });
 
   it('should successfully get a url', function(done) {
     socket.emit('push', {path:'/', data: utils.testObj});
@@ -43,7 +46,7 @@ describe('get', function() {
   });
 
   it('should successfuly get a static property at root', function(done) {
-    configTest.bulkInsert('/', {activated: true}, function() {
+    bulkInsert('/', {activated: true}, function() {
       socket.once('/activated/-getUrlSuccess', function(data) {
         data.data.should.equal(true);
         done();
@@ -53,7 +56,7 @@ describe('get', function() {
   });
 
   it('should successfuly get a nested static property', function(done) {
-    configTest.bulkInsert('/', {activated: {nested: {nestedActivated: false}}}, function() {
+    bulkInsert('/', {activated: {nested: {nestedActivated: false}}}, function() {
       socket.once('/activated/nested/nestedActivated/-getUrlSuccess', function(data) {
         data.data.should.equal(false);
         done();

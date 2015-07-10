@@ -6,16 +6,18 @@ var parseToObj = require('../utils/parseToObj');
 var should = require('should');
 var supertest = require('supertest');
 var configTest = require('./configTest');
+var resetDb = require('./utils/resetDb');
+var authenticateSocket = require('./utils/authenticateSocket');
+var bulkInsert = require('./utils/bulkInsert');
 
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
 
 xdescribe('setEmitter', function() {
   var insertDb = function(path, data, callback) {
-    // path = '/tests/one/two/';
-    configTest.resetDb(function() {
+    resetDb(function() {
       db.connect(function(conn) {
-        configTest.bulkInsert(path, data, function() {
+        bulkInsert(path, data, function() {
           callback();
         });
       })
@@ -24,8 +26,8 @@ xdescribe('setEmitter', function() {
   var socket;
   var agent;
   beforeEach(function(done) {
-    configTest.resetDb(function() {
-      configTest.authenticateSocket(function(newSocket, newAgent) {
+    resetDb(function() {
+      authenticateSocket(function(newSocket, newAgent) {
         socket = newSocket;
         agent = newAgent;
         done();
@@ -35,7 +37,7 @@ xdescribe('setEmitter', function() {
 
   after(function(done) {
     socket.disconnect();
-    configTest.resetDb(function() {
+    resetDb(function() {
       done();
     });
   });

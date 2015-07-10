@@ -6,6 +6,8 @@ var parseToObj = require('../utils/parseToObj');
 var should = require('should');
 var supertest = require('supertest');
 var configTest = require('./configTest');
+var resetDb = require('./utils/resetDb');
+var authenticateSocket = require('./utils/authenticateSocket');
 
 var utils = configTest.utils;
 var serverAddress = configTest.serverAddress;
@@ -14,8 +16,8 @@ describe('getUrlChildren', function() {
   var socket;
   var agent;
   before(function(done) {
-    configTest.resetDb(function() {
-      configTest.authenticateSocket(function(newSocket, newAgent) {
+    resetDb(function() {
+      authenticateSocket(function(newSocket, newAgent) {
         socket = newSocket;
         agent = newAgent;
         done();
@@ -25,7 +27,7 @@ describe('getUrlChildren', function() {
 
   after(function(done) {
     socket.disconnect();
-    configTest.resetDb(function() {
+    resetDb(function() {
       done();
     });
   });
