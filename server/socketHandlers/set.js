@@ -1,6 +1,7 @@
 var parseToRows = require('../utils/parseToRows');
 var parseToObj = require('../utils/parseToObj');
 var bubbleUp = require('../utils/bubbleUp');
+var bubbleDown = require('../utils/bubbleDown');
 var getParent = require('../utils/getParent');
 var setDifference = require('../utils/setDifference');
 var getQuery = require('../rethinkQuery/getQuery');
@@ -216,6 +217,7 @@ exports.setup = function(socket, io) {
                     if(parentPath) {
                       bubbleUp('value', parentPath, io);
                     }
+                    // bubbleDown(setRequest.data, setRequest.path, 'value', io);
                     setEmitter(diff.emitEvents, io);
                   } else {
                     update();
@@ -228,6 +230,7 @@ exports.setup = function(socket, io) {
                 if(parentPath) {
                   bubbleUp('value', parentPath, io);
                 }
+                // bubbleDown(setRequest.data, setRequest.path, 'value', io);
                 setEmitter(diff.emitEvents, io);
               } else {
                 update();
@@ -274,6 +277,8 @@ exports.setup = function(socket, io) {
           socket.emit(setRequest.path + '-setSuccess', {
             success: true
           });
+          bubbleDown(setRequest.data, setRequest.path, 'value', io);
+          bubbleDown(setRequest.data, setRequest.path, 'child_added', io);
           bubbleUp('value', setRequest.path, io);
         });
       }

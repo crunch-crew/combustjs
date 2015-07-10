@@ -70,9 +70,105 @@ module.exports = {
       password: "authPassword",
       email: "authEmail"
     },
+    authUser2: {
+      username: "authUser2",
+      password: "authPassword2",
+      email: "authEmail2"
+    },
     createAgent: function(server) {
       server = server || this.serverAddress;
       return supertest.agent(server);
     },
+  },
+  authenticateSocket: function(callback) {
+    var agent = this.utils.createAgent(this.serverAddress);
+    var that = this;
+      agent.post('/signup').send(that.utils.authUser).expect(201).end(function(err, response) {
+        if (err) throw err;
+        else {
+          agent.post('/authenticate').send(that.utils.authUser).expect(200).end(function(err, response) {
+            //store the web token
+            token = response.body.token;
+            if (err) throw err;
+            else {
+              //authenticate the client with the webtoken - used for remaining tests
+              socket = io.connect(that.serverAddress, {
+                forceNew: true,
+                //send the web token with the initial websocket handshake
+                query: 'token=' + token
+              });
+              socket.on('connectSuccess', function() {
+                callback(socket, agent);
+              });
+            }
+          });
+        }
+      });
+  },
+  authenticateSocket2: function(callback) {
+    var agent = this.utils.createAgent(this.serverAddress);
+    var that = this;
+      agent.post('/signup').send(that.utils.authUser2).expect(201).end(function(err, response) {
+        if (err) throw err;
+        else {
+          agent.post('/authenticate').send(that.utils.authUser2).expect(200).end(function(err, response) {
+            //store the web token
+            token = response.body.token;
+            if (err) throw err;
+            else {
+              //authenticate the client with the webtoken - used for remaining tests
+              socket = io.connect(that.serverAddress, {
+                forceNew: true,
+                //send the web token with the initial websocket handshake
+                query: 'token=' + token
+              });
+              socket.on('connectSuccess', function() {
+                callback(socket, agent);
+              });
+            }
+          });
+        }
+      });
+  },
+  resetDb: function(callback) {
+    var that = this;
+    db.connect(function(conn) {
+      r.db(that.utils.dbName).table(that.utils.tableName).delete().run(conn, function(err, cursor) {
+        if (err) throw err;
+        r.db(that.utils.dbName).table(that.utils.tableName).insert({path: null, _id: '/'}).run(conn, function(err, cursor) {
+          r.db(that.utils.dbName).table(that.utils.tableName).insert({path: '/', _id: 'users'}).run(conn, function(err, cursor) {
+            if (err) throw (err);
+            callback();
+          });
+        });
+      });
+    });
+  },
+  bulkInsert: function(path, data, callback) {
+    var urlArray;
+    var _idFind;
+    var rootString;
+    if (path === '/') {
+        rootString = null;
+        _idFind = "/";
+        childrenString = '/';
+        children_idFind = "";
+    }
+      //all other paths - this is just string processing to get it into the proper format for querying the db
+    else {
+      urlArray = path.split('/');
+      //urlArray will look something like [users, messages, comments]
+      urlArray = urlArray.slice(1,urlArray.length-1);
+
+      //sets the rootString which is the path we will use in dbqueries
+      rootString = (urlArray.slice(0, urlArray.length - 1).join("/")) + "/";
+      _idFind = urlArray[urlArray.length-1];
+      childrenString = rootString;
+      children_idFind = urlArray[urlArray.length-1];
+    }
+    var rows = parseToRows(data, rootString, _idFind);
+    insertQuery(rows, function(result) {
+      callback();
+    });
   }
 };

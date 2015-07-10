@@ -17,15 +17,15 @@ describe('update()', function() {
         authRef = authenticatedCombust;
         socket = authRef.socket;
         done();
-      })
-    })
+      });
+    });
   });
 
   after(function(done) {
     config.resetDb(function() {
       socket.disconnect();
       done();
-    })
+    });
   });
 
   it('should update values for existing keys in the object in database at the current path', function(done) {
