@@ -5,7 +5,7 @@ var Payload = require('./Payload');
 //required for testing only - removed in production by grunt-strip-code
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var localStorage = require('./specs/utils/localStorage')();
-var Payload = require('./bower/lib/Payload');
+var Payload = require('./dist/lib/Payload');
 /* end-test-code */
 
 /**
