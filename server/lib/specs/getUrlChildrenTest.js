@@ -33,12 +33,16 @@ describe('getUrlChildren', function() {
   });
 
   it('should return an array with getUrlChildren', function(done) {
-    socket.once('/-getUrlChildrenSuccess', function(data) {
-      if(Array.isArray(data.data)) {
-        done();
-      }
+    socket.once('/-pushSuccess', function(key) {
+      socket.once('/-getUrlChildrenSuccess', function(data) {
+        if(Array.isArray(data.data)) {
+          data.data.length.should.eql(2);
+          done();
+        }
+      });
+      socket.emit('getUrlChildren', {url: '/'});
     });
-    socket.emit('getUrlChildren', {url: '/'});
+    socket.emit('push', {path: '/', data: {test : 'something'}});
   });
 });
 
