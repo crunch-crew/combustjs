@@ -4,6 +4,7 @@ rethinkdb_data/
 docs/
 client/index.html
 npm-debug.log
-/server/doc
+/server/docs
+/server/server.js
 /client/docs
 .DS_Store

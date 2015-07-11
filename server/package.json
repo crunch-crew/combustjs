@@ -1,11 +1,10 @@
 {
   "name": "combust-js",
   "version": "0.0.0",
-  "description": "CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without
-    writing a line of back-end code.",
+  "description": "CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without writing a line of back-end code.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha lib/specs"
   },
   "author": "CombustJS Team (Richard Artoul, Jack Zhang, Kuldeep Dhanjal, and Alex Mendez)",
   "license": "MIT",

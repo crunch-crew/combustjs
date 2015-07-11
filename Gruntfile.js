@@ -23,7 +23,7 @@ module.exports = function(grunt) {
         options: {
           reporter: 'spec',
           },
-        src: ['server/specs/*.js', 'client/specs/*.js']
+        src: ['server/lib/specs/*.js', 'client/specs/*.js']
       }
     },
 
@@ -66,7 +66,7 @@ module.exports = function(grunt) {
         command: 'yuidoc -o ./client/docs ./client/.'
       },
       apiDoc: {
-        command: 'apidoc -i ./server -o ./server/doc'
+        command: 'apidoc -i ./server/lib -o ./server/docs'
       } 
     }
   });

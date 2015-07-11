@@ -36,4 +36,4 @@ module.exports = function(app, port) {
   console.log("Express server listening on %d in %s mode", port, app.settings.env);
  
   return server;
-}
+};
