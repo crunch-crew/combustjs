@@ -34,7 +34,7 @@ describe('getUrlChildren', function() {
 
   it('should return an array with getUrlChildren', function(done) {
     socket.once('/-getUrlChildrenSuccess', function(data) {
-      if(Array.isArray(data)) {
+      if(Array.isArray(data.data)) {
         done();
       }
     });

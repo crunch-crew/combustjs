@@ -277,7 +277,6 @@ exports.setup = function(socket, io) {
           socket.emit(setRequest.path + '-setSuccess', {
             success: true
           });
-          console.log('in set');
           bubbleDown(setRequest.data, setRequest.path, 'value', io);
           bubbleDown(setRequest.data, setRequest.path, 'child_added', io);
           bubbleUp('value', setRequest.path, io);
