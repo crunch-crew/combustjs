@@ -29,7 +29,7 @@ exports.setup = function(socket) {
           result.id = key; 
           children.push(result[key]);
         }
-        socket.emit(getRequest.url + '-getUrlChildrenSuccess', children);
+        socket.emit(getRequest.url + '-getUrlChildrenSuccess', {success: true, data: children});
       }
     });
 	});
