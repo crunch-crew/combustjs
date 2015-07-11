@@ -21,7 +21,7 @@ exports.setup = function(socket) {
     getQuery(getRequest.url, function(result) {
       //static property case - result is just a value
       if (!(result instanceof Object)) {
-        socket.emit(getRequest.url + '-getUrlChildrenSuccess', null);
+        socket.emit(getRequest.url + '-getUrlChildrenSuccess', {success: false, data: null});
       }
       //non-static property case, result will be an object
       else {
@@ -29,7 +29,7 @@ exports.setup = function(socket) {
           result.id = key; 
           children.push(result[key]);
         }
-        socket.emit(getRequest.url + '-getUrlChildrenSuccess', children);
+        socket.emit(getRequest.url + '-getUrlChildrenSuccess', {success: true, data: children});
       }
     });
 	});
