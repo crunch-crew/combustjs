@@ -30,7 +30,25 @@ module.exports = function(grunt) {
     uglify: {
       dist: {
         files: {
-          '.client/dist/<%= pkg.name %>.min.js': ['<%= concat.dist %>']
+          'client/dist/combust.min.js': 'client/dist/combust.min.js'
+        }
+      }
+    },
+
+    strip_code: {
+      options: {},
+      target: {
+        files: [
+          {src: 'client/Combust.js', dest: 'client/dist/lib/Combust.js'},
+          {src: 'client/Payload.js', dest: 'client/dist/lib/Payload.js'}
+        ]
+      }
+    },
+
+    browserify: {
+      dist: {
+        files: {
+          'client/dist/combust.min.js': ['client/dist/lib/Combust.js', 'client/dist/lib/Payload.js']
         }
       }
     },
@@ -79,9 +97,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-nodemon');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-shell');
+  grunt.loadNpmTasks('grunt-strip-code');
+  grunt.loadNpmTasks('grunt-browserify');
 
-  grunt.registerTask('default', ['jshint', 'mochaTest', 'shell']);
+  grunt.registerTask('default', ['jshint', 'mochaTest', 'shell', 'bower']);
   grunt.registerTask('dev', ['mochaTest', 'shell']);
   grunt.registerTask('watchtest', ['watch:scripts']);
+  grunt.registerTask('test', ['mochaTest']);
+  grunt.registerTask('bower', ['strip_code', 'browserify', 'uglify']);
 
 };
