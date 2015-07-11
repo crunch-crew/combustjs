@@ -30,7 +30,7 @@ module.exports = function(grunt) {
     uglify: {
       dist: {
         files: {
-          'client/bower/combust.min.js': 'client/bower/combust.min.js'
+          'client/dist/combust.min.js': 'client/dist/combust.min.js'
         }
       }
     },
@@ -39,8 +39,8 @@ module.exports = function(grunt) {
       options: {},
       target: {
         files: [
-          {src: 'client/Combust.js', dest: 'client/bower/lib/Combust.js'},
-          {src: 'client/Payload.js', dest: 'client/bower/lib/Payload.js'}
+          {src: 'client/Combust.js', dest: 'client/dist/lib/Combust.js'},
+          {src: 'client/Payload.js', dest: 'client/dist/lib/Payload.js'}
         ]
       }
     },
@@ -48,7 +48,7 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         files: {
-          'client/bower/combust.min.js': ['client/bower/lib/Combust.js', 'client/bower/lib/Payload.js']
+          'client/dist/combust.min.js': ['client/dist/lib/Combust.js', 'client/dist/lib/Payload.js']
         }
       }
     },
