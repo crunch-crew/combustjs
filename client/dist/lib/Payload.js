@@ -1,5 +1,3 @@
-/* test-code */
-/* end-test-code */
 
 var Payload = function(data) {
   this._storage = data;

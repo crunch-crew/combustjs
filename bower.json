@@ -1,0 +1,47 @@
+{
+  "name": "combust-js",
+  "version": "1.0.0",
+  "authors": [
+    "Richard Artoul",
+    "Kuldeep Dhanjal",
+    "Jack Zhang",
+    "Alex Mendez"
+  ],
+  "description": "Client library for interacting with the noBackend framework CombustJS.",
+  "main": "combust.min.js",
+  "keywords": [
+    "combust",
+    "combustjs",
+    "combust-js",
+    "nobackend",
+    "livesync",
+    "live-sync",
+    "realtime",
+    "real-time",
+    "publish",
+    "subscribe"
+  ],
+  "license": "MIT",
+  "homepage": "http://www.combustjs.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "specs",
+    "server",
+    "docs",
+    "Combust.js",
+    "demos",
+    "endtoendtest.html",
+    "Gruntfile.js",
+    "package.json",
+    "readme",
+    "rethinkdb_data",
+    "client/Combust.js",
+    "client/docs",
+    "client/Payload.js",
+    "client/specs"
+  ]
+}

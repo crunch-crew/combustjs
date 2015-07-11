@@ -2,13 +2,14 @@ var io = require('socket.io-client');
 var configTest = require('../configTest')
 var utils = configTest.utils;
 
-var authenticateSocket = function(callback) {
+var authenticateSocket = function(callback, credentials) {
   var agent = utils.createAgent(configTest.serverAddress);
+  var credentials = credentials || utils.authUser;
   var that = this;
-    agent.post('/signup').send(utils.authUser).expect(201).end(function(err, response) {
+    agent.post('/signup').send(credentials).expect(201).end(function(err, response) {
       if (err) throw err;
       else {
-        agent.post('/authenticate').send(utils.authUser).expect(200).end(function(err, response) {
+        agent.post('/authenticate').send(credentials).expect(200).end(function(err, response) {
           //store the web token
           token = response.body.token;
           if (err) throw err;

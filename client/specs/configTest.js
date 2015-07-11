@@ -1,8 +1,8 @@
 var io = require('socket.io-client');
 var should = require('should');
 var r = require('rethinkdb');
-var db = require('../../server/db');
-var Combust = require('../Combust.js');
+var db = require('../../server/lib/db');
+var Combust = require('../Combust');
 var config = require('./configTest.js');
 
 module.exports = {
