@@ -1,0 +1,43 @@
+{
+  "name": "combust-js",
+  "version": "0.0.0",
+  "description": "CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without
+    writing a line of back-end code.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "CombustJS Team (Richard Artoul, Jack Zhang, Kuldeep Dhanjal, and Alex Mendez)",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.12.4",
+    "mocha": "^2.2.5",
+    "socket.io": "^1.3.5",
+    "superagent": "~1.2.0",
+    "supertest": "~1.0.1",
+    "rethinkdb": "~2.0.0-2",
+    "socket.io-client": "~1.3.5",
+    "chai": "~3.0.0",
+    "should": "~7.0.1",
+    "jsonwebtoken": "~5.0.2",
+    "bcrypt": "~0.8.3",
+    "body-parser": "~1.13.1",
+    "xmlhttprequest": "~1.7.0",
+    "cors": "~2.7.1",
+    "should": "~7.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.0.0",
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-contrib-jshint": "^0.11.2",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-mocha": "^0.4.12",
+    "grunt-mocha-test": "^0.12.7",
+    "grunt-nodemon": "^0.4.0",
+    "grunt-shell": "^1.1.2",
+    "mocha": "^2.2.5",
+    "should": "^7.0.1"
+  }
+}
