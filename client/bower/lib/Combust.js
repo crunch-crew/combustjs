@@ -1,12 +1,6 @@
 var io = require('socket.io-client');
 var Payload = require('./Payload');
 
-/* test-code */
-//required for testing only - removed in production by grunt-strip-code
-var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-var localStorage = require('./specs/utils/localStorage')();
-var Payload = require('./bower/lib/Payload');
-/* end-test-code */
 
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,

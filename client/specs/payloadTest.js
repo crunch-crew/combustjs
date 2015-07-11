@@ -1,4 +1,4 @@
-var Payload = require('../Payload');
+var Payload = require('../bower/lib/Payload');
 var should = require('should');
 
 describe('Payload', function() {
