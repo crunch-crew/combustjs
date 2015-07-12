@@ -275,18 +275,20 @@ Combust.prototype.on = function(eventType, callback) {
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
       //wrap data in payload
-      var childrenPayload = new Payload(data.data);
+      // console.log(" ===>  in Combust ON  data  : ", data);
+      var childrenPayload = new Payload(data.data, path);
       //getUrlChildren returns null if path points to a static property
       if (data.data !== null) {
         //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
         childrenPayload.forEach(function(child) {
           //calls callback on all current children
+          // console.log('in forEACH : with child: ', child, 'child.val :', child.val());
           callback(child);
         });
       }
       socket.on(path + '-child_added', function(data) {
         //wrap data in payload
-        var payload = new Payload(data);
+        var payload = new Payload(data, path);
         //call callback on new child
         callback(payload);
       });
@@ -298,7 +300,7 @@ Combust.prototype.on = function(eventType, callback) {
     socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
       // socket.emit('getUrlChildren', {url: path});
       socket.on(path + '-child_changed', function(data) {
-        var payload = new Payload(data);
+        var payload = new Payload(data.data, path);
         callback(payload);
       });
     });
@@ -308,7 +310,7 @@ Combust.prototype.on = function(eventType, callback) {
     socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
       // socket.emit('getUrlChildren', {url: path});
       socket.on(path + '-child_removed', function(data) {
-        var payload = new Payload(data);
+        var payload = new Payload(data.data, path);
         callback(payload);
       });
     });
@@ -320,10 +322,10 @@ Combust.prototype.on = function(eventType, callback) {
       socket.emit('getUrl', {url: path});
     });
     socket.once(path + "-getUrlSuccess", function(data) {
-      var urlPayload = new Payload(data);
-      callback(urlPayload.val());
+      var urlPayload = new Payload(data.data, path);
+      callback(urlPayload);
       socket.on(path + '-value', function(data) {
-        var payload = new Payload(data);
+        var payload = new Payload(data.data, path);
         callback(payload);
       });
     });
