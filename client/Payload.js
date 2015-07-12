@@ -1,10 +1,11 @@
 /* test-code */
 /* end-test-code */
 
+var isolateData = require('./isolateData');
+
 var Payload = function(data, path) {
   this._storage = data || null;
   this._ref = path;
-  console.log(" path is : ", this._ref, " and data is: ", this._storage);
 };
 
 Payload.prototype.val = function() {
@@ -27,19 +28,20 @@ Payload.prototype.exists = function(){
 };
 
 Payload.prototype.hasChildren = function() {
-  return (this._storage !== null && this._storage !== undefined);
+  return (this._storage !== null && this._storage !== undefined && Object.keys(this._storage).length > 0);
 };
 
 Payload.prototype.numChildren = function() {
-  return Object.keys(this._storage).length;
+  if (this._storage !== null && this._storage !== undefined) {
+    return Object.keys(this._storage).length;
+  }
+  else {
+    return 0;
+  }
 };
 
 Payload.prototype.hasChild = function(childPath) {
-  console.log("in hasChild PATH is  : ", childPath );
-  console.log("in hasChild isolateData returns : ", isolateData(childPath, this._storage));
-  console.log("in hasChild keys : ", Object.keys(isolateData(childPath, this._storage)));
-
-  return (Object.keys(isolateData(childPath, this._storage)).length > 0);
+  return isolateData(childPath, this._storage) !== undefined;
 };
 
 Payload.prototype.child = function(childPath) {
@@ -54,4 +56,4 @@ Payload.prototype.ref = function(){
   return this._ref;
 };
 
-// module.exports = Payload;
+module.exports = Payload;

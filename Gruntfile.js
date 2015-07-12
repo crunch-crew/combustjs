@@ -40,7 +40,8 @@ module.exports = function(grunt) {
       target: {
         files: [
           {src: 'client/Combust.js', dest: 'client/dist/lib/Combust.js'},
-          {src: 'client/Payload.js', dest: 'client/dist/lib/Payload.js'}
+          {src: 'client/Payload.js', dest: 'client/dist/lib/Payload.js'},
+          {src: 'client/isolateData.js', dest: 'client/dist/lib/isolateData.js'}
         ]
       }
     },
@@ -48,7 +49,7 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         files: {
-          'client/dist/combust.min.js': ['client/dist/lib/Combust.js', 'client/dist/lib/Payload.js']
+          'client/dist/combust.min.js': ['client/dist/lib/Combust.js', 'client/dist/lib/Payload.js', 'client/dist/lib/isolateData.js']
         }
       }
     },

@@ -1,11 +1,11 @@
-// var io = require('socket.io-client');
-// var Payload = require('./Payload');
+var io = require('socket.io-client');
+var Payload = require('./Payload');
 
 /* test-code */
 //required for testing only - removed in production by grunt-strip-code
-// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-// var localStorage = require('./specs/utils/localStorage')();
-// var Payload = require('./dist/lib/Payload');
+var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+var localStorage = require('./specs/utils/localStorage')();
+var Payload = require('./dist/lib/Payload');
 /* end-test-code */
 
 /**
@@ -403,4 +403,4 @@ Combust.prototype.unauthenticate = function() {
   localStorage.removeItem('token');
 };
 
-// module.exports = Combust;
+module.exports = Combust;

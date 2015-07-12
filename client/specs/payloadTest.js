@@ -22,4 +22,47 @@ describe('Payload', function() {
       done();
     });
   });
+
+  describe('exists()', function() {
+    it('should return false if storage is null', function() {
+      var payload = new Payload();
+      payload.exists().should.equal(false);
+    });
+    it('should return true if storage is not null', function() {
+      var payload = new Payload({msg: 'hi'});
+      payload.exists().should.equal(true);
+    });
+  });
+
+  describe('hasChildren()', function() {
+    it('should return false if storage is null', function() {
+      var payload = new Payload();
+      payload.hasChildren().should.equal(false);
+    });
+    it('should return false if storage is empty object', function() {
+      var payload = new Payload({});
+      payload.hasChildren().should.equal(false);
+    });
+    it('should return true if storage has children', function() {
+      var payload = new Payload({msg: 'hi'});
+      payload.hasChildren().should.equal(true);
+    });
+  });
+
+  describe('numChildren()', function() {
+    it('should return 0 if storage is null', function() {
+      var payload = new Payload();
+      payload.numChildren().should.equal(0);
+    });
+    it('should return 0 if storage is empty object', function() {
+      var payload = new Payload({});
+      payload.numChildren().should.equal(0);
+    });
+    it('should return number of children if storage has children', function() {
+      var payload = new Payload({msg: 'hi'});
+      payload.numChildren().should.equal(1);
+      var payload = new Payload({msg: 'hi', test: 'yo'});
+      payload.numChildren().should.equal(2);
+    });
+  });
 });
