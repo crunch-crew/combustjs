@@ -269,9 +269,9 @@ Combust.prototype.on = function(eventType, callback) {
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
       //wrap data in payload
-      var childrenPayload = new Payload(data);
+      var childrenPayload = new Payload(data.data);
       //getUrlChildren returns null if path points to a static property
-      if (data !== null) {
+      if (data.data !== null) {
         //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
         childrenPayload.forEach(function(child) {
           //calls callback on all current children
