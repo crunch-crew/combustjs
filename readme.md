@@ -1,6 +1,4 @@
-<snippet>
-  <content><![CDATA[
-# ${1:CombustJS}
+# CombustJS
 
 CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without writing a line of back-end code.
 
@@ -48,7 +46,3 @@ Primary Authors:
 
 ## License
 MIT
-
-]]></content>
-  <tabTrigger>readme</tabTrigger>
-</snippet>
