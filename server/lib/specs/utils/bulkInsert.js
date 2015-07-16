@@ -1,5 +1,4 @@
-var r = require('rethinkdb');
-var db = require('../../db');
+var r = require('../../db');
 var insertQuery = require('../../rethinkQuery/insertQuery');
 var parseToRows = require('../../utils/parseToRows');
 

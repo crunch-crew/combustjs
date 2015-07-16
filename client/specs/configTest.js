@@ -1,7 +1,6 @@
 var io = require('socket.io-client');
 var should = require('should');
-var r = require('rethinkdb');
-var db = require('../../server/lib/db');
+var r = require('../../server/lib/db');
 var Combust = require('../Combust');
 var config = require('./configTest.js');
 
@@ -61,18 +60,15 @@ module.exports = {
     }
   },
   resetDb: function(callback) {
-    var that = this;
-    db.connect(function(conn) {
-      r.db(that.utils.dbName).table(that.utils.tableName).delete().run(conn, function(err, cursor) {
-        if (err) throw err;
-        r.db(that.utils.dbName).table(that.utils.tableName).insert({path: null, _id: '/'}).run(conn, function(err, cursor) {
-          r.db(that.utils.dbName).table(that.utils.tableName).insert({path: '/', _id: 'users'}).run(conn, function(err, cursor) {
-            if (err) throw (err);
-            callback();
-          });
-        });
-      });
-    });
+    var utils = this.utils;
+    r.db(utils.dbName).table(utils.tableName).delete().run()
+    .then(function(result) {
+      return r.db(utils.dbName).table(utils.tableName).insert({path: null, _id: '/'}).run()
+    }).then(function(result) {
+      return r.db(utils.dbName).table(utils.tableName).insert({path: '/', _id: 'users'}).run()
+    }).then(function(result) {
+      callback();
+    }).error(function(error) {throw error});
   },
   combustToken: function(callback) {
     var that = this;

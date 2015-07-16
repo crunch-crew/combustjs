@@ -1,6 +1,5 @@
 var io = require('socket.io-client');
-var r = require('rethinkdb');
-var db = require('../db');
+var r = require('../db');
 var supertest = require('supertest');
 var parseToRows = require('../utils/parseToRows');
 var insertQuery = require('../rethinkQuery/insertQuery');

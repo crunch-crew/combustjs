@@ -1,9 +1,9 @@
-var db = require('../db');
-var r = require('rethinkdb');
+var r = require('../db');
 var config = require('../config');
 var parseToObj = require('../utils/parseToObj');
+var handleError = require('./handleError');
 
-var getNestedQuery = function(conn, path, callback) {
+var getNestedQuery = function(path, callback) {
    //handles edge case when accessing root path
   var urlArray;
   if (path === '/') {
@@ -20,23 +20,17 @@ var getNestedQuery = function(conn, path, callback) {
   var rootRow;
   var childrenRows;
 
-  r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run(conn, function(err, cursor) {
-    if (err) throw err;
-    cursor.toArray(function(err, result) {
-      //first one because query returns an array, even if there is only one result
-      rootRow = result[0];
-      //query to find all children of root node
-      r.db(config.dbName).table(config.tableName).filter(r.row('path').match(path + '*')).run(conn, function(err, cursor) {
-        if (err) throw err;
-        cursor.toArray(function(err, result) {
-          childrenRows = result;
-          if(callback) {
-            callback(parseToObj(rootRow, childrenRows));
-          }
-        });
-      });
+  r.db(config.dbName).table(config.tableName).filter({path: rootString, _id:_idFind}).run().then(function(result) {
+    //first one because query returns an array, even if there is only one result
+    rootRow = result[0];
+    //query to find all children of root node
+    r.db(config.dbName).table(config.tableName).filter(r.row('path').match(path + '*')).run().then(function(result) {
+      childrenRows = result;
+      if(callback) {
+        callback(parseToObj(rootRow, childrenRows));
+      }
     });
-  }); 
-}
+  }).error(handleError);
+};
 
 module.exports = getNestedQuery;

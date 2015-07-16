@@ -1,5 +1,3 @@
-var db = require('../db');
-var r = require('rethinkdb');
 var bubbleUp = require('../utils/bubbleUp.js');
 var config = require('../config');
 var parseToRows = require('../utils/parseToRows.js');
