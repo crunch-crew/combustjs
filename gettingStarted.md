@@ -1,8 +1,7 @@
 # Getting started with CombustJS - Chat Application
 
-1) Install and Setup a CombustJS server [insert link here]
+1) [Install and Setup a CombustJS server](readme.md)
 2) Use Bower to install the CombustJS client library - `bower install combust-js`
-3) Use Bower to install
 3) Create an index.html file with a simple input box, and add the CombustJS minified client library as a script tag, as well as a CDN for jquery
 
 ```

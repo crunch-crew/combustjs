@@ -113,6 +113,6 @@ module.exports = function(grunt) {
   grunt.registerTask('dev', ['mochaTest', 'shell']);
   grunt.registerTask('watchtest', ['watch:scripts']);
   grunt.registerTask('test', ['mochaTest']);
-  grunt.registerTask('bower', ['strip_code', 'browserify', 'uglify']);
+  grunt.registerTask('bower', ['strip_code', 'browserify']);
 
 };
