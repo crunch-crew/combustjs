@@ -8,18 +8,18 @@ var bubbleDown = function(obj, path, event, io) {
     depth = depth ? depth : 0;
     for (var key in obj) {
       // test case for arrays no idea if it works yet
-      // if (Array.isArray(obj[key])) {
-      //   currentPath = appendProp(path, key);
-      //   emitEvent(currentPath, event, obj[key], io, depth);
-      //   for(var i = 0; i < obj[key].length; i++) {
-      //     currentPath = appendProp(currentPath, i);
-      //     emitEvent(currentPath, event, obj[key][i], io, depth);
-      //     if(obj[key][i] === 'object') {
-      //       recurse(obj[key[i]], currentPath, depth + 1);
-      //     }
-      //     currentPath = getParent(currentPath);
-      //   }
-      // }
+      if (Array.isArray(obj[key])) {
+        currentPath = appendProp(path, key);
+        emitEvent(currentPath, event, obj[key], io, depth);
+        for(var i = 0; i < obj[key].length; i++) {
+          currentPath = appendProp(currentPath, i);
+          emitEvent(currentPath, event, obj[key][i], io, depth);
+          if(obj[key][i] === 'object') {
+            recurse(obj[key[i]], currentPath, depth + 1);
+          }
+          currentPath = getParent(currentPath);
+        }
+      }
       //checks if the value at the property is a object, calls emitEvent on the event type and path then recurses deeper
       if(typeof obj[key] === "object") {
         currentPath = appendProp(path, key);
