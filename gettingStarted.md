@@ -11,7 +11,7 @@
     <title>CombustJS Chat</title>
   </head>
   <body>
-  <script src="./bower_components/combust-js/client/dist/combust.min.js>"></script>
+  <script src="./bower_components/combust-js/client/dist/Combust.js>"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <form action="">
       <input type="text" id="messageinput"></input>
@@ -52,7 +52,7 @@ var startApp = function() {
     <title>CombustJS Chat</title>
   </head>
   <body>
-  <script src="./bower_components/combust-js/client/dist/combust.min.js>"></script>
+  <script src="./bower_components/combust-js/client/dist/Combust.js>"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script>
     //Replaces this with the address/port of your Combust server
