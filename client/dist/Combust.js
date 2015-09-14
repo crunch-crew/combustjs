@@ -1,499 +1,17 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var io = require('socket.io-client');
-var Payload = require('./Payload');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.io=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
+module.exports = _dereq_('./lib/');
 
-/**
-* Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
-* as well as listening for changes in data at the specified path.
-*
-*@class Combust
-*
-*@constructor
-*/
-var Combust = function(options, callback) {
-  this.callback = callback || function() {};
-  this.auth = options.auth || null;
-  this.serverAddress = options.serverAddress || null;
-  this.dbName = options.tableName || 'test';
-  this.tableName = options.tableName || 'test';
-  //checks localStorage to see if token is already stored
-  this.token = localStorage.getItem('token') || null;
-  
-  //manage socket connection
-  if (options.socket) {
-    this.socket = options.socket;
-  }
-  else if (this.serverAddress) {
-    this.connectSocket(this.callback);
-  }
-  else {
-    this.socket = null;
-  }
-  this.pathArray = ['/'];
-};
-
-//create socket connection to server - internal method, no API documentation
-Combust.prototype.connectSocket = function(callback) {
-  //if authentication credentials are provided, attempt to get obtain a token from the server and then establish an authenticated websocket connection.
-  if (this.auth) {
-    this.authenticate(this.auth, function(response) {
-      if (response.success) {
-        this.socket = io.connect(this.serverAddress, {
-          forceNew: true,
-          //send the web token with the initial websocket handshake
-          query: 'token=' + response.token
-        });
-        this.token = response.token;
-        this.socket.on('connectSuccess', function() {
-          callback(response);
-        });
-      }
-      //does not attempt connetion if credentials are invalid.
-      else {
-        console.log('CombustJS: Invalid credentials. Socket connection not established.');
-        callback(response);
-      }
-    }.bind(this));
-  }
-  else {
-    //if user already has a token from local storage, make an authenticated connection
-    if (this.token) {
-      this.socket = io.connect(this.serverAddress, {
-        forceNew: true,
-        //send the web token with the initial websocket handshake
-        query: 'token=' + this.token
-      });
-    }
-    //else make an unauthenticated connection
-    else {
-      this.socket = io.connect(this.serverAddress, {
-        forceNew: true
-      });
-    }
-    this.socket.once('connectSuccess', function(response) {
-      if (response.success) {
-        callback(response);
-      }
-      else {
-        console.log('CombustJS: Connection refused by server');
-        callback(response);
-      }
-    });
-    //Handling of servers received from server
-    this.socket.once('error', function(err) {
-      if (err === 'TokenExpiredError') {
-        console.log('CombustJS: Token expired. Please reauthenticate.');
-        callback({success: false, error: err});
-      }
-      else if (err === 'TokenCorruptError') {
-        console.log('CombustJS: Token is corrupt');
-        callback({success: false, error: err});
-      }
-      else {
-        console.log('CombustJS: Connection refused by server.');
-        callback({success: false, error: 'Unknown'});
-      }
-    });
-  }
-};
-
-/* this method doesn't have documentation because its an internal method that the user should not use.
-   Converts the pathArray variable into a string that can be used by other methods to interact with the server
-*/
-Combust.prototype.constructPath = function() {
-  var path;
-  if (this.pathArray[0] === '/' && this.pathArray.length === 1) {
-    return '/';
-  }
-  else if (this.pathArray[0] === '/') {
-    path = this.pathArray.slice(1);
-  }
-  else {
-    path = this.pathArray;
-  }
-  return "/" + path.join('/') + '/';
-};
-
-/**
-* Change the path of the Combust object to point to one of the children of the current path.
-* Method is chainable.
-*
-*@method child
-*
-*@param childName {String} childName Name of the child of the current path to point Combust at
-*@return {Object} Returns a mutated instance of the same Combust instance so that it can be chained.
-*/
-
-//consider changing this method so that it returns a new Combust object instead of mutating the existing one
-Combust.prototype.child = function(childName) {
-  var newRef = new Combust({
-    dbName: this.dbName,
-    tableName: this.tableName,
-    socket: this.socket
-  });
-  newRef.token = this.token;
-  newRef.pathArray = this.pathArray.slice();
-  newRef.pathArray.push(childName);
-  return newRef;
-};
-
-/**
-* Pushes an object as a new child at the current path.
-*
-*@method push
-*
-*@param object {Object} object The object to push as a new child at the current path.
-*@param *callback {Callback} callback The callback to be executed once the new child has been synchronized with the database. Optional parameter.
-*
-*@return {Object} Returns a new instance of Combust that points to the path of the newly created child.
-*/
-
-/* returns a new object combust reference immediately, but once it receives the new key from the database
-it updates the returned combust reference with the proper path */
-Combust.prototype.push = function(object, callback) {
-  var newRef = new Combust({
-    dbName: this.dbName,
-    tableName: this.tableName,
-    socket: this.socket
-  });
-  newRef.token = this.token;
-  newRef.pathArray = this.pathArray.slice();
-
-  this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
-    newRef.pathArray.push(data.key);
-    if (callback) {
-      callback(data);
-    }
-  });
-  this.socket.emit('push', {path: this.constructPath(), data: object});
-
-  return newRef;
-};
-
-/**
-* Deletes an object at the current path.
-*
-*@method delete
-* 
-*@param object {Object} object The object to delete at the current path.
-*@param *callback {Callback} callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.
-*
-*/
-
-// Takes in an object to be set at a path and emits an event to the server
-Combust.prototype.delete = function(object, callback) {
-  //should delete switch path to parent or something?
-  var path = this.constructPath();
-
-  this.socket.once(path + '-deleteSuccess', function(data){
-    if (callback) {
-      callback(data);
-    }
-  });
-  this.socket.emit('delete', {path: path}); 
-};
-
-/**
-* Sets an object at the current path.
-*
-*@method set
-*
-*@param object {Object} object The object to set at the current path.
-*@param *callback {Callback} callback The callback to be executed once the object has been set at the path in the database. Optional parameter.
-*
-**/
-
-/* Takes in an object to be set at path. Does not return anything. */
-Combust.prototype.set = function(object, callback) {
-  var newRef = new Combust({
-    dbName: this.dbName,
-    tableName: this.tableName,
-    socket: this.socket
-  });
-  //transfer token
-  newRef.token = this.token;
-
-  this.socket.once(this.constructPath() + '-setSuccess', function(data) {
-    if (callback) {
-      callback(data);
-    }
-  });
-  this.socket.emit('set', {path: this.constructPath(), data: object});
-};
-
-
-/**
-* Updates object at the current path.
-*
-*@method update
-*
-*@param object {Object} object The object to update the current path with.
-*@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
-*
-*/
-
-/* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
-Combust.prototype.update = function(object, callback) {
-  var newRef = new Combust({
-    dbName: this.dbName,
-    tableName: this.tableName,
-    socket: this.socket
-  });
-
-  this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
-    if (callback) {
-      callback(data);
-    }
-  });
-  this.socket.emit('update', {path: this.constructPath(), data: object});
-};
-
-//TODO: Update this documentation and function
-/**
-* Creates an event listener for a specified event at the current path.
-*
-*@method on
-*
-*@param eventType {String} eventType The type of event to listen for at the current path - currently supported values are "child_added", "child_changed", "child_removed", "value"
-*@param *callback {Function} callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.
-*/
-Combust.prototype.on = function(eventType, callback) {
-  //set it here incase path changes before getSuccess is executed
-  var path = this.constructPath();
-  //this binding is lost in async calls so store it here
-  var socket = this.socket;
-  if (eventType === "child_added") {
-    socket.once(path + '-subscribeUrlChildAddedSuccess', function() {
-      //need a get children method - not desired functionality as written
-      socket.emit('getUrlChildren', {url: path});
-    });
-    socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //wrap data in payload
-      // console.log(" ===>  in Combust ON  data  : ", data);
-      var childrenPayload = new Payload(data.data, path);
-      //getUrlChildren returns null if path points to a static property
-      if (data.data !== null) {
-        //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-        childrenPayload.forEach(function(child) {
-          //calls callback on all current children
-          // console.log('in forEACH : with child: ', child, 'child.val :', child.val());
-          callback(child);
-        });
-      }
-      socket.on(path + '-child_added', function(data) {
-        //wrap data in payload
-        var payload = new Payload(data, path);
-        //call callback on new child
-        callback(payload);
-      });
-    });
-    socket.emit("subscribeUrlChildAdded", {url: path});
-  }
-  //changed this to not retrieve existing children, leave that to child_added
-  if (eventType === "child_changed") {
-    socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
-      // socket.emit('getUrlChildren', {url: path});
-      socket.on(path + '-child_changed', function(data) {
-        var payload = new Payload(data.data, path);
-        callback(payload);
-      });
-    });
-    socket.emit("subscribeUrlChildChanged", {url: path});
-  }
-  if (eventType === "child_removed") {
-    socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
-      // socket.emit('getUrlChildren', {url: path});
-      socket.on(path + '-child_removed', function(data) {
-        var payload = new Payload(data.data, path);
-        callback(payload);
-      });
-    });
-    socket.emit("subscribeUrlChildRemoved", {url: path});
-  }
-  //changed this to trigger the callback once on whatever value is currently in the db and then listen for changes
-  if (eventType === "value") {
-    socket.once(path + '-subscribeUrlValueSuccess', function() {
-      socket.emit('getUrl', {url: path});
-    });
-    socket.once(path + "-getUrlSuccess", function(data) {
-      var urlPayload = new Payload(data.data, path);
-      callback(urlPayload);
-      socket.on(path + '-value', function(data) {
-        var payload = new Payload(data.data, path);
-        callback(payload);
-      });
-    });
-    socket.emit("subscribeUrlValue", {url: path});
-  }
-};
-
-/**
-* Attempts to create a new user
-*
-*@method newUser
-*
-*@param newUser {Object} newUser Object that contains the credentials of the user to be added.
-*@param newUser.username username Username to associate with new user.
-*@param newUser.password password Password to associate with new user.
-*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
-*Response has two properties: 
-*1) 'success' which indicates whether the new user was successfully created or not.
-*2) 'id' which will contains the new users id if the operation was successful. 
-*/
-Combust.prototype.newUser = function(newUser, callback) {
-  //raw http requests
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.onload = function() {
-    response = JSON.parse(xhr.responseText);
-    response.status = xhr.status;
-    if (callback) {
-      callback(response);
-    }
-  }.bind(this);
-  xhr.send(JSON.stringify(newUser));
-};
-
-/**
-* Attempts to authenticate user credentials. If authentication is successful, the JSON Web Token will be stored in local storage, as well as on the Combust instance.
-*
-*@method authenticate
-*
-*@param crendentials {Object} credentials Object that contains the username and password of the user to authenticate.
-*@param credentials.username username Username of the user authenticate.
-*@param credentials.password password Password of the user to authenticate.
-*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
-*Response has three properties: 
-*1) 'success' (Boolean) which indicates whether the user was successfully authenticated or not.
-*2) 'id' (String) Contains the authenticated users id - only present if success is true.
-*3) 'token' (String) Contains the authenticated users authentication JSON Web token - only present is success is true.
-*/
-Combust.prototype.authenticate = function(credentials, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.onload = function() {
-    response = JSON.parse(xhr.responseText);
-    response.status = xhr.status;
-    if (response.token) {
-      this.token = response.token;
-      //store token in local storage
-      localStorage.setItem('token', response.token);
-    }
-    callback(response);
-  }.bind(this);
-  xhr.send(JSON.stringify(credentials));
-};
-
-/**
-* Unauthenticates the current user by disconnecting the socket connection, and delete the authenticaton JSON Web Token from the Combust instance, as well as local storage.
-*
-*@method authenticate
-*/
-Combust.prototype.unauthenticate = function() {
-  this.socket.disconnect();
-  this.token = null;
-  localStorage.removeItem('token');
-};
-
-module.exports = Combust;
-},{"./Payload":2,"socket.io-client":4}],2:[function(require,module,exports){
-
-var isolateData = require('./isolateData');
-
-var Payload = function(data, path) {
-  this._storage = data || null;
-  this._ref = path;
-};
-
-Payload.prototype.val = function() {
-  return this._storage;
-};
-
-Payload.prototype.forEach = function(callback) {
-  if (Array.isArray(this._storage)) {
-    for (var i = 0; i < this._storage.length; i++) {
-      callback(new Payload(this._storage[i], this._ref));
-    }
-  }
-  else if (this._storage) {
-    callback(this._storage);
-  }
-};
-
-Payload.prototype.exists = function(){
-  return (this._storage !== null) ;
-};
-
-Payload.prototype.hasChildren = function() {
-  return (this._storage !== null && this._storage !== undefined && Object.keys(this._storage).length > 0);
-};
-
-Payload.prototype.numChildren = function() {
-  if (this._storage !== null && this._storage !== undefined) {
-    return Object.keys(this._storage).length;
-  }
-  else {
-    return 0;
-  }
-};
-
-Payload.prototype.hasChild = function(childPath) {
-  return isolateData(childPath, this._storage) !== undefined;
-};
-
-Payload.prototype.child = function(childPath) {
-  var data = isolateData(childPath, this._storage);
-  if (data) {
-    data._ref = childPath;
-  }
-  return data;
-};
-
-Payload.prototype.ref = function(){
-  return this._ref;
-};
-
-module.exports = Payload;
-},{"./isolateData":3}],3:[function(require,module,exports){
-var isolateData = function(path, rootObject) {
-
-  var pathArray = [];
-  var currentPointer = rootObject;
-
-  if(path === '/') {
-    return rootObject;
-  }
-
-  pathArray = path.split('/');
-  pathArray = pathArray.slice(1, pathArray.length - 1);
-
-  for(var i = 0; i < pathArray.length; i++) {
-    if (currentPointer) {
-      currentPointer = currentPointer[pathArray[i]];
-    }
-  }
-
-  return currentPointer;
-};
-
-module.exports = isolateData;
-},{}],4:[function(require,module,exports){
-
-module.exports = require('./lib/');
-
-},{"./lib/":5}],5:[function(require,module,exports){
+},{"./lib/":2}],2:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
  */
 
-var url = require('./url');
-var parser = require('socket.io-parser');
-var Manager = require('./manager');
-var debug = require('debug')('socket.io-client');
+var url = _dereq_('./url');
+var parser = _dereq_('socket.io-parser');
+var Manager = _dereq_('./manager');
+var debug = _dereq_('debug')('socket.io-client');
 
 /**
  * Module exports.
@@ -570,26 +88,26 @@ exports.connect = lookup;
  * @api public
  */
 
-exports.Manager = require('./manager');
-exports.Socket = require('./socket');
+exports.Manager = _dereq_('./manager');
+exports.Socket = _dereq_('./socket');
 
-},{"./manager":6,"./socket":8,"./url":9,"debug":13,"socket.io-parser":49}],6:[function(require,module,exports){
+},{"./manager":3,"./socket":5,"./url":6,"debug":10,"socket.io-parser":46}],3:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
  */
 
-var url = require('./url');
-var eio = require('engine.io-client');
-var Socket = require('./socket');
-var Emitter = require('component-emitter');
-var parser = require('socket.io-parser');
-var on = require('./on');
-var bind = require('component-bind');
-var object = require('object-component');
-var debug = require('debug')('socket.io-client:manager');
-var indexOf = require('indexof');
-var Backoff = require('backo2');
+var url = _dereq_('./url');
+var eio = _dereq_('engine.io-client');
+var Socket = _dereq_('./socket');
+var Emitter = _dereq_('component-emitter');
+var parser = _dereq_('socket.io-parser');
+var on = _dereq_('./on');
+var bind = _dereq_('component-bind');
+var object = _dereq_('object-component');
+var debug = _dereq_('debug')('socket.io-client:manager');
+var indexOf = _dereq_('indexof');
+var Backoff = _dereq_('backo2');
 
 /**
  * Module exports
@@ -1078,7 +596,7 @@ Manager.prototype.onreconnect = function(){
   this.emitAll('reconnect', attempt);
 };
 
-},{"./on":7,"./socket":8,"./url":9,"backo2":10,"component-bind":11,"component-emitter":12,"debug":13,"engine.io-client":14,"indexof":45,"object-component":46,"socket.io-parser":49}],7:[function(require,module,exports){
+},{"./on":4,"./socket":5,"./url":6,"backo2":7,"component-bind":8,"component-emitter":9,"debug":10,"engine.io-client":11,"indexof":42,"object-component":43,"socket.io-parser":46}],4:[function(_dereq_,module,exports){
 
 /**
  * Module exports.
@@ -1104,19 +622,19 @@ function on(obj, ev, fn) {
   };
 }
 
-},{}],8:[function(require,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
  */
 
-var parser = require('socket.io-parser');
-var Emitter = require('component-emitter');
-var toArray = require('to-array');
-var on = require('./on');
-var bind = require('component-bind');
-var debug = require('debug')('socket.io-client:socket');
-var hasBin = require('has-binary');
+var parser = _dereq_('socket.io-parser');
+var Emitter = _dereq_('component-emitter');
+var toArray = _dereq_('to-array');
+var on = _dereq_('./on');
+var bind = _dereq_('component-bind');
+var debug = _dereq_('debug')('socket.io-client:socket');
+var hasBin = _dereq_('has-binary');
 
 /**
  * Module exports.
@@ -1491,15 +1009,15 @@ Socket.prototype.disconnect = function(){
   return this;
 };
 
-},{"./on":7,"component-bind":11,"component-emitter":12,"debug":13,"has-binary":43,"socket.io-parser":49,"to-array":53}],9:[function(require,module,exports){
+},{"./on":4,"component-bind":8,"component-emitter":9,"debug":10,"has-binary":38,"socket.io-parser":46,"to-array":50}],6:[function(_dereq_,module,exports){
 (function (global){
 
 /**
  * Module dependencies.
  */
 
-var parseuri = require('parseuri');
-var debug = require('debug')('socket.io-client:url');
+var parseuri = _dereq_('parseuri');
+var debug = _dereq_('debug')('socket.io-client:url');
 
 /**
  * Module exports.
@@ -1567,8 +1085,8 @@ function url(uri, loc){
   return obj;
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"debug":13,"parseuri":47}],10:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"debug":10,"parseuri":44}],7:[function(_dereq_,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -1655,7 +1173,7 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
-},{}],11:[function(require,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 /**
  * Slice reference.
  */
@@ -1680,7 +1198,7 @@ module.exports = function(obj, fn){
   }
 };
 
-},{}],12:[function(require,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -1846,7 +1364,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 
 /**
  * Expose `debug()` as the module.
@@ -1985,13 +1503,13 @@ try {
   if (window.localStorage) debug.enable(localStorage.debug);
 } catch(e){}
 
-},{}],14:[function(require,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 
-module.exports =  require('./lib/');
+module.exports =  _dereq_('./lib/');
 
-},{"./lib/":15}],15:[function(require,module,exports){
+},{"./lib/":12}],12:[function(_dereq_,module,exports){
 
-module.exports = require('./socket');
+module.exports = _dereq_('./socket');
 
 /**
  * Exports parser
@@ -1999,22 +1517,22 @@ module.exports = require('./socket');
  * @api public
  *
  */
-module.exports.parser = require('engine.io-parser');
+module.exports.parser = _dereq_('engine.io-parser');
 
-},{"./socket":16,"engine.io-parser":28}],16:[function(require,module,exports){
+},{"./socket":13,"engine.io-parser":25}],13:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Module dependencies.
  */
 
-var transports = require('./transports');
-var Emitter = require('component-emitter');
-var debug = require('debug')('engine.io-client:socket');
-var index = require('indexof');
-var parser = require('engine.io-parser');
-var parseuri = require('parseuri');
-var parsejson = require('parsejson');
-var parseqs = require('parseqs');
+var transports = _dereq_('./transports');
+var Emitter = _dereq_('component-emitter');
+var debug = _dereq_('debug')('engine.io-client:socket');
+var index = _dereq_('indexof');
+var parser = _dereq_('engine.io-parser');
+var parseuri = _dereq_('parseuri');
+var parsejson = _dereq_('parsejson');
+var parseqs = _dereq_('parseqs');
 
 /**
  * Module exports.
@@ -2129,9 +1647,9 @@ Socket.protocol = parser.protocol; // this is an int
  */
 
 Socket.Socket = Socket;
-Socket.Transport = require('./transport');
-Socket.transports = require('./transports');
-Socket.parser = require('engine.io-parser');
+Socket.Transport = _dereq_('./transport');
+Socket.transports = _dereq_('./transports');
+Socket.parser = _dereq_('engine.io-parser');
 
 /**
  * Creates transport of the given type.
@@ -2709,14 +2227,14 @@ Socket.prototype.filterUpgrades = function (upgrades) {
   return filteredUpgrades;
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./transport":17,"./transports":18,"component-emitter":12,"debug":25,"engine.io-parser":28,"indexof":45,"parsejson":39,"parseqs":40,"parseuri":41}],17:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./transport":14,"./transports":15,"component-emitter":9,"debug":22,"engine.io-parser":25,"indexof":42,"parsejson":34,"parseqs":35,"parseuri":36}],14:[function(_dereq_,module,exports){
 /**
  * Module dependencies.
  */
 
-var parser = require('engine.io-parser');
-var Emitter = require('component-emitter');
+var parser = _dereq_('engine.io-parser');
+var Emitter = _dereq_('component-emitter');
 
 /**
  * Module exports.
@@ -2871,16 +2389,16 @@ Transport.prototype.onClose = function () {
   this.emit('close');
 };
 
-},{"component-emitter":12,"engine.io-parser":28}],18:[function(require,module,exports){
+},{"component-emitter":9,"engine.io-parser":25}],15:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Module dependencies
  */
 
-var XMLHttpRequest = require('xmlhttprequest');
-var XHR = require('./polling-xhr');
-var JSONP = require('./polling-jsonp');
-var websocket = require('./websocket');
+var XMLHttpRequest = _dereq_('xmlhttprequest');
+var XHR = _dereq_('./polling-xhr');
+var JSONP = _dereq_('./polling-jsonp');
+var websocket = _dereq_('./websocket');
 
 /**
  * Export transports.
@@ -2927,16 +2445,16 @@ function polling(opts){
   }
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling-jsonp":19,"./polling-xhr":20,"./websocket":22,"xmlhttprequest":23}],19:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./polling-jsonp":16,"./polling-xhr":17,"./websocket":19,"xmlhttprequest":20}],16:[function(_dereq_,module,exports){
 (function (global){
 
 /**
  * Module requirements.
  */
 
-var Polling = require('./polling');
-var inherit = require('component-inherit');
+var Polling = _dereq_('./polling');
+var inherit = _dereq_('component-inherit');
 
 /**
  * Module exports.
@@ -3164,18 +2682,18 @@ JSONPPolling.prototype.doWrite = function (data, fn) {
   }
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":21,"component-inherit":24}],20:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./polling":18,"component-inherit":21}],17:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Module requirements.
  */
 
-var XMLHttpRequest = require('xmlhttprequest');
-var Polling = require('./polling');
-var Emitter = require('component-emitter');
-var inherit = require('component-inherit');
-var debug = require('debug')('engine.io-client:polling-xhr');
+var XMLHttpRequest = _dereq_('xmlhttprequest');
+var Polling = _dereq_('./polling');
+var Emitter = _dereq_('component-emitter');
+var inherit = _dereq_('component-inherit');
+var debug = _dereq_('debug')('engine.io-client:polling-xhr');
 
 /**
  * Module exports.
@@ -3552,17 +3070,17 @@ function unloadHandler() {
   }
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./polling":21,"component-emitter":12,"component-inherit":24,"debug":25,"xmlhttprequest":23}],21:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./polling":18,"component-emitter":9,"component-inherit":21,"debug":22,"xmlhttprequest":20}],18:[function(_dereq_,module,exports){
 /**
  * Module dependencies.
  */
 
-var Transport = require('../transport');
-var parseqs = require('parseqs');
-var parser = require('engine.io-parser');
-var inherit = require('component-inherit');
-var debug = require('debug')('engine.io-client:polling');
+var Transport = _dereq_('../transport');
+var parseqs = _dereq_('parseqs');
+var parser = _dereq_('engine.io-parser');
+var inherit = _dereq_('component-inherit');
+var debug = _dereq_('debug')('engine.io-client:polling');
 
 /**
  * Module exports.
@@ -3575,7 +3093,7 @@ module.exports = Polling;
  */
 
 var hasXHR2 = (function() {
-  var XMLHttpRequest = require('xmlhttprequest');
+  var XMLHttpRequest = _dereq_('xmlhttprequest');
   var xhr = new XMLHttpRequest({ xdomain: false });
   return null != xhr.responseType;
 })();
@@ -3800,16 +3318,16 @@ Polling.prototype.uri = function(){
   return schema + '://' + this.hostname + port + this.path + query;
 };
 
-},{"../transport":17,"component-inherit":24,"debug":25,"engine.io-parser":28,"parseqs":40,"xmlhttprequest":23}],22:[function(require,module,exports){
+},{"../transport":14,"component-inherit":21,"debug":22,"engine.io-parser":25,"parseqs":35,"xmlhttprequest":20}],19:[function(_dereq_,module,exports){
 /**
  * Module dependencies.
  */
 
-var Transport = require('../transport');
-var parser = require('engine.io-parser');
-var parseqs = require('parseqs');
-var inherit = require('component-inherit');
-var debug = require('debug')('engine.io-client:websocket');
+var Transport = _dereq_('../transport');
+var parser = _dereq_('engine.io-parser');
+var parseqs = _dereq_('parseqs');
+var inherit = _dereq_('component-inherit');
+var debug = _dereq_('debug')('engine.io-client:websocket');
 
 /**
  * `ws` exposes a WebSocket-compatible interface in
@@ -3817,7 +3335,7 @@ var debug = require('debug')('engine.io-client:websocket');
  * in the browser.
  */
 
-var WebSocket = require('ws');
+var WebSocket = _dereq_('ws');
 
 /**
  * Module exports.
@@ -4040,9 +3558,9 @@ WS.prototype.check = function(){
   return !!WebSocket && !('__initialize' in WebSocket && this.name === WS.prototype.name);
 };
 
-},{"../transport":17,"component-inherit":24,"debug":25,"engine.io-parser":28,"parseqs":40,"ws":42}],23:[function(require,module,exports){
+},{"../transport":14,"component-inherit":21,"debug":22,"engine.io-parser":25,"parseqs":35,"ws":37}],20:[function(_dereq_,module,exports){
 // browser shim for xmlhttprequest module
-var hasCORS = require('has-cors');
+var hasCORS = _dereq_('has-cors');
 
 module.exports = function(opts) {
   var xdomain = opts.xdomain;
@@ -4078,7 +3596,7 @@ module.exports = function(opts) {
   }
 }
 
-},{"has-cors":37}],24:[function(require,module,exports){
+},{"has-cors":40}],21:[function(_dereq_,module,exports){
 
 module.exports = function(a, b){
   var fn = function(){};
@@ -4086,7 +3604,7 @@ module.exports = function(a, b){
   a.prototype = new fn;
   a.prototype.constructor = a;
 };
-},{}],25:[function(require,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -4094,7 +3612,7 @@ module.exports = function(a, b){
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = require('./debug');
+exports = module.exports = _dereq_('./debug');
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -4169,7 +3687,7 @@ function formatArgs() {
   var index = 0;
   var lastC = 0;
   args[0].replace(/%[a-z%]/g, function(match) {
-    if ('%%' === match) return;
+    if ('%' === match) return;
     index++;
     if ('%c' === match) {
       // we only are interested in the *last* %c
@@ -4235,7 +3753,7 @@ function load() {
 
 exports.enable(load());
 
-},{"./debug":26}],26:[function(require,module,exports){
+},{"./debug":23}],23:[function(_dereq_,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -4249,7 +3767,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = require('ms');
+exports.humanize = _dereq_('ms');
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -4334,7 +3852,7 @@ function debug(namespace) {
     var index = 0;
     args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
       // if we encounter an escaped % then don't increase the array index
-      if (match === '%%') return match;
+      if (match === '%') return match;
       index++;
       var formatter = exports.formatters[format];
       if ('function' === typeof formatter) {
@@ -4434,7 +3952,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":27}],27:[function(require,module,exports){
+},{"ms":24}],24:[function(_dereq_,module,exports){
 /**
  * Helpers.
  */
@@ -4547,18 +4065,18 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],28:[function(require,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Module dependencies.
  */
 
-var keys = require('./keys');
-var hasBinary = require('has-binary');
-var sliceBuffer = require('arraybuffer.slice');
-var base64encoder = require('base64-arraybuffer');
-var after = require('after');
-var utf8 = require('utf8');
+var keys = _dereq_('./keys');
+var hasBinary = _dereq_('has-binary');
+var sliceBuffer = _dereq_('arraybuffer.slice');
+var base64encoder = _dereq_('base64-arraybuffer');
+var after = _dereq_('after');
+var utf8 = _dereq_('utf8');
 
 /**
  * Check if we are running an android browser. That requires us to use
@@ -4615,7 +4133,7 @@ var err = { type: 'error', data: 'parser error' };
  * Create a blob api even for blob builder when vendor prefixes exist
  */
 
-var Blob = require('blob');
+var Blob = _dereq_('blob');
 
 /**
  * Encodes a packet.
@@ -5144,8 +4662,8 @@ exports.decodePayloadAsBinary = function (data, binaryType, callback) {
   });
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./keys":29,"after":30,"arraybuffer.slice":31,"base64-arraybuffer":32,"blob":33,"has-binary":34,"utf8":36}],29:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./keys":26,"after":27,"arraybuffer.slice":28,"base64-arraybuffer":29,"blob":30,"has-binary":31,"utf8":33}],26:[function(_dereq_,module,exports){
 
 /**
  * Gets the keys for an object.
@@ -5166,7 +4684,7 @@ module.exports = Object.keys || function keys (obj){
   return arr;
 };
 
-},{}],30:[function(require,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 module.exports = after
 
 function after(count, callback, err_cb) {
@@ -5196,7 +4714,7 @@ function after(count, callback, err_cb) {
 
 function noop() {}
 
-},{}],31:[function(require,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 /**
  * An abstraction for slicing an arraybuffer even when
  * ArrayBuffer.prototype.slice is not supported
@@ -5227,7 +4745,7 @@ module.exports = function(arraybuffer, start, end) {
   return result.buffer;
 };
 
-},{}],32:[function(require,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /*
  * base64-arraybuffer
  * https://github.com/niklasvh/base64-arraybuffer
@@ -5288,7 +4806,7 @@ module.exports = function(arraybuffer, start, end) {
   };
 })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
 
-},{}],33:[function(require,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 (function (global){
 /**
  * Create a blob builder even when vendor prefixes exist
@@ -5340,15 +4858,15 @@ module.exports = (function() {
   }
 })();
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],34:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],31:[function(_dereq_,module,exports){
 (function (global){
 
 /*
  * Module requirements.
  */
 
-var isArray = require('isarray');
+var isArray = _dereq_('isarray');
 
 /**
  * Module exports.
@@ -5402,291 +4920,256 @@ function hasBinary(data) {
   return _hasBinary(data);
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":35}],35:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"isarray":32}],32:[function(_dereq_,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],36:[function(require,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 (function (global){
 /*! http://mths.be/utf8js v2.0.0 by @mathias */
 ;(function(root) {
 
-	// Detect free variables `exports`
-	var freeExports = typeof exports == 'object' && exports;
+  // Detect free variables `exports`
+  var freeExports = typeof exports == 'object' && exports;
 
-	// Detect free variable `module`
-	var freeModule = typeof module == 'object' && module &&
-		module.exports == freeExports && module;
+  // Detect free variable `module`
+  var freeModule = typeof module == 'object' && module &&
+    module.exports == freeExports && module;
 
-	// Detect free variable `global`, from Node.js or Browserified code,
-	// and use it as `root`
-	var freeGlobal = typeof global == 'object' && global;
-	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-		root = freeGlobal;
-	}
+  // Detect free variable `global`, from Node.js or Browserified code,
+  // and use it as `root`
+  var freeGlobal = typeof global == 'object' && global;
+  if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
+    root = freeGlobal;
+  }
 
-	/*--------------------------------------------------------------------------*/
+  /*--------------------------------------------------------------------------*/
 
-	var stringFromCharCode = String.fromCharCode;
+  var stringFromCharCode = String.fromCharCode;
 
-	// Taken from http://mths.be/punycode
-	function ucs2decode(string) {
-		var output = [];
-		var counter = 0;
-		var length = string.length;
-		var value;
-		var extra;
-		while (counter < length) {
-			value = string.charCodeAt(counter++);
-			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
-				// high surrogate, and there is a next character
-				extra = string.charCodeAt(counter++);
-				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
-					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
-				} else {
-					// unmatched surrogate; only append this code unit, in case the next
-					// code unit is the high surrogate of a surrogate pair
-					output.push(value);
-					counter--;
-				}
-			} else {
-				output.push(value);
-			}
-		}
-		return output;
-	}
+  // Taken from http://mths.be/punycode
+  function ucs2decode(string) {
+    var output = [];
+    var counter = 0;
+    var length = string.length;
+    var value;
+    var extra;
+    while (counter < length) {
+      value = string.charCodeAt(counter++);
+      if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+        // high surrogate, and there is a next character
+        extra = string.charCodeAt(counter++);
+        if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+          output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+        } else {
+          // unmatched surrogate; only append this code unit, in case the next
+          // code unit is the high surrogate of a surrogate pair
+          output.push(value);
+          counter--;
+        }
+      } else {
+        output.push(value);
+      }
+    }
+    return output;
+  }
 
-	// Taken from http://mths.be/punycode
-	function ucs2encode(array) {
-		var length = array.length;
-		var index = -1;
-		var value;
-		var output = '';
-		while (++index < length) {
-			value = array[index];
-			if (value > 0xFFFF) {
-				value -= 0x10000;
-				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
-				value = 0xDC00 | value & 0x3FF;
-			}
-			output += stringFromCharCode(value);
-		}
-		return output;
-	}
+  // Taken from http://mths.be/punycode
+  function ucs2encode(array) {
+    var length = array.length;
+    var index = -1;
+    var value;
+    var output = '';
+    while (++index < length) {
+      value = array[index];
+      if (value > 0xFFFF) {
+        value -= 0x10000;
+        output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+        value = 0xDC00 | value & 0x3FF;
+      }
+      output += stringFromCharCode(value);
+    }
+    return output;
+  }
 
-	/*--------------------------------------------------------------------------*/
+  /*--------------------------------------------------------------------------*/
 
-	function createByte(codePoint, shift) {
-		return stringFromCharCode(((codePoint >> shift) & 0x3F) | 0x80);
-	}
+  function createByte(codePoint, shift) {
+    return stringFromCharCode(((codePoint >> shift) & 0x3F) | 0x80);
+  }
 
-	function encodeCodePoint(codePoint) {
-		if ((codePoint & 0xFFFFFF80) == 0) { // 1-byte sequence
-			return stringFromCharCode(codePoint);
-		}
-		var symbol = '';
-		if ((codePoint & 0xFFFFF800) == 0) { // 2-byte sequence
-			symbol = stringFromCharCode(((codePoint >> 6) & 0x1F) | 0xC0);
-		}
-		else if ((codePoint & 0xFFFF0000) == 0) { // 3-byte sequence
-			symbol = stringFromCharCode(((codePoint >> 12) & 0x0F) | 0xE0);
-			symbol += createByte(codePoint, 6);
-		}
-		else if ((codePoint & 0xFFE00000) == 0) { // 4-byte sequence
-			symbol = stringFromCharCode(((codePoint >> 18) & 0x07) | 0xF0);
-			symbol += createByte(codePoint, 12);
-			symbol += createByte(codePoint, 6);
-		}
-		symbol += stringFromCharCode((codePoint & 0x3F) | 0x80);
-		return symbol;
-	}
+  function encodeCodePoint(codePoint) {
+    if ((codePoint & 0xFFFFFF80) == 0) { // 1-byte sequence
+      return stringFromCharCode(codePoint);
+    }
+    var symbol = '';
+    if ((codePoint & 0xFFFFF800) == 0) { // 2-byte sequence
+      symbol = stringFromCharCode(((codePoint >> 6) & 0x1F) | 0xC0);
+    }
+    else if ((codePoint & 0xFFFF0000) == 0) { // 3-byte sequence
+      symbol = stringFromCharCode(((codePoint >> 12) & 0x0F) | 0xE0);
+      symbol += createByte(codePoint, 6);
+    }
+    else if ((codePoint & 0xFFE00000) == 0) { // 4-byte sequence
+      symbol = stringFromCharCode(((codePoint >> 18) & 0x07) | 0xF0);
+      symbol += createByte(codePoint, 12);
+      symbol += createByte(codePoint, 6);
+    }
+    symbol += stringFromCharCode((codePoint & 0x3F) | 0x80);
+    return symbol;
+  }
 
-	function utf8encode(string) {
-		var codePoints = ucs2decode(string);
+  function utf8encode(string) {
+    var codePoints = ucs2decode(string);
 
-		// console.log(JSON.stringify(codePoints.map(function(x) {
-		// 	return 'U+' + x.toString(16).toUpperCase();
-		// })));
+    // console.log(JSON.stringify(codePoints.map(function(x) {
+    //  return 'U+' + x.toString(16).toUpperCase();
+    // })));
 
-		var length = codePoints.length;
-		var index = -1;
-		var codePoint;
-		var byteString = '';
-		while (++index < length) {
-			codePoint = codePoints[index];
-			byteString += encodeCodePoint(codePoint);
-		}
-		return byteString;
-	}
+    var length = codePoints.length;
+    var index = -1;
+    var codePoint;
+    var byteString = '';
+    while (++index < length) {
+      codePoint = codePoints[index];
+      byteString += encodeCodePoint(codePoint);
+    }
+    return byteString;
+  }
 
-	/*--------------------------------------------------------------------------*/
+  /*--------------------------------------------------------------------------*/
 
-	function readContinuationByte() {
-		if (byteIndex >= byteCount) {
-			throw Error('Invalid byte index');
-		}
+  function readContinuationByte() {
+    if (byteIndex >= byteCount) {
+      throw Error('Invalid byte index');
+    }
 
-		var continuationByte = byteArray[byteIndex] & 0xFF;
-		byteIndex++;
+    var continuationByte = byteArray[byteIndex] & 0xFF;
+    byteIndex++;
 
-		if ((continuationByte & 0xC0) == 0x80) {
-			return continuationByte & 0x3F;
-		}
+    if ((continuationByte & 0xC0) == 0x80) {
+      return continuationByte & 0x3F;
+    }
 
-		// If we end up here, it’s not a continuation byte
-		throw Error('Invalid continuation byte');
-	}
+    // If we end up here, it’s not a continuation byte
+    throw Error('Invalid continuation byte');
+  }
 
-	function decodeSymbol() {
-		var byte1;
-		var byte2;
-		var byte3;
-		var byte4;
-		var codePoint;
+  function decodeSymbol() {
+    var byte1;
+    var byte2;
+    var byte3;
+    var byte4;
+    var codePoint;
 
-		if (byteIndex > byteCount) {
-			throw Error('Invalid byte index');
-		}
+    if (byteIndex > byteCount) {
+      throw Error('Invalid byte index');
+    }
 
-		if (byteIndex == byteCount) {
-			return false;
-		}
+    if (byteIndex == byteCount) {
+      return false;
+    }
 
-		// Read first byte
-		byte1 = byteArray[byteIndex] & 0xFF;
-		byteIndex++;
+    // Read first byte
+    byte1 = byteArray[byteIndex] & 0xFF;
+    byteIndex++;
 
-		// 1-byte sequence (no continuation bytes)
-		if ((byte1 & 0x80) == 0) {
-			return byte1;
-		}
+    // 1-byte sequence (no continuation bytes)
+    if ((byte1 & 0x80) == 0) {
+      return byte1;
+    }
 
-		// 2-byte sequence
-		if ((byte1 & 0xE0) == 0xC0) {
-			var byte2 = readContinuationByte();
-			codePoint = ((byte1 & 0x1F) << 6) | byte2;
-			if (codePoint >= 0x80) {
-				return codePoint;
-			} else {
-				throw Error('Invalid continuation byte');
-			}
-		}
+    // 2-byte sequence
+    if ((byte1 & 0xE0) == 0xC0) {
+      var byte2 = readContinuationByte();
+      codePoint = ((byte1 & 0x1F) << 6) | byte2;
+      if (codePoint >= 0x80) {
+        return codePoint;
+      } else {
+        throw Error('Invalid continuation byte');
+      }
+    }
 
-		// 3-byte sequence (may include unpaired surrogates)
-		if ((byte1 & 0xF0) == 0xE0) {
-			byte2 = readContinuationByte();
-			byte3 = readContinuationByte();
-			codePoint = ((byte1 & 0x0F) << 12) | (byte2 << 6) | byte3;
-			if (codePoint >= 0x0800) {
-				return codePoint;
-			} else {
-				throw Error('Invalid continuation byte');
-			}
-		}
+    // 3-byte sequence (may include unpaired surrogates)
+    if ((byte1 & 0xF0) == 0xE0) {
+      byte2 = readContinuationByte();
+      byte3 = readContinuationByte();
+      codePoint = ((byte1 & 0x0F) << 12) | (byte2 << 6) | byte3;
+      if (codePoint >= 0x0800) {
+        return codePoint;
+      } else {
+        throw Error('Invalid continuation byte');
+      }
+    }
 
-		// 4-byte sequence
-		if ((byte1 & 0xF8) == 0xF0) {
-			byte2 = readContinuationByte();
-			byte3 = readContinuationByte();
-			byte4 = readContinuationByte();
-			codePoint = ((byte1 & 0x0F) << 0x12) | (byte2 << 0x0C) |
-				(byte3 << 0x06) | byte4;
-			if (codePoint >= 0x010000 && codePoint <= 0x10FFFF) {
-				return codePoint;
-			}
-		}
+    // 4-byte sequence
+    if ((byte1 & 0xF8) == 0xF0) {
+      byte2 = readContinuationByte();
+      byte3 = readContinuationByte();
+      byte4 = readContinuationByte();
+      codePoint = ((byte1 & 0x0F) << 0x12) | (byte2 << 0x0C) |
+        (byte3 << 0x06) | byte4;
+      if (codePoint >= 0x010000 && codePoint <= 0x10FFFF) {
+        return codePoint;
+      }
+    }
 
-		throw Error('Invalid UTF-8 detected');
-	}
+    throw Error('Invalid UTF-8 detected');
+  }
 
-	var byteArray;
-	var byteCount;
-	var byteIndex;
-	function utf8decode(byteString) {
-		byteArray = ucs2decode(byteString);
-		byteCount = byteArray.length;
-		byteIndex = 0;
-		var codePoints = [];
-		var tmp;
-		while ((tmp = decodeSymbol()) !== false) {
-			codePoints.push(tmp);
-		}
-		return ucs2encode(codePoints);
-	}
+  var byteArray;
+  var byteCount;
+  var byteIndex;
+  function utf8decode(byteString) {
+    byteArray = ucs2decode(byteString);
+    byteCount = byteArray.length;
+    byteIndex = 0;
+    var codePoints = [];
+    var tmp;
+    while ((tmp = decodeSymbol()) !== false) {
+      codePoints.push(tmp);
+    }
+    return ucs2encode(codePoints);
+  }
 
-	/*--------------------------------------------------------------------------*/
+  /*--------------------------------------------------------------------------*/
 
-	var utf8 = {
-		'version': '2.0.0',
-		'encode': utf8encode,
-		'decode': utf8decode
-	};
+  var utf8 = {
+    'version': '2.0.0',
+    'encode': utf8encode,
+    'decode': utf8decode
+  };
 
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		typeof define == 'function' &&
-		typeof define.amd == 'object' &&
-		define.amd
-	) {
-		define(function() {
-			return utf8;
-		});
-	}	else if (freeExports && !freeExports.nodeType) {
-		if (freeModule) { // in Node.js or RingoJS v0.8.0+
-			freeModule.exports = utf8;
-		} else { // in Narwhal or RingoJS v0.7.0-
-			var object = {};
-			var hasOwnProperty = object.hasOwnProperty;
-			for (var key in utf8) {
-				hasOwnProperty.call(utf8, key) && (freeExports[key] = utf8[key]);
-			}
-		}
-	} else { // in Rhino or a web browser
-		root.utf8 = utf8;
-	}
+  // Some AMD build optimizers, like r.js, check for specific condition patterns
+  // like the following:
+  if (
+    typeof define == 'function' &&
+    typeof define.amd == 'object' &&
+    define.amd
+  ) {
+    define(function() {
+      return utf8;
+    });
+  } else if (freeExports && !freeExports.nodeType) {
+    if (freeModule) { // in Node.js or RingoJS v0.8.0+
+      freeModule.exports = utf8;
+    } else { // in Narwhal or RingoJS v0.7.0-
+      var object = {};
+      var hasOwnProperty = object.hasOwnProperty;
+      for (var key in utf8) {
+        hasOwnProperty.call(utf8, key) && (freeExports[key] = utf8[key]);
+      }
+    }
+  } else { // in Rhino or a web browser
+    root.utf8 = utf8;
+  }
 
 }(this));
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],37:[function(require,module,exports){
-
-/**
- * Module dependencies.
- */
-
-var global = require('global');
-
-/**
- * Module exports.
- *
- * Logic borrowed from Modernizr:
- *
- *   - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cors.js
- */
-
-try {
-  module.exports = 'XMLHttpRequest' in global &&
-    'withCredentials' in new global.XMLHttpRequest();
-} catch (err) {
-  // if XMLHttp support is disabled in IE then it will throw
-  // when trying to create
-  module.exports = false;
-}
-
-},{"global":38}],38:[function(require,module,exports){
-
-/**
- * Returns `this`. Execute this without a "context" (i.e. without it being
- * attached to an object of the left-hand side), and `this` points to the
- * "global" scope of the current JS execution.
- */
-
-module.exports = (function () { return this; })();
-
-},{}],39:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],34:[function(_dereq_,module,exports){
 (function (global){
 /**
  * JSON parse.
@@ -5720,8 +5203,8 @@ module.exports = function parsejson(data) {
     return (new Function('return ' + data))();
   }
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],40:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],35:[function(_dereq_,module,exports){
 /**
  * Compiles a querystring
  * Returns string representation of the object
@@ -5760,7 +5243,7 @@ exports.decode = function(qs){
   return qry;
 };
 
-},{}],41:[function(require,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 /**
  * Parses an URI
  *
@@ -5801,7 +5284,7 @@ module.exports = function parseuri(str) {
     return uri;
 };
 
-},{}],42:[function(require,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
@@ -5846,14 +5329,14 @@ function ws(uri, protocols, opts) {
 
 if (WebSocket) ws.prototype = WebSocket.prototype;
 
-},{}],43:[function(require,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 (function (global){
 
 /*
  * Module requirements.
  */
 
-var isArray = require('isarray');
+var isArray = _dereq_('isarray');
 
 /**
  * Module exports.
@@ -5907,10 +5390,45 @@ function hasBinary(data) {
   return _hasBinary(data);
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"isarray":44}],44:[function(require,module,exports){
-arguments[4][35][0].apply(exports,arguments)
-},{"dup":35}],45:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"isarray":39}],39:[function(_dereq_,module,exports){
+module.exports=_dereq_(32)
+},{}],40:[function(_dereq_,module,exports){
+
+/**
+ * Module dependencies.
+ */
+
+var global = _dereq_('global');
+
+/**
+ * Module exports.
+ *
+ * Logic borrowed from Modernizr:
+ *
+ *   - https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cors.js
+ */
+
+try {
+  module.exports = 'XMLHttpRequest' in global &&
+    'withCredentials' in new global.XMLHttpRequest();
+} catch (err) {
+  // if XMLHttp support is disabled in IE then it will throw
+  // when trying to create
+  module.exports = false;
+}
+
+},{"global":41}],41:[function(_dereq_,module,exports){
+
+/**
+ * Returns `this`. Execute this without a "context" (i.e. without it being
+ * attached to an object of the left-hand side), and `this` points to the
+ * "global" scope of the current JS execution.
+ */
+
+module.exports = (function () { return this; })();
+
+},{}],42:[function(_dereq_,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -5921,7 +5439,7 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-},{}],46:[function(require,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 
 /**
  * HOP ref.
@@ -6006,7 +5524,7 @@ exports.length = function(obj){
 exports.isEmpty = function(obj){
   return 0 == exports.length(obj);
 };
-},{}],47:[function(require,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 /**
  * Parses an URI
  *
@@ -6033,7 +5551,7 @@ module.exports = function parseuri(str) {
   return uri;
 };
 
-},{}],48:[function(require,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 (function (global){
 /*global Blob,File*/
 
@@ -6041,8 +5559,8 @@ module.exports = function parseuri(str) {
  * Module requirements
  */
 
-var isArray = require('isarray');
-var isBuf = require('./is-buffer');
+var isArray = _dereq_('isarray');
+var isBuf = _dereq_('./is-buffer');
 
 /**
  * Replaces every Buffer | ArrayBuffer in packet with a numbered placeholder.
@@ -6177,19 +5695,19 @@ exports.removeBlobs = function(data, callback) {
   }
 };
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./is-buffer":50,"isarray":51}],49:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./is-buffer":47,"isarray":48}],46:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
  */
 
-var debug = require('debug')('socket.io-parser');
-var json = require('json3');
-var isArray = require('isarray');
-var Emitter = require('component-emitter');
-var binary = require('./binary');
-var isBuf = require('./is-buffer');
+var debug = _dereq_('debug')('socket.io-parser');
+var json = _dereq_('json3');
+var isArray = _dereq_('isarray');
+var Emitter = _dereq_('component-emitter');
+var binary = _dereq_('./binary');
+var isBuf = _dereq_('./is-buffer');
 
 /**
  * Protocol version.
@@ -6580,7 +6098,7 @@ function error(data){
   };
 }
 
-},{"./binary":48,"./is-buffer":50,"component-emitter":12,"debug":13,"isarray":51,"json3":52}],50:[function(require,module,exports){
+},{"./binary":45,"./is-buffer":47,"component-emitter":9,"debug":10,"isarray":48,"json3":49}],47:[function(_dereq_,module,exports){
 (function (global){
 
 module.exports = isBuf;
@@ -6596,10 +6114,10 @@ function isBuf(obj) {
          (global.ArrayBuffer && obj instanceof ArrayBuffer);
 }
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],51:[function(require,module,exports){
-arguments[4][35][0].apply(exports,arguments)
-},{"dup":35}],52:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],48:[function(_dereq_,module,exports){
+module.exports=_dereq_(32)
+},{}],49:[function(_dereq_,module,exports){
 /*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
 ;(function (window) {
   // Convenience aliases.
@@ -7462,7 +6980,7 @@ arguments[4][35][0].apply(exports,arguments)
   }
 }(this));
 
-},{}],53:[function(require,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 module.exports = toArray
 
 function toArray(list, index) {
@@ -7477,4 +6995,475 @@ function toArray(list, index) {
     return array
 }
 
-},{}]},{},[1,2,3]);
+},{}]},{},[1])
+(1)
+});
+
+var isolateData = function(path, rootObject) {
+
+  var pathArray = [];
+  var currentPointer = rootObject;
+
+  if(path === '/') {
+    return rootObject;
+  }
+
+  pathArray = path.split('/');
+  pathArray = pathArray.slice(1, pathArray.length - 1);
+
+  for(var i = 0; i < pathArray.length; i++) {
+    if (currentPointer) {
+      currentPointer = currentPointer[pathArray[i]];
+    }
+  }
+
+  return currentPointer;
+};
+
+var Payload = function(data, path) {
+  this._storage = data || null;
+  this._ref = path;
+};
+
+Payload.prototype.val = function() {
+  return this._storage;
+};
+
+Payload.prototype.forEach = function(callback) {
+  if (Array.isArray(this._storage)) {
+    for (var i = 0; i < this._storage.length; i++) {
+      callback(new Payload(this._storage[i], this._ref));
+    }
+  }
+  else if (this._storage) {
+    callback(this._storage);
+  }
+};
+
+Payload.prototype.exists = function(){
+  return (this._storage !== null) ;
+};
+
+Payload.prototype.hasChildren = function() {
+  return (this._storage !== null && this._storage !== undefined && Object.keys(this._storage).length > 0);
+};
+
+Payload.prototype.numChildren = function() {
+  if (this._storage !== null && this._storage !== undefined) {
+    return Object.keys(this._storage).length;
+  }
+  else {
+    return 0;
+  }
+};
+
+Payload.prototype.hasChild = function(childPath) {
+  return isolateData(childPath, this._storage) !== undefined;
+};
+
+Payload.prototype.child = function(childPath) {
+  var data = isolateData(childPath, this._storage);
+  if (data) {
+    data._ref = childPath;
+  }
+  return data;
+};
+
+Payload.prototype.ref = function(){
+  return this._ref;
+};
+
+/**
+* Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
+* as well as listening for changes in data at the specified path.
+*
+*@class Combust
+*
+*@constructor
+*/
+var Combust = function(options, callback) {
+  this.callback = callback || function() {};
+  this.auth = options.auth || null;
+  this.serverAddress = options.serverAddress || null;
+  this.dbName = options.tableName || 'test';
+  this.tableName = options.tableName || 'test';
+  //checks localStorage to see if token is already stored
+  this.token = localStorage.getItem('token') || null;
+  
+  //manage socket connection
+  if (options.socket) {
+    this.socket = options.socket;
+  }
+  else if (this.serverAddress) {
+    this.connectSocket(this.callback);
+  }
+  else {
+    this.socket = null;
+  }
+  this.pathArray = ['/'];
+};
+
+//create socket connection to server - internal method, no API documentation
+Combust.prototype.connectSocket = function(callback) {
+  //if authentication credentials are provided, attempt to get obtain a token from the server and then establish an authenticated websocket connection.
+  if (this.auth) {
+    this.authenticate(this.auth, function(response) {
+      if (response.success) {
+        this.socket = io.connect(this.serverAddress, {
+          forceNew: true,
+          //send the web token with the initial websocket handshake
+          query: 'token=' + response.token
+        });
+        this.token = response.token;
+        this.socket.on('connectSuccess', function() {
+          callback(response);
+        });
+      }
+      //does not attempt connetion if credentials are invalid.
+      else {
+        console.log('CombustJS: Invalid credentials. Socket connection not established.');
+        callback(response);
+      }
+    }.bind(this));
+  }
+  else {
+    //if user already has a token from local storage, make an authenticated connection
+    if (this.token) {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true,
+        //send the web token with the initial websocket handshake
+        query: 'token=' + this.token
+      });
+    }
+    //else make an unauthenticated connection
+    else {
+      this.socket = io.connect(this.serverAddress, {
+        forceNew: true
+      });
+    }
+    this.socket.once('connectSuccess', function(response) {
+      if (response.success) {
+        callback(response);
+      }
+      else {
+        console.log('CombustJS: Connection refused by server');
+        callback(response);
+      }
+    });
+    //Handling of servers received from server
+    this.socket.once('error', function(err) {
+      if (err === 'TokenExpiredError') {
+        console.log('CombustJS: Token expired. Please reauthenticate.');
+        callback({success: false, error: err});
+      }
+      else if (err === 'TokenCorruptError') {
+        console.log('CombustJS: Token is corrupt');
+        callback({success: false, error: err});
+      }
+      else {
+        console.log('CombustJS: Connection refused by server.');
+        callback({success: false, error: 'Unknown'});
+      }
+    });
+  }
+};
+
+/* this method doesn't have documentation because its an internal method that the user should not use.
+   Converts the pathArray variable into a string that can be used by other methods to interact with the server
+*/
+Combust.prototype.constructPath = function() {
+  var path;
+  if (this.pathArray[0] === '/' && this.pathArray.length === 1) {
+    return '/';
+  }
+  else if (this.pathArray[0] === '/') {
+    path = this.pathArray.slice(1);
+  }
+  else {
+    path = this.pathArray;
+  }
+  return "/" + path.join('/') + '/';
+};
+
+/**
+* Change the path of the Combust object to point to one of the children of the current path.
+* Method is chainable.
+*
+*@method child
+*
+*@param childName {String} childName Name of the child of the current path to point Combust at
+*@return {Object} Returns a mutated instance of the same Combust instance so that it can be chained.
+*/
+
+//consider changing this method so that it returns a new Combust object instead of mutating the existing one
+Combust.prototype.child = function(childName) {
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
+  newRef.pathArray.push(childName);
+  return newRef;
+};
+
+/**
+* Pushes an object as a new child at the current path.
+*
+*@method push
+*
+*@param object {Object} object The object to push as a new child at the current path.
+*@param *callback {Callback} callback The callback to be executed once the new child has been synchronized with the database. Optional parameter.
+*
+*@return {Object} Returns a new instance of Combust that points to the path of the newly created child.
+*/
+
+/* returns a new object combust reference immediately, but once it receives the new key from the database
+it updates the returned combust reference with the proper path */
+Combust.prototype.push = function(object, callback) {
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
+
+  this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
+    newRef.pathArray.push(data.key);
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('push', {path: this.constructPath(), data: object});
+
+  return newRef;
+};
+
+/**
+* Deletes an object at the current path.
+*
+*@method delete
+* 
+*@param object {Object} object The object to delete at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been deleted at the path in the database. Optional parameter.
+*
+*/
+
+// Takes in an object to be set at a path and emits an event to the server
+Combust.prototype.delete = function(object, callback) {
+  //should delete switch path to parent or something?
+  var path = this.constructPath();
+
+  this.socket.once(path + '-deleteSuccess', function(data){
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('delete', {path: path}); 
+};
+
+/**
+* Sets an object at the current path.
+*
+*@method set
+*
+*@param object {Object} object The object to set at the current path.
+*@param *callback {Callback} callback The callback to be executed once the object has been set at the path in the database. Optional parameter.
+*
+**/
+
+/* Takes in an object to be set at path. Does not return anything. */
+Combust.prototype.set = function(object, callback) {
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  //transfer token
+  newRef.token = this.token;
+
+  this.socket.once(this.constructPath() + '-setSuccess', function(data) {
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('set', {path: this.constructPath(), data: object});
+};
+
+
+/**
+* Updates object at the current path.
+*
+*@method update
+*
+*@param object {Object} object The object to update the current path with.
+*@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
+*
+*/
+
+/* Takes in an object to update existing object at path in database. #### TBD - WHAT to return ###### */
+Combust.prototype.update = function(object, callback) {
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+
+  this.socket.once(this.constructPath() + '-updateSuccess', function(data) {
+    if (callback) {
+      callback(data);
+    }
+  });
+  this.socket.emit('update', {path: this.constructPath(), data: object});
+};
+
+//TODO: Update this documentation and function
+/**
+* Creates an event listener for a specified event at the current path.
+*
+*@method on
+*
+*@param eventType {String} eventType The type of event to listen for at the current path - currently supported values are "child_added", "child_changed", "child_removed", "value"
+*@param *callback {Function} callback(newChild) The callback to be executed once the specified event is triggered. Accepts the new child as the only parameter.
+*/
+Combust.prototype.on = function(eventType, callback) {
+  //set it here incase path changes before getSuccess is executed
+  var path = this.constructPath();
+  //this binding is lost in async calls so store it here
+  var socket = this.socket;
+  if (eventType === "child_added") {
+    socket.once(path + '-subscribeUrlChildAddedSuccess', function() {
+      //need a get children method - not desired functionality as written
+      socket.emit('getUrlChildren', {url: path});
+    });
+    socket.once(path + "-getUrlChildrenSuccess", function(data) {
+      //wrap data in payload
+      // console.log(" ===>  in Combust ON  data  : ", data);
+      var childrenPayload = new Payload(data.data, path);
+      //getUrlChildren returns null if path points to a static property
+      if (data.data !== null) {
+        //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
+        childrenPayload.forEach(function(child) {
+          //calls callback on all current children
+          // console.log('in forEACH : with child: ', child, 'child.val :', child.val());
+          callback(child);
+        });
+      }
+      socket.on(path + '-child_added', function(data) {
+        //wrap data in payload
+        var payload = new Payload(data, path);
+        //call callback on new child
+        callback(payload);
+      });
+    });
+    socket.emit("subscribeUrlChildAdded", {url: path});
+  }
+  //changed this to not retrieve existing children, leave that to child_added
+  if (eventType === "child_changed") {
+    socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_changed', function(data) {
+        var payload = new Payload(data.data, path);
+        callback(payload);
+      });
+    });
+    socket.emit("subscribeUrlChildChanged", {url: path});
+  }
+  if (eventType === "child_removed") {
+    socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_removed', function(data) {
+        var payload = new Payload(data.data, path);
+        callback(payload);
+      });
+    });
+    socket.emit("subscribeUrlChildRemoved", {url: path});
+  }
+  //changed this to trigger the callback once on whatever value is currently in the db and then listen for changes
+  if (eventType === "value") {
+    socket.once(path + '-subscribeUrlValueSuccess', function() {
+      socket.emit('getUrl', {url: path});
+    });
+    socket.once(path + "-getUrlSuccess", function(data) {
+      var urlPayload = new Payload(data.data, path);
+      callback(urlPayload);
+      socket.on(path + '-value', function(data) {
+        var payload = new Payload(data.data, path);
+        callback(payload);
+      });
+    });
+    socket.emit("subscribeUrlValue", {url: path});
+  }
+};
+
+/**
+* Attempts to create a new user
+*
+*@method newUser
+*
+*@param newUser {Object} newUser Object that contains the credentials of the user to be added.
+*@param newUser.username username Username to associate with new user.
+*@param newUser.password password Password to associate with new user.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has two properties: 
+*1) 'success' which indicates whether the new user was successfully created or not.
+*2) 'id' which will contains the new users id if the operation was successful. 
+*/
+Combust.prototype.newUser = function(newUser, callback) {
+  //raw http requests
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', encodeURI('http://0.0.0.0:3000/signup'));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    response = JSON.parse(xhr.responseText);
+    response.status = xhr.status;
+    if (callback) {
+      callback(response);
+    }
+  }.bind(this);
+  xhr.send(JSON.stringify(newUser));
+};
+
+/**
+* Attempts to authenticate user credentials. If authentication is successful, the JSON Web Token will be stored in local storage, as well as on the Combust instance.
+*
+*@method authenticate
+*
+*@param crendentials {Object} credentials Object that contains the username and password of the user to authenticate.
+*@param credentials.username username Username of the user authenticate.
+*@param credentials.password password Password of the user to authenticate.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has three properties: 
+*1) 'success' (Boolean) which indicates whether the user was successfully authenticated or not.
+*2) 'id' (String) Contains the authenticated users id - only present if success is true.
+*3) 'token' (String) Contains the authenticated users authentication JSON Web token - only present is success is true.
+*/
+Combust.prototype.authenticate = function(credentials, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    response = JSON.parse(xhr.responseText);
+    response.status = xhr.status;
+    if (response.token) {
+      this.token = response.token;
+      //store token in local storage
+      localStorage.setItem('token', response.token);
+    }
+    callback(response);
+  }.bind(this);
+  xhr.send(JSON.stringify(credentials));
+};
+
+/**
+* Unauthenticates the current user by disconnecting the socket connection, and delete the authenticaton JSON Web Token from the Combust instance, as well as local storage.
+*
+*@method authenticate
+*/
+Combust.prototype.unauthenticate = function() {
+  this.socket.disconnect();
+  this.token = null;
+  localStorage.removeItem('token');
+};

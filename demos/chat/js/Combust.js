@@ -1,3 +1,8 @@
+//required for testing only - remove in production
+// var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+// var io = require('socket.io-client');
+// var localStorage = require('./specs/utils/localStorage')();
+
 /**
 * Combust class always maintains a path to part of the database and has various methods for reading and writing data to it,
 * as well as listening for changes in data at the specified path.
@@ -12,7 +17,6 @@ var Combust = function(options, callback) {
   this.serverAddress = options.serverAddress || null;
   this.dbName = options.tableName || 'test';
   this.tableName = options.tableName || 'test';
-  
   //checks localStorage to see if token is already stored
   this.token = localStorage.getItem('token') || null;
   
@@ -29,19 +33,27 @@ var Combust = function(options, callback) {
   this.pathArray = ['/'];
 };
 
-//create socket connection to server
+//create socket connection to server - internal method, no API documentation
 Combust.prototype.connectSocket = function(callback) {
+  //if authentication credentials are provided, attempt to get obtain a token from the server and then establish an authenticated websocket connection.
   if (this.auth) {
     this.authenticate(this.auth, function(response) {
-      this.socket = io.connect(this.serverAddress, {
-        forceNew: true,
-        //send the web token with the initial websocket handshake
-        query: 'token=' + response.token
-      });
-      this.token = response.token;
-      this.socket.on('connectSuccess', function() {
+      if (response.success) {
+        this.socket = io.connect(this.serverAddress, {
+          forceNew: true,
+          //send the web token with the initial websocket handshake
+          query: 'token=' + response.token
+        });
+        this.token = response.token;
+        this.socket.on('connectSuccess', function() {
+          callback(response);
+        });
+      }
+      //does not attempt connetion if credentials are invalid.
+      else {
+        console.log('CombustJS: Invalid credentials. Socket connection not established.');
         callback(response);
-      });
+      }
     }.bind(this));
   }
   else {
@@ -68,6 +80,7 @@ Combust.prototype.connectSocket = function(callback) {
         callback(response);
       }
     });
+    //Handling of servers received from server
     this.socket.once('error', function(err) {
       if (err === 'TokenExpiredError') {
         console.log('CombustJS: Token expired. Please reauthenticate.');
@@ -114,8 +127,15 @@ Combust.prototype.constructPath = function() {
 
 //consider changing this method so that it returns a new Combust object instead of mutating the existing one
 Combust.prototype.child = function(childName) {
-  this.pathArray.push(childName);
-  return this;
+  var newRef = new Combust({
+    dbName: this.dbName,
+    tableName: this.tableName,
+    socket: this.socket
+  });
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
+  newRef.pathArray.push(childName);
+  return newRef;
 };
 
 /**
@@ -137,10 +157,11 @@ Combust.prototype.push = function(object, callback) {
     tableName: this.tableName,
     socket: this.socket
   });
-  // newRef.token = this.token;
+  newRef.token = this.token;
+  newRef.pathArray = this.pathArray.slice();
 
   this.socket.once(this.constructPath() + '-pushSuccess', function(data) {
-    newRef.child(data.key);
+    newRef.pathArray.push(data.key);
     if (callback) {
       callback(data);
     }
@@ -207,7 +228,7 @@ Combust.prototype.set = function(object, callback) {
 *
 *@method update
 *
-*@param object {Object} object The object to update the existing object at the current path.
+*@param object {Object} object The object to update the current path with.
 *@param *callback {Callback} callback The callback to be executed once the object has been updated at the path in the database. Optional parameter.
 *
 */
@@ -228,7 +249,7 @@ Combust.prototype.update = function(object, callback) {
   this.socket.emit('update', {path: this.constructPath(), data: object});
 };
 
-
+//TODO: Update this documentation and function
 /**
 * Creates an event listener for a specified event at the current path.
 *
@@ -242,72 +263,88 @@ Combust.prototype.on = function(eventType, callback) {
   var path = this.constructPath();
   //this binding is lost in async calls so store it here
   var socket = this.socket;
-  //this might cause a bug...what if there are multiple getSuccesses and you capture the wrong one?
   if (eventType === "child_added") {
-    socket.once(path + '-subscribeUrlChildAddSuccess', function() {
+    socket.once(path + '-subscribeUrlChildAddedSuccess', function() {
       //need a get children method - not desired functionality as written
       socket.emit('getUrlChildren', {url: path});
     });
     socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //calls callback on all current child
+      //calls callback on all current children
       //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
       data.forEach(function(child) {
         callback(child);
       });
-      socket.on(path + '-childaddSuccess', function(data) {
+      socket.on(path + '-child_added', function(data) {
         //call callback on new child
         callback(data);
       });
     });
-    socket.emit("subscribeUrlChildAdd", {url: path});
+    socket.emit("subscribeUrlChildAdded", {url: path});
   }
-  // the client side method that enables execution of callback with child_changed response
+  //changed this to not retrieve existing children, leave that to child_added
   if (eventType === "child_changed") {
-    socket.once(path + '-subscribeUrlChildChangeSuccess', function() {
-      //listens to completion of subscribe event on server
-      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
-      socket.emit('getUrlChildren', {url: path});
-      //emit for getUrlChildren action on server; for the 'path'
-    });
-    socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //listens to getChildren Success and executes callback on all current children; does this first time
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      data.forEach(function(child) {
-        callback(child);
-      });
-      socket.on(path + '-childchangeSuccess', function(data) {
-        //continues to listen to child change events and executes callback with returned data
+    socket.once(path + '-subscribeUrlChildChangedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_changed', function(data) {
         callback(data);
       });
     });
-    socket.emit("subscribeUrlChildChange", {url: path});
-    // emits for registeration of subscribe event at the path on server handler
+    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
+    //   data.forEach(function(child) {
+    //     callback(child);
+    //   });
+    // });
+    socket.emit("subscribeUrlChildChanged", {url: path});
   }
-  // the client side method that enables execution of callback with child_changed response
+  if (eventType === "child_removed") {
+    socket.once(path + '-subscribeUrlChildRemovedSuccess', function() {
+      // socket.emit('getUrlChildren', {url: path});
+      socket.on(path + '-child_removed', function(data) {
+        callback(data);
+      });
+    });
+    // socket.once(path + "-getUrlChildrenSuccess", function(data) {
+    //   data.forEach(function(child) {
+    //     callback(child);
+    //   });
+    // });
+    socket.emit("subscribeUrlChildRemoved", {url: path});
+  }
+  //changed this to trigger the callback once on whatever value is currently in the db and then listen for changes
   if (eventType === "value") {
     socket.once(path + '-subscribeUrlValueSuccess', function() {
-      //listens to completion of subscribe event on server
-      //TODO: Revisit the getUrlChildren after the sync strategy is confirmed
-      socket.emit('getUrlChildren', {url: path});
-      //emit for getUrlChildren action on server; for the 'path'
+      console.log('subscribed to value at: ', path);
+
+      socket.emit('getUrl', {url: path});
     });
-    socket.once(path + "-getUrlChildrenSuccess", function(data) {
-      //listens to getChildren Success and executes callback on all current children; does this first time
-      //getUrlChildren will return an array of Objects, ie. [{key1: 1}, {key2:{inkey:2}}, {key3: true}]
-      data.forEach(function(child) {
-        callback(child);
-      });
-      // confirm what should this be --- 
+    socket.once(path + "-getUrlSuccess", function(data) {
+      console.log('getUrlSuccess');
+      // data.forEach(function(child) {
+      //   callback(child);
+      // });
+      callback(data);
       socket.on(path + '-value', function(data) {
-        //continues to listen to child change events and executes callback with returned data
+        console.log('value event at path: ', path);
         callback(data);
       });
     });
     socket.emit("subscribeUrlValue", {url: path});
-    // emits for registeration of subscribe event at the path on server handler
   }
 };
 
+/**
+* Attempts to create a new user
+*
+*@method newUser
+*
+*@param newUser {Object} newUser Object that contains the credentials of the user to be added.
+*@param newUser.username username Username to associate with new user.
+*@param newUser.password password Password to associate with new user.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has two properties: 
+*1) 'success' which indicates whether the new user was successfully created or not.
+*2) 'id' which will contains the new users id if the operation was successful. 
+*/
 Combust.prototype.newUser = function(newUser, callback) {
   //raw http requests
   var xhr = new XMLHttpRequest();
@@ -316,12 +353,27 @@ Combust.prototype.newUser = function(newUser, callback) {
   xhr.onload = function() {
     response = JSON.parse(xhr.responseText);
     response.status = xhr.status;
-    callback(response);
+    if (callback) {
+      callback(response);
+    }
   }.bind(this);
   xhr.send(JSON.stringify(newUser));
 };
 
-//storing token in instance of object for now, should it be stored in local storage?
+/**
+* Attempts to authenticate user credentials. If authentication is successful, the JSON Web Token will be stored in local storage, as well as on the Combust instance.
+*
+*@method authenticate
+*
+*@param crendentials {Object} credentials Object that contains the username and password of the user to authenticate.
+*@param credentials.username username Username of the user authenticate.
+*@param credentials.password password Password of the user to authenticate.
+*@param *callback(response) {Function} callback(response) The callback to be executed once a response from the server is received. Accepts response as the only parameter.
+*Response has three properties: 
+*1) 'success' (Boolean) which indicates whether the user was successfully authenticated or not.
+*2) 'id' (String) Contains the authenticated users id - only present if success is true.
+*3) 'token' (String) Contains the authenticated users authentication JSON Web token - only present is success is true.
+*/
 Combust.prototype.authenticate = function(credentials, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', encodeURI('http://0.0.0.0:3000/authenticate'));
@@ -339,8 +391,15 @@ Combust.prototype.authenticate = function(credentials, callback) {
   xhr.send(JSON.stringify(credentials));
 };
 
+/**
+* Unauthenticates the current user by disconnecting the socket connection, and delete the authenticaton JSON Web Token from the Combust instance, as well as local storage.
+*
+*@method authenticate
+*/
 Combust.prototype.unauthenticate = function() {
   this.socket.disconnect();
   this.token = null;
   localStorage.removeItem('token');
 };
+
+// module.exports = Combust;

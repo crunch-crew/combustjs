@@ -77,6 +77,13 @@ module.exports = function(grunt) {
       }
     },
 
+    mochacli: {
+      options: {
+          harmony: true,
+      },
+      all: ['server/lib/specs/*.js', 'client/specs/*.js']
+    },
+
     shell: {
       options: {
         strderr: false
@@ -100,11 +107,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-strip-code');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-mocha-cli');
 
-  grunt.registerTask('default', ['jshint', 'mochaTest', 'shell', 'bower']);
+  grunt.registerTask('default', ['jshint', 'mochacli', 'shell', 'bower']);
   grunt.registerTask('dev', ['mochaTest', 'shell']);
   grunt.registerTask('watchtest', ['watch:scripts']);
   grunt.registerTask('test', ['mochaTest']);
-  grunt.registerTask('bower', ['strip_code', 'browserify', 'uglify']);
+  grunt.registerTask('bower', ['strip_code', 'browserify']);
 
 };
