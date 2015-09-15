@@ -62,13 +62,13 @@ Make sure RethinkDB and the Node server are running, then navigate to node_modul
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request
 
-## Credits
+## Authors
 
-Primary Authors:
 1. Richard Artoul
 2. Kuldeep Dhanjal
 3. Alex Mendez
 4. Jack Zhang
 
 ## License
+
 MIT
