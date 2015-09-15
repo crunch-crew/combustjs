@@ -1,10 +1,10 @@
 # Getting started with CombustJS - Chat Application
 
-1) [Install and Setup a CombustJS server](readme.md)
-2) Use Bower to install the CombustJS client library - `bower install combust-js`
-3) Create an index.html file with a simple input box, and add the CombustJS client library as a script tag, as well as a CDN for jquery and socketIO.
+1. [Install and Setup a CombustJS server](readme.md)
+2. Use Bower to install the CombustJS client library - `bower install combust-js`
+3. Create an index.html file with a simple input box, and add the CombustJS client library as a script tag, as well as a CDN for jquery and socketIO.
 
-```
+```html
 <!doctype html>
 <html>
   <head>
@@ -24,7 +24,7 @@
 
 4) Add another script tag to the index.html file that contains the client-side code required to interact with the CombustJS server
 
-```
+```html
 <script>
 //Replaces this with the address/port of your Combust server
 var serverAddress = 'http://localhost:3000';
@@ -45,7 +45,7 @@ $('#messageform').submit(function(event) {
 
 5) Thats it! The final index.html code is below. Try opening it in multiple tabs! For a more advanced demonstration with authentication, checkout the demo application inside the CombustJS GitHub Repository.
 
-```
+```html
 <!doctype html>
 <html>
   <head>
