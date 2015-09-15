@@ -1,8 +1,26 @@
 # CombustJS
 
-CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without writing a line of back-end code.
+![documentation/logo.png]()
 
-Check out our [chat application](gettingStarted.md) tutorial!
+CombustJS is a noBackend framework that mimics Firebase behavior. It allows developers to create real-time (push-based), persistent applications without writing a line of back-end code. CombustJS was developed over the course of three weeks and successfully recreates the following firebase functionality:
+
+1. Firebase-like object-relational mapping. This means that the entire backend database can be treated, by the front-end developer, as a giant JavaScript object that can be modified, set, and pushed (similar to an array or a list) into. This is an incredibly powerful abstraction because every experienced front-end developer has a mental model of how JavaScript objects work and are stored, and as a result, they know how to structure and use data in the CombustJS backend.
+2. Firebase-like push-notifications. CombustJS clients can subscribe to any piece of data, and receive updates when that data is updated in realtime. This makes developing real-time, persistent, data-driven applications really easy. In our getting started tutorial below, a real-time chat application (with data persistence!) can be written in 9 lines of JavaScript.
+3. Baked in authentication and authorization. With an additional 40 lines of frontend-only JavaScript / JQuery code user accounts can be added to the chat application. In addition to user accounts, the ability to restrict parts of the database based on user-priviledge is also built-in. Authentication is managed via JWT's.
+4. Automatic RESTful API. The CombustJS automatically generates a RESTful API that allows you to access any piece of data in the database, if you have the right permissions, with a simple HTTP request; you can do it right in your browser!
+5. A testing suite with over 100 tests for various functionality.
+
+All of these features makes it incredibly easy to write real-time, persistent, single-page applications. Take a look at the following code that implements a chat-client, with user management:
+
+![](documentation/chat_code.png)
+
+Check out our [chat application](gettingStarted.md) tutorial to see just how easy it is to develop real-time, persistent applications without writing a line of back-end code.
+
+## Architecture
+
+![](documentation/ppx_architecture.png)
+
+![](documentation/glyphy_architecture.png)
 
 ## Installation
 
