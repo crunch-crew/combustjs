@@ -22,7 +22,7 @@
 </html>
 ```
 
-4. Add another script tag to the index.html file that contains the client-side code required to interact with the CombustJS server
+Add another script tag to the index.html file that contains the client-side code required to interact with the CombustJS server
 
 ```html
 <script>
@@ -43,7 +43,7 @@ $('#messageform').submit(function(event) {
 </script>
 ```
 
-5. Thats it! The final index.html code is below. Try opening it in multiple tabs! For a more advanced demonstration with authentication, checkout the demo application inside the CombustJS GitHub Repository.
+Thats it! The final index.html code is below. Try opening it in multiple tabs! For a more advanced demonstration with authentication, checkout the demo application inside the CombustJS GitHub Repository.
 
 ```html
 <!doctype html>
