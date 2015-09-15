@@ -8,7 +8,7 @@ CombustJS is a noBackend framework that mimics Firebase behavior. It allows deve
 2. Firebase-like push-notifications. CombustJS clients can subscribe to any piece of data, and receive updates when that data is updated in realtime. This makes developing real-time, persistent, data-driven applications really easy. In our getting started tutorial below, a real-time chat application (with data persistence!) can be written in 9 lines of JavaScript.
 3. Baked in authentication and authorization. With an additional 40 lines of frontend-only JavaScript / JQuery code user accounts can be added to the chat application. In addition to user accounts, the ability to restrict parts of the database based on user-priviledge is also built-in. Authentication is managed via JWT's.
 4. Automatic RESTful API. The CombustJS automatically generates a RESTful API that allows you to access any piece of data in the database, if you have the right permissions, with a simple HTTP request; you can do it right in your browser!
-5. A testing suite with over 100 tests for various functionality.
+5. A testing suite with over 100 tests for various functionality, as well as full documentation for our client library and backend server (for developers who wish to contribute). Please see the documentation section below for links to the online documentation.
 
 All of these features makes it incredibly easy to write real-time, persistent, single-page applications. Take a look at the following code that implements a chat-client, with user management:
 
@@ -21,6 +21,11 @@ Check out our [chat application](gettingStarted.md) tutorial to see just how eas
 ![](documentation/ppx_architecture.png)
 
 ![](documentation/glyphy_architecture.png)
+
+## Documentation
+
+1. [CombustJS backend documentation (developer facing)](http://crunch-crew.github.io/dev-api-docs/)
+2. [CombustJS client Library documentation (user facing)](http://crunch-crew.github.io/client-library-docs/)
 
 ## Installation
 
