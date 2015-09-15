@@ -45,8 +45,8 @@ var server = combust(app, port);
 ```
 ## Usage
 
-1) Run RethinkDB by navigating to the directory where you want data to be stored and executing `rethinkdb`
-2) Run the server using node `node server.js`
+1. Run RethinkDB by navigating to the directory where you want data to be stored and executing `rethinkdb`
+2. Run the server using node `node server.js`
 
 Thats it! You can start writing applications that interact with the server using the CombustJS client library (insert bower / getting started instructions here)
 
