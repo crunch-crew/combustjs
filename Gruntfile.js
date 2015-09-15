@@ -89,7 +89,7 @@ module.exports = function(grunt) {
         strderr: false
       },
       yuiDoc: {
-        command: 'yuidoc -o ./client/docs ./client/.'
+        command: 'yuidoc -o ./client/docs ./client/dist/lib'
       },
       apiDoc: {
         command: 'apidoc -i ./server/lib -o ./server/docs'
@@ -110,7 +110,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-cli');
 
   grunt.registerTask('default', ['jshint', 'mochacli', 'shell', 'bower']);
-  grunt.registerTask('dev', ['mochaTest', 'shell']);
+  grunt.registerTask('dev', ['shell']);
   grunt.registerTask('watchtest', ['watch:scripts']);
   grunt.registerTask('test', ['mochaTest']);
   grunt.registerTask('bower', ['strip_code', 'browserify']);

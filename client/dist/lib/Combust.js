@@ -389,7 +389,7 @@ Combust.prototype.authenticate = function(credentials, callback) {
 /**
 * Unauthenticates the current user by disconnecting the socket connection, and delete the authenticaton JSON Web Token from the Combust instance, as well as local storage.
 *
-*@method authenticate
+*@method unauthenticate
 */
 Combust.prototype.unauthenticate = function() {
   this.socket.disconnect();
